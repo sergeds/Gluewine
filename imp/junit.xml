@@ -1,0 +1,125 @@
+<?xml version="1.0"?>
+<project name="junit" default="junit.allchecks" basedir=".">
+    <import file="init.xml"/>
+    <import file="osgi.xml"/>
+
+    <taskdef resource="tasks.properties">
+        <classpath>
+            <fileset dir="${dir.tools.cobertura}">
+                <include name="cobertura.jar"/>
+                <include name="lib/**/*.jar"/>
+            </fileset>
+        </classpath>
+    </taskdef>
+
+    <!-- Compile unit tests -->
+    <target name="junit.compile" depends="osgi.compile, junit.depend">
+        <javac srcdir="${dir.src.junit}" destdir="${dir.build.junit}" debug="on" debuglevel="${debuglevel}" source="${source}" target="${target}" includeantruntime="false" encoding="utf8">
+            <classpath>
+                <path refid="classpath.osgi.base"/>
+                <pathelement location="${dir.build.osgi}"/>
+            </classpath>
+        </javac>
+    </target>
+
+    <target name="junit.allchecks" depends="junit.checkstyle, cobertura"/>
+
+    <target name="junit.quickchecks" depends="junit.checkstyle, junit"/>
+
+    <target name="junit.init" depends="init">
+        <mkdir dir="${dir.build.junit}"/>
+    </target>
+
+    <!-- Clean up old unit tests class files -->
+    <target name="junit.depend" depends="junit.init">
+        <depend srcdir="${dir.src.junit}" destdir="${dir.build.junit}" closure="yes"/>
+    </target>
+
+    <!-- Run unit tests -->
+    <target name="junit.run">
+        <delete dir="${dir.reports.junit}"/>
+        <mkdir dir="${dir.reports.junit}"/>
+        <junit printsummary="yes" failureproperty="junit.fail" fork="true" forkmode="perBatch">
+            <classpath refid="${junitclasspath}"/>
+            <sysproperty key="net.sourceforge.cobertura.datafile" file="${dir.reports.cobertura}/cobertura.ser"/>
+            <formatter type="xml"/>
+            <batchtest fork="yes" todir="${dir.reports.junit}">
+                <fileset dir="${dir.build.junit}">
+                    <include name="**/*_Test.class"/>
+                </fileset>
+            </batchtest>
+        </junit>
+        <junitreport todir="${dir.reports.junit}">
+            <fileset dir="${dir.reports.junit}">
+                <include name="*.xml"/>
+            </fileset>
+            <report todir="${dir.reports.junit}"/>
+        </junitreport>
+    </target>
+
+    <!-- Run tests with coverage reporting -->
+    <target name="cobertura" depends="junit.compile" description="Runs JUnit tests with code coverage reporting">
+        <!-- cobertura always needs to start from scratch, so it makes no sense to separate this into separate targets -->
+        <delete dir="${dir.reports.cobertura}"/>
+        <delete dir="${dir.build.cobertura}"/>
+        <delete dir="${dir.tools.cobertura.src}"/>
+        <mkdir dir="${dir.build.cobertura}"/>
+        <mkdir dir="${dir.reports.cobertura}"/>
+        <cobertura-instrument todir="${dir.build.cobertura}" datafile="${dir.reports.cobertura}/cobertura.ser">
+            <fileset dir="${dir.build.osgi}">
+                <include name="**/*.class"/>
+            </fileset>
+        </cobertura-instrument>
+        <antcall target="junit.run">
+            <param name="junitclasspath" value="classpath.cobertura.full"/>
+        </antcall>
+        <cobertura-report datafile="${dir.reports.cobertura}/cobertura.ser" format="html" destdir="${dir.reports.cobertura}" srcdir="${dir.src.osgi}"/>
+        <cobertura-report datafile="${dir.reports.cobertura}/cobertura.ser" format="xml" destdir="${dir.reports.cobertura}" srcdir="${dir.src.osgi}"/>
+        <fail>
+            <condition>
+                <and>
+                    <not>
+                        <isset property="ignorecheckfails"/>
+                    </not>
+                    <isset property="junit.fail"/>
+                </and>
+            </condition>
+        </fail>
+    </target>
+
+    <!-- Run tests without coverage reporting -->
+    <target name="junit" depends="junit.compile" description="Runs JUnit tests without code coverage reporting">
+        <antcall target="junit.run">
+            <param name="junitclasspath" value="classpath.junit.full"/>
+        </antcall>
+        <fail>
+            <condition>
+                <and>
+                    <not>
+                        <isset property="ignorecheckfails"/>
+                    </not>
+                    <isset property="junit.fail"/>
+                </and>
+            </condition>
+        </fail>
+    </target>
+
+    <!-- Run checkstyle on unit tests -->
+    <target name="junit.checkstyle" depends="junit.compile">
+        <antcall target="qa.checkstyle">
+            <param name="target" value="junit"/>
+            <param name="sourcedir" value="${dir.src.junit}"/>
+            <param name="reportdir" value="${dir.reports.checkstyle.junit}"/>
+        </antcall>
+    </target>
+
+    <!-- Run findbugs on unit tests -->
+    <target name="junit.findbugs" depends="junit.compile">
+        <antcall target="qa.findbugs">
+            <param name="target" value="junit"/>
+            <param name="sourcedir" value="${dir.src.junit}"/>
+            <param name="classdir" value="${dir.build.junit}"/>
+            <param name="reportdir" value="${dir.reports.findbugs.junit}"/>
+        </antcall>
+    </target>
+</project>

@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<project name="qa" basedir=".">
+    <import file="init.xml"/>
+    <import file="osgi.xml"/>
+
+    <taskdef resource="checkstyletask.properties" classpath="${dir.tools.checkstyle}/checkstyle-5.3-all.jar"/>
+    <taskdef name="testability" classname="com.google.ant.TestabilityTask">
+        <classpath>
+            <fileset dir="${dir.tools.te}">
+                <include name="**/*.jar"/>
+            </fileset>
+        </classpath>
+    </taskdef>
+    <taskdef name="findbugs" classname="edu.umd.cs.findbugs.anttask.FindBugsTask" classpath="${dir.tools.findbugs}/lib/findbugs-ant.jar"/>
+
+    <!-- Run checkstyle -->
+    <target name="qa.checkstyle">
+        <!-- parameter: target -->
+        <!-- parameter: sourcedir -->
+        <!-- parameter: reportdir -->
+        <mkdir dir="${reportdir}"/>
+        <checkstyle config="${dir.tools.checkstyle}/fks_checks_${target}.xml" failureProperty="checkstyle.${target}.fail" failOnViolation="false" classpathref="classpath.${target}.full">
+            <fileset dir="${sourcedir}" includes="**/*.java"/>
+            <formatter type="plain" toFile="${reportdir}/checkstyle_errors.txt"/>
+            <formatter type="xml" toFile="${reportdir}/checkstyle_errors.xml"/>
+        </checkstyle>
+        <xslt in="${reportdir}/checkstyle_errors.xml" out="${reportdir}/index.html" style="${dir.tools.checkstyle}/checkstyle-noframes.xsl"/>
+        <fail>
+            <condition>
+                <and>
+                    <not>
+                        <isset property="ignorecheckfails"/>
+                    </not>
+                    <isset property="checkstyle.${target}.fail"/>
+                </and>
+            </condition>
+        </fail>
+    </target>
+
+    <target name="qa.findbugs">
+        <!-- parameter: target -->
+        <!-- parameter: sourcedir -->
+        <!-- parameter: classdir -->
+        <!-- parameter: reportdir -->
+        <mkdir dir="${reportdir}"/>
+        <findbugs home="${dir.tools.findbugs}" output="xml:withMessages" outputFile="${reportdir}/findbugs.xml" effort="max" warningsProperty="findbugs.${target}.fail" excludeFilter="${dir.tools.findbugs}/suppress-${target}.xml" reportLevel="low">
+            <auxClassPath>
+                <path refid="classpath.${target}.full"/>
+            </auxClassPath>
+            <sourcePath>
+                <pathelement path="${sourcedir}"/>
+            </sourcePath>
+            <class location="${classdir}"/>
+        </findbugs>
+        <xslt in="${reportdir}/findbugs.xml" out="${reportdir}/index.html" style="${dir.tools.findbugs}/lib/default.xsl"/>
+        <fail>
+            <condition>
+                <and>
+                    <not>
+                        <isset property="ignorecheckfails"/>
+                    </not>
+                    <isset property="findbugs.${target}.fail"/>
+                </and>
+            </condition>
+        </fail>
+    </target>
+
+    <target name="qa.testability">
+        <!-- parameter: reportdir -->
+        <mkdir dir="${reportdir}"/>
+        <testability resultfile="${reportdir}/testability.xml" errorfile="${reportdir}/testability.err.txt" print="xml" failproperty="testability.fail">
+            <classpath>
+                <path refid="classpath.${target}.classes"/>
+            </classpath>
+        </testability>
+        <testability resultfile="${reportdir}/index.html" errorfile="${reportdir}/testability.err.txt" printdepth="2" print="html" failproperty="testability.fail">
+            <classpath>
+                <path refid="classpath.${target}.classes"/>
+            </classpath>
+        </testability>
+    </target>
+</project>

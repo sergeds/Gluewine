@@ -1,0 +1,8 @@
+	<servlet>
+		<servlet-name>service</servlet-name>
+		<servlet-class>org.gwt.gluewine.server.ServiceImpl</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>service</servlet-name>
+		<url-pattern>/gluewine/service</url-pattern>
+	</servlet-mapping>

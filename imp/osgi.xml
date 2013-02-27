@@ -1,0 +1,113 @@
+<?xml version="1.0"?>
+<project name="osgi" default="osgi.default" basedir=".">
+    <import file="init.xml"/>
+    <import file="qa.xml"/>
+
+    <target name="osgi.init" depends="init">
+        <mkdir dir="${dir.build.osgi}"/>
+        <mkdir dir="${dir.bundle.extra}"/>
+    </target>
+
+    <!-- Compile the code -->
+    <target name="osgi.compile" depends="osgi.depend">
+        <javac srcdir="${dir.src.osgi}" destdir="${dir.build.osgi}" debug="on" debuglevel="${debuglevel}" source="${source}" target="${target}" includeantruntime="false" encoding="utf8">
+            <classpath refid="classpath.osgi.base"/>
+        </javac>
+    </target>
+
+    <!-- quality checks -->
+    <target name="osgi.allchecks" depends="junit.allchecks, osgi.checkstyle, osgi.findbugs, osgi.testability"/>
+    <target name="osgi.quickchecks" depends="osgi.checkstyle, junit.quickchecks"/>
+
+    <!-- Clean up old class files -->
+    <target name="osgi.depend" depends="osgi.init">
+        <depend srcdir="${dir.src.osgi}" destdir="${dir.build.osgi}" closure="yes"/>
+    </target>
+
+    <!-- Package all bundles -->
+    <target name="osgi.bundles" depends="osgi.compile, bundles.package"/>
+
+    <!-- Do a regular build with all required steps to be allowed to commit -->
+    <target name="osgi.default" depends="osgi.bundles, osgi.quickchecks, osgi.javadoc"/>
+
+    <target name="osgi.package" depends="osgi.bundles, osgi.jarsrc, osgi.zipdoc">
+        <copy todir="${dir.dist.lib}">
+            <fileset dir="${dir.lib.runtime}" includes="**/*.jar"/>
+        </copy>
+        <mkdir dir="${dir.dist.rtf}"/>
+        <mkdir dir="${dir.dist.rtf}/cfg"/>
+        <mkdir dir="${dir.dist.rtf}/cfg/generic"/>
+        <copy todir="${dir.dist.rtf}/cfg/generic">
+            <fileset dir="${dir.templates}/cfg/generic" includes="**/*.properties"/>
+        </copy>
+    </target>
+
+    <!-- Build all distributable files, fully tested -->
+    <target name="osgi.dist" depends="osgi.allchecks, osgi.package"/>
+
+    <!-- Generate API documentation -->
+    <target name="osgi.javadoc">
+        <mkdir dir="${dir.doc.api.osgi}"/>
+        <javadoc packagenames="org.*" destdir="${dir.doc.api.osgi}" version="true" author="true" splitindex="true" access="package" failonerror="true" encoding="utf8">
+            <sourcepath>
+                <pathelement path="${dir.src.osgi}"/>
+            </sourcepath>
+            <classpath refid="classpath.osgi.base"/>
+            <link href="http://download.oracle.com/javase/6/docs/api/"/>
+        </javadoc>
+    </target>
+
+    <!-- Creates a jar containing the source code -->
+    <target name="osgi.jarsrc">
+        <mkdir dir="${dir.dist.src}"/>
+        <jar jarfile="${dir.dist.src}/${product}_${version}_src.jar">
+            <fileset dir="${dir.src.osgi}">
+                <include name="*/**"/>
+            </fileset>
+            <fileset dir="..">
+                <include name="LICENSE.txt"/>
+            </fileset>
+        </jar>
+    </target>
+
+    <!-- Creates a zip containing the API doc -->
+    <target name="osgi.zipdoc" depends="osgi.javadoc">
+        <mkdir dir="${dir.dist.doc}"/>
+        <zip zipfile="${dir.dist.doc}/${product}_${version}_doc.zip">
+            <fileset dir="${dir.doc.api.osgi}">
+                <include name="*/**"/>
+            </fileset>
+            <fileset dir="..">
+                <include name="LICENSE.txt"/>
+            </fileset>
+        </zip>
+    </target>
+
+    <!-- Run checkstyle on main source -->
+    <target name="osgi.checkstyle" depends="osgi.compile">
+        <antcall target="qa.checkstyle">
+            <param name="target" value="osgi"/>
+            <param name="sourcedir" value="${dir.src.osgi}"/>
+            <param name="reportdir" value="${dir.reports.checkstyle.osgi}"/>
+        </antcall>
+    </target>
+
+    <!-- Run findbugs -->
+    <target name="osgi.findbugs" depends="osgi.compile">
+        <antcall target="qa.findbugs">
+            <param name="target" value="osgi"/>
+            <param name="sourcedir" value="${dir.src.osgi}"/>
+            <param name="classdir" value="${dir.build.osgi}"/>
+            <param name="reportdir" value="${dir.reports.findbugs.osgi}"/>
+        </antcall>
+    </target>
+
+    <!-- Produce testability report -->
+    <target name="osgi.testability" depends="osgi.compile">
+        <antcall target="qa.testability">
+            <param name="target" value="osgi"/>
+            <param name="classdir" value="${dir.build.osgi}"/>
+            <param name="reportdir" value="${dir.reports.te.osgi}"/>
+        </antcall>
+    </target>
+</project>

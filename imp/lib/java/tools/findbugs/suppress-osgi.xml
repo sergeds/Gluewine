@@ -1,0 +1,50 @@
+<FindBugsFilter>
+     <Match>
+       <!--  May expose internal representation by incorporating reference to mutable object 
+             This code stores a reference to an externally mutable object into the internal 
+             representation of the object.  If instances are accessed by untrusted code, 
+             and unchecked changes to the mutable object would compromise security or other 
+             important properties, you will need to do something different. 
+             Storing a copy of the object is better approach in many situations.
+        -->
+       <Bug pattern="EI_EXPOSE_REP2" />
+       <!-- 
+             This check has been removed as it is not consistent. It only occurs on 'known' 
+             types (not your own classes), and only works on the first level. (ie. [], List, Set...)
+             but not on the content of such classes. (ie. List in a Map).
+             Non-OSGi code can only work on a deserialized version of those classes, meaning that 
+             they use different instances. 
+        -->
+     </Match>
+     
+     <Match>
+       <!-- This Serializable class defines a non-primitive instance field which is neither transient, 
+            Serializable, or java.lang.Object, and does not appear to implement the Externalizable 
+            interface or the readObject() and writeObject() methods.  Objects of this class will not be 
+            deserialized correctly if a non-Serializable object is stored in this field.  
+        -->
+       <Bug pattern="SE_BAD_FIELD" />
+       <!-- 
+             This check has been removed as it is not compatible with Hibernate which expects collection
+             members to be defined as interfaces.
+             From the OSGi point of view, the classes do not need to be serializable, as they are 
+             processed by XStream. But GWT needs the classes to be serializable for the communication
+             between the servlets and the client.
+        -->
+     </Match>
+     
+     <Match>
+       <!--  Invoking System.exit shuts down the entire Java virtual machine. This should only been done when 
+             it is appropriate. Such calls make it hard or impossible for your code to be invoked by other code. 
+             Consider throwing a RuntimeException instead.  
+        -->
+       <Bug pattern="DM_EXIT" />
+       <!-- 
+             This check has been removed as it causes problems in the PhoneCallApi that runs 'outside' the OSGi
+             environment, but is defined in one of the OSGi bundles.
+             The System.exit is used as it allows to differntiate the exit code so that the asterisk application
+             can play different WAV files depending on the return code.
+        -->
+     </Match>
+</FindBugsFilter>
+

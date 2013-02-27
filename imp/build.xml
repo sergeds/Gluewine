@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<project name="gluewine" default="default" basedir=".">
+    <import file="init.xml"/>
+    <import file="bundles.xml"/>
+    <import file="gwt.xml"/>
+    <import file="junit.xml"/>
+    <import file="osgi.xml"/>
+
+    <target name="default" depends="osgi.default, gwt.default" description="Run a moderately fast default build."/>
+    <target name="dist" depends="osgi.dist, gwt.dist" description="Creates the OSGi and GWT distribution."/>
+
+    <!-- Clean the build directories, but not the end results -->
+    <target name="clean" description="Cleans all build-directories, but leaves dist/">
+        <delete dir="${dir.build}"/>
+    </target>
+
+    <!-- Clean everything, going back to an as-if freshly checked out state -->
+    <target name="distclean" depends="clean" description="Cleans everything.">
+        <delete dir="${dir.dist}"/>
+        <delete dir="${dir.doc}"/>
+        <delete dir="${dir.reports}"/>
+    </target>
+
+    <target name="allchecks" depends="osgi.allchecks, gwt.allchecks"/>
+
+    <target name="quickchecks" depends="osgi.quickchecks, gwt.quickchecks"/>
+
+    <target name="findbugs" depends="osgi.findbugs, gwt.findbugs"/>
+
+    <target name="checkstyle" depends="osgi.checkstyle, gwt.checkstyle"/>
+
+    <target name="testability" depends="osgi.testability, gwt.testability"/>
+</project>

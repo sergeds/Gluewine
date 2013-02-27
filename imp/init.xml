@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Init" basedir="." default="init">
+    <!-- Change for your project -->
+    <property name="product" value="gluewine"/>
+    <property name="version" value="0.0.1"/>
+
+    <!-- Java Compiler specific options -->
+    <property name="debuginfo" value="on"/>
+    <property name="debuglevel" value="source,lines,vars"/>
+    <property name="target" value="1.6"/>
+    <property name="source" value="1.6"/>
+
+    <!-- Directories -->
+    <property name="dir.gwt" value="src/gwt"/>
+    <property name="dir.build" value="../build"/>
+    <property name="dir.build.osgi" value="${dir.build}/osgi"/>
+    <property name="dir.build.junit" value="${dir.build}/test"/>
+    <property name="dir.build.gwt" value="${dir.build}/gwt/classes"/>
+    <property name="dir.build.gwt.generated" value="${dir.build}/gwt/generated"/>
+    <property name="dir.build.gwt.generated.src" value="${dir.build.gwt.generated}/src"/>
+    <property name="dir.build.gwt.generated.classes" value="${dir.build.gwt.generated}/classes"/>
+    <property name="dir.bundle.extra" value="${dir.build}/bundleextra"/>
+    <property name="dir.dist" value="../dist"/>
+    <property name="dir.dist.src" value="${dir.dist}/src"/>
+    <property name="dir.dist.doc" value="${dir.dist}/doc"/>
+    <property name="dir.dist.lib" value="${dir.dist}/lib"/>
+    <property name="dir.dist.rtf" value="${dir.dist}/rtf"/>
+    <property name="dir.lib.runtime" value="lib/java/runtime"/>
+    <property name="dir.lib.compile" value="lib/java/compile"/>
+    <property name="dir.lib.tools" value="lib/java/tools"/>
+    <property name="dir.gwt.runtime" value="lib/gwt/runtime"/>
+    <property name="dir.gwt.compile" value="lib/gwt/compile"/>
+    <property name="dir.gwt.run.classpath" value="${dir.build}/gwt/classes"/>
+    <property name="dir.gwt.warsource" value="${dir.gwt}/war"/>
+    <property name="dir.gwt.webxml" value="${dir.gwt}/webxml"/>
+    <property name="dir.gwt.warbuild" value="${dir.build.gwt}/war"/>
+    <property name="dir.gwt.dist" value="${dir.dist}/gwt"/>
+    <property name="dir.src.osgi" value="src/java"/>
+    <property name="dir.src.junit" value="test/java"/>
+    <property name="dir.src.gwt" value="${dir.gwt}/src"/>
+
+    <property name="dir.templates" value="../templates"/>
+
+    <property name="dir.reports" value="../reports"/>
+    <property name="dir.reports.junit" value="${dir.reports}/junit"/>
+    <property name="dir.reports.checkstyle.osgi" value="${dir.reports}/checkstyle.osgi"/>
+    <property name="dir.reports.checkstyle.junit" value="${dir.reports}/checkstyle.junit"/>
+    <property name="dir.reports.checkstyle.gwt" value="${dir.reports}/checkstyle.gwt"/>
+    <property name="dir.reports.findbugs.osgi" value="${dir.reports}/findbugs.osgi"/>
+    <property name="dir.reports.findbugs.junit" value="${dir.reports}/findbugs.junit"/>
+    <property name="dir.reports.findbugs.gwt" value="${dir.reports}/findbugs.gwt"/>
+    <property name="dir.reports.cobertura" value="${dir.reports}/cobertura"/>
+    <property name="dir.reports.te.osgi" value="${dir.reports}/testability.osgi"/>
+    <property name="dir.reports.te.gwt" value="${dir.reports}/testability.gwt"/>
+
+    <property name="dir.tools.checkstyle" value="${dir.lib.tools}/checkstyle"/>
+    <property name="dir.tools.findbugs" value="${dir.lib.tools}/findbugs"/>
+    <property name="dir.tools.te" value="${dir.lib.tools}/testability-explorer"/>
+    <property name="dir.tools.svnant" value="${dir.lib.tools}/svnant"/>
+    <property name="dir.tools.cobertura" value="${dir.lib.tools}/cobertura"/>
+    <property name="dir.build.cobertura" value="${dir.build}/cobertura/build"/>
+
+    <property name="dir.doc" value="../doc"/>
+    <property name="dir.doc.api.osgi" value="${dir.doc}/javadoc.osgi"/>
+    <property name="dir.doc.api.gwt" value="${dir.doc}/javadoc.gwt"/>
+
+    <!-- classpaths come in three levels:
+             *.base : the path needed to build the component in question, provided in svn or by previously built other components
+             *.classes: the classes produced by the build process
+             *.full: the path needed to use the component.
+             Do not break this convention, various parts of the build system depend on it.
+        -->
+    <path id="classpath.osgi.base">
+        <fileset dir="${dir.lib.compile}" includes="**/*.jar"/>
+        <fileset dir="${dir.lib.runtime}" includes="**/*.jar"/>
+    </path>
+
+    <path id="classpath.osgi.classes">
+        <pathelement location="${dir.build.osgi}"/>
+    </path>
+
+    <path id="classpath.osgi.full">
+        <fileset dir="${dir.lib.runtime}" includes="**/*.jar"/>
+        <fileset dir="${dir.lib.compile}" includes="**/*.jar"/>
+        <path refid="classpath.osgi.classes"/>
+    </path>
+
+    <path id="classpath.gwt.base">
+        <fileset dir="${dir.gwt.compile}" includes="**/*.jar"/>
+        <fileset dir="${dir.gwt.runtime}" includes="**/*.jar"/>
+    </path>
+
+    <path id="classpath.gwt.classes">
+        <pathelement location="${dir.build.gwt}"/>
+        <pathelement location="${dir.build.gwt.generated.classes}"/>
+    </path>
+
+    <path id="classpath.gwt.full">
+        <fileset dir="${dir.gwt.runtime}" includes="**/*.jar"/>
+        <!-- gwt needs some jars in {dir.gwt.compile} to resolve fully when checked
+                     outside of a servlet container -->
+        <fileset dir="${dir.gwt.compile}" includes="**/*.jar"/>
+        <path refid="classpath.gwt.classes"/>
+        <pathelement location="${dir.src.gwt}"/>
+        <pathelement location="${dir.build.gwt.generated.src}"/>
+        <pathelement location="${dir.gwt.warsource}"/>
+    </path>
+
+    <path id="classpath.junit.base">
+        <path refid="classpath.osgi.full"/>
+    </path>
+
+    <path id="classpath.junit.classes">
+        <pathelement location="${dir.build.junit}"/>
+    </path>
+
+    <path id="classpath.junit.full">
+        <path refid="classpath.osgi.base"/>
+        <path refid="classpath.osgi.classes"/>
+        <path refid="classpath.junit.classes"/>
+    </path>
+
+    <path id="classpath.cobertura.full">
+        <pathelement location="${dir.build.cobertura}"/>
+        <path refid="classpath.junit.full"/>
+        <path>
+            <fileset dir="${dir.tools.cobertura}">
+                <include name="cobertura.jar"/>
+                <include name="lib/**/*.jar"/>
+            </fileset>
+        </path>
+    </path>
+
+    <!-- Set some properties with useful build information -->
+    <import file="svn.xml"/>
+
+    <svn refid="svn.settings"><wcversion path=".." prefix="buildinfo.global"/></svn>
+    <tstamp>
+        <format property="buildinfo.timestamp" pattern="yyyy-MM-dd"/>
+    </tstamp>
+    <condition property="buildinfo.jenkins.build" value="Not autobuilt">
+        <not><isset property="buildinfo.jenkins.build"/></not>
+    </condition>
+
+    <target name="init">
+        <mkdir dir="${dir.build}"/>
+        <mkdir dir="${dir.dist}"/>
+        <mkdir dir="${dir.dist.lib}"/>
+    </target>
+    
+    <copy file="${dir.src.osgi}/org/gluewine/persistence/Persistence.gwt.xml" todir="${dir.bundle.extra}/org/gluewine/persistence/org/gluewine/" />
+    <copy file="${dir.src.osgi}/org/gluewine/persistence/PersistenceException.java" todir="${dir.bundle.extra}/org/gluewine/persistence/org/gluewine/persistence" />
+</project>

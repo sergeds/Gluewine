@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="imp/src/java"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="imp/lib/java/compile/junit-4.8.2.jar"/>
+	<classpathentry kind="lib" path="imp/lib/java/compile/findbugs_annotations.jar"/>
+	<classpathentry kind="lib" path="imp/lib/gwt/compile/gwt-dev.jar"/>
+	<classpathentry kind="lib" path="imp/lib/gwt/compile/gwt-user.jar"/>
+	<classpathentry kind="lib" path="imp/lib/gwt/runtime/gwt-servlet.jar"/>
+	<classpathentry kind="lib" path="imp/lib/java/compile/dom4j-1.6.1.jar"/>
+	<classpathentry kind="lib" path="imp/lib/java/compile/hsqldb.jar"/>
+	<classpathentry kind="lib" path="imp/lib/java/compile/javassist-3.12.0.GA.jar"/>
+	<classpathentry kind="lib" path="imp/lib/java/compile/antlr-2.7.6.jar"/>
+	<classpathentry kind="lib" path="imp/lib/java/runtime/cglib-nodep-2.2.2.jar"/>
+	<classpathentry kind="lib" path="imp/lib/java/runtime/log4j-1.2.15.jar"/>
+	<classpathentry kind="lib" path="imp/lib/java/runtime/jline.jar"/>
+	<classpathentry kind="lib" path="imp/lib/java/runtime/xpp3_min-1.1.4c.jar"/>
+	<classpathentry kind="lib" path="imp/lib/java/runtime/xstream-1.4.4.jar"/>
+	<classpathentry kind="lib" path="imp/lib/java/runtime/hibernate-commons-annotations-4.0.1.Final.jar"/>
+	<classpathentry kind="lib" path="imp/lib/java/runtime/hibernate-core-4.1.9.Final.jar"/>
+	<classpathentry kind="lib" path="imp/lib/java/runtime/hibernate-jpa-2.0-api-1.0.1.Final.jar"/>
+	<classpathentry kind="lib" path="imp/lib/java/runtime/jboss-logging-3.1.0.GA.jar"/>
+	<classpathentry kind="lib" path="imp/lib/java/runtime/jboss-transaction-api_1.1_spec-1.0.0.Final.jar"/>
+	<classpathentry kind="lib" path="imp/lib/java/runtime/postgresql-9.1-901.jdbc4.jar"/>
+	<classpathentry kind="lib" path="imp/lib/java/runtime/xstream-hibernate-1.4.4.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Bundles" basedir=".">
+    <import file="svn.xml"/>
+
+    <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpath="${dir.lib.tools}/ant-contrib-1.0b3.jar"/>
+
+    <target name="bundles.package">
+        <mkdir dir="${dir.build.osgi}/manifests"/>
+        <foreach target="bundles.bundle" param="manifest" parallel="true">
+            <path id="manifests">
+                <fileset dir="${dir.src.osgi}">
+                    <include name="**/*.manifest"/>
+                </fileset>
+            </path>
+        </foreach>
+    </target>
+
+    <target name="bundles.bundle">
+        <propertyregex property="manfile" input="${manifest}" regexp="java[\\/](.*)" select="\1" casesensitive="false"/>
+        <propertyregex property="pack" input="${manfile}" regexp="(.*)[\\/$][\.]*" select="\1" casesensitive="false"/>
+        <basename property="bundlename" file="${manifest}" suffix=".manifest"/>
+
+        <property name="manifestfile" value="${dir.build.osgi}/manifests/${bundlename}.manifest"/>
+        <svn refid="svn.settings"><wcversion prefix="bundle" path="${dir.src.osgi}/${pack}"/></svn>
+
+
+        <copy tofile="${manifestfile}.new" file="${dir.src.osgi}/${manfile}" filtering="true" overwrite="true">
+            <filterset>
+                <filter token="BUILDDATE" value="${buildinfo.timestamp}"/>
+                <filter token="BUNDLE-SVNREVISION" value="${bundle.revision.range}"/>
+                <filter token="REPOSITORY-SVNREVISION" value="${buildinfo.global.revision.range}"/>
+                <filter token="JENKINS-BUILDNUMBER" value="${buildinfo.jenkins.build}"/>
+            </filterset>
+        </copy>
+
+        <if>
+            <resourceexists>
+                <file file="${manifestfile}"/>
+            </resourceexists> 
+            <then>
+                <checksum property="bundle.checksum" file="${manifestfile}"/>
+            </then>
+            <else>
+                <property name="bundle.checksum" value="NOSUM"/>
+            </else>
+        </if>
+
+        <checksum property="bundle.newchecksum" file="${manifestfile}.new"/>
+        <if>
+            <equals arg1="${bundle.checksum}" arg2="${bundle.newchecksum}"/>
+            <else>
+                <move tofile="${manifestfile}" file="${manifestfile}.new"/>
+            </else>
+        </if>
+
+        <mkdir dir="${dir.bundle.extra}/${pack}"/>
+        <jar jarfile="${dir.dist.lib}/${bundlename}.jar" manifest="${manifestfile}">
+            <fileset dir="${dir.build.osgi}">
+                <include name="${pack}/**"/>
+            </fileset>
+            <fileset dir="${dir.bundle.extra}/${pack}">
+                <include name="**"/>
+            </fileset>
+            <fileset dir="${dir.src.osgi}/${pack}">
+            	<include name="**/*.sql"/>
+            </fileset>
+            <fileset dir="..">
+                <include name="LICENSE.txt"/>
+            </fileset>
+        </jar>
+    </target>
+</project>
