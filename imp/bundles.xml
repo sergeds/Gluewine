@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="Bundles" basedir=".">
-    <import file="svn.xml"/>
 
     <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpath="${dir.lib.tools}/ant-contrib-1.0b3.jar"/>
 
@@ -21,16 +20,9 @@
         <basename property="bundlename" file="${manifest}" suffix=".manifest"/>
 
         <property name="manifestfile" value="${dir.build.osgi}/manifests/${bundlename}.manifest"/>
-        <svn refid="svn.settings"><wcversion prefix="bundle" path="${dir.src.osgi}/${pack}"/></svn>
 
 
         <copy tofile="${manifestfile}.new" file="${dir.src.osgi}/${manfile}" filtering="true" overwrite="true">
-            <filterset>
-                <filter token="BUILDDATE" value="${buildinfo.timestamp}"/>
-                <filter token="BUNDLE-SVNREVISION" value="${bundle.revision.range}"/>
-                <filter token="REPOSITORY-SVNREVISION" value="${buildinfo.global.revision.range}"/>
-                <filter token="JENKINS-BUILDNUMBER" value="${buildinfo.jenkins.build}"/>
-            </filterset>
         </copy>
 
         <if>

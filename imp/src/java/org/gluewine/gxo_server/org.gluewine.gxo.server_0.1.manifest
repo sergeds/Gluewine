@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
 Ant-Version: Apache Ant 1.6.5
 Created-By: Serge de Schaetzen
-gluewine-name: org.gluewine.gxo.server
-gluewine-glue: org.gluewine.gxo_server.GxoServerImpl
+Gluewine-Name: org.gluewine.gxo.server
+Gluewine-Services: org.gluewine.gxo_server.GxoServerImpl

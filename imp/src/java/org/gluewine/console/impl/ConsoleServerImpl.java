@@ -21,6 +21,7 @@
  **************************************************************************/
 package org.gluewine.console.impl;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,6 +35,7 @@ import org.gluewine.console.Authenticator;
 import org.gluewine.console.CommandContext;
 import org.gluewine.console.CommandProvider;
 import org.gluewine.console.ConsoleServer;
+import org.gluewine.console.SyntaxException;
 import org.gluewine.core.Glue;
 import org.gluewine.core.Repository;
 import org.gluewine.core.RepositoryListener;
@@ -110,8 +112,23 @@ public class ConsoleServerImpl implements ConsoleServer, CommandProvider
             CommandProvider prov = providers.get(command);
             BufferedCommandInterpreter ci = new BufferedCommandInterpreter(params);
 
-            Method m = prov.getClass().getMethod("_" + command, CommandContext.class);
-            m.invoke(prov, new Object[] {ci});
+            try
+            {
+                Method m = prov.getClass().getMethod("_" + command, CommandContext.class);
+                m.invoke(prov, new Object[] {ci});
+            }
+            catch (Throwable e)
+            {
+                if (e instanceof InvocationTargetException)
+                    e = ((InvocationTargetException) e).getCause();
+
+                if (e instanceof SyntaxException)
+                {
+                    ci.println(e.getMessage());
+                }
+                else
+                    throw e;
+            }
 
             return ci.getOutput();
         }

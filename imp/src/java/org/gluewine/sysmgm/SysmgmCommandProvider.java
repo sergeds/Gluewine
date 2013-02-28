@@ -153,21 +153,22 @@ public class SysmgmCommandProvider implements CommandProvider
                 Arrays.sort(infos, new IdComparator());
         }
 
+        ci.tableHeader("Thread", "State", "CPU Time", "Blocked Time", "Class");
         for (ThreadInfo info : infos)
         {
-            StringBuilder b = new StringBuilder("Thread : ");
-            b.append(info.getThreadId()).append("-").append(info.getThreadName());
-            b.append(", State : ").append(info.getThreadState().name());
-            b.append(", CPUTime : ").append(tbean.getThreadCpuTime(info.getThreadId()) / 1000);
-            b.append(", BlockedTime : ").append(info.getBlockedTime());
-            b.append(", Class : ");
+            String clazz = null;
             if (info.getStackTrace().length > 0)
             {
                 StackTraceElement el = info.getStackTrace()[0];
-                b.append(el.getClassName()).append(".").append(el.getMethodName());
+                clazz = el.getClassName() + "." + el.getMethodName();
             }
-            ci.println(b.toString());
+
+            ci.tableRow(info.getThreadId() + "-" + info.getThreadName(), info.getThreadState().name(),
+                        Long.toString(tbean.getThreadCpuTime(info.getThreadId()) - 1000),
+                        Long.toString(info.getBlockedTime()), clazz);
         }
+
+        ci.printTable();
     }
 
     // ===========================================================================
@@ -314,10 +315,6 @@ public class SysmgmCommandProvider implements CommandProvider
     public void _sysmgm_memory(CommandContext ci) throws Throwable
     {
         Runtime rt = Runtime.getRuntime();
-        ci.println("FreeMemory=" + rt.freeMemory());
-        ci.println("CurrentMemory=" + rt.totalMemory());
-        ci.println("MaxMemory=" + rt.maxMemory());
-        ci.println("Processors=" + rt.availableProcessors());
 
         long committed = 0;
         long peak = 0;
@@ -328,8 +325,9 @@ public class SysmgmCommandProvider implements CommandProvider
             peak += bean.getPeakUsage().getCommitted();
         }
 
-         ci.println("CommittedMemory : " + committed);
-         ci.println("PeakMemory : " + peak);
+        ci.tableHeader("Free", "Current", "Max", "Committed", "Peak", "Processors");
+        ci.tableRow(Long.toString(rt.freeMemory()), Long.toString(rt.totalMemory()), Long.toString(rt.maxMemory()), Long.toString(committed), Long.toString(peak), Integer.toString(rt.availableProcessors()));
+        ci.printTable();
     }
 
     // ===========================================================================

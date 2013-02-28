@@ -104,7 +104,7 @@ public class RepositoryImpl implements Repository
     @SuppressWarnings("unchecked")
     private void unregistered(Object o, RepositoryListener<?> l, Class<?> generic)
     {
-        if (generic != null && o.getClass().isAssignableFrom(generic))
+        if (generic != null && generic.isAssignableFrom(o.getClass()))
             ((RepositoryListener<Object>) l).unregistered(o);
     }
 
@@ -187,5 +187,13 @@ public class RepositoryImpl implements Repository
         }
 
         return instance;
+    }
+
+    // ===========================================================================
+    @Override
+    public synchronized void removeListener(RepositoryListener<?> listener)
+    {
+        logger.debug("Deregistered listener: " + listener.getClass().getName());
+        listeners.remove(listener);
     }
 }

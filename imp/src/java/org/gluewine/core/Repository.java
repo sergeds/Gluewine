@@ -54,6 +54,14 @@ public interface Repository
 
     // ===========================================================================
     /**
+     * Removes a listener.
+     *
+     * @param listener The listener to remove.
+     */
+    void removeListener(RepositoryListener<?> listener);
+
+    // ===========================================================================
+    /**
      * Returns an instance of the given type, or null if no such instance is available.
      *
      * @param <T> The generic type of the service.

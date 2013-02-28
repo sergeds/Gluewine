@@ -21,6 +21,7 @@
  **************************************************************************/
 package org.gluewine.dscl;
 
+import java.io.InputStream;
 import java.net.URL;
 
 /**
@@ -72,5 +73,12 @@ public class DSCLClassLoader extends ClassLoader
     protected URL findResource(String name)
     {
         return getClass().getClassLoader().getResource(name);
+    }
+
+    // ===========================================================================
+    @Override
+    public InputStream getResourceAsStream(String name)
+    {
+        return getClass().getClassLoader().getResourceAsStream(name);
     }
 }

@@ -118,4 +118,35 @@ public interface CommandContext
      * @return The (possibly null) arguement.
      */
     String nextArgument();
+
+    // ===========================================================================
+    /**
+     * Creates a new table with the given header.
+     *
+     * @param s The column headers.
+     */
+    void tableHeader(String ... s);
+
+    // ===========================================================================
+    /**
+     * Sets the max widths of the columns. 0 indicates no maximum restriction.
+     *
+     * @param w The widths.
+     */
+    void tableMaxColumnWidth(int ... w);
+
+    // ===========================================================================
+    /**
+     * Adds a row to the current table. If no table is available a new one is
+     * created (without a header).
+     *
+     * @param s The row fields.
+     */
+    void tableRow(String ... s);
+
+    // ===========================================================================
+    /**
+     * Prints out the current table, and discards it.
+     */
+    void printTable();
 }

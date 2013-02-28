@@ -70,6 +70,11 @@ public class BufferedCommandInterpreter implements CommandContext
      */
     private static final char LF = '\n';
 
+    /**
+     * The current table. (if any).
+     */
+    private Table table = null;
+
     // ===========================================================================
     /**
      * Creates an instance.
@@ -80,6 +85,11 @@ public class BufferedCommandInterpreter implements CommandContext
     {
         this.parameters = params;
         if (parameters != null)  split = parameters.split(" ");
+        else
+        {
+            parameters = "";
+            split = new String[0];
+        }
     }
 
     // ===========================================================================
@@ -251,5 +261,40 @@ public class BufferedCommandInterpreter implements CommandContext
     {
         if (split != null && paramIndex < split.length) return split[paramIndex++];
         else return null;
+    }
+
+    // ===========================================================================
+    @Override
+    public void tableHeader(String... s)
+    {
+        if (table == null) table = new Table();
+        table.setHeader(s);
+    }
+
+    // ===========================================================================
+    @Override
+    public void tableRow(String... s)
+    {
+        if (table == null) table = new Table();
+        table.addRow(s);
+    }
+
+    // ===========================================================================
+    @Override
+    public void printTable()
+    {
+        if (table != null)
+        {
+            table.print(this);
+            table = null;
+        }
+    }
+
+    // ===========================================================================
+    @Override
+    public void tableMaxColumnWidth(int... w)
+    {
+        if (table == null) table = new Table();
+        table.setMaxWidth(w);
     }
 }

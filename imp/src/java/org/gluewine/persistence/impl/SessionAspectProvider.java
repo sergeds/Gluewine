@@ -30,6 +30,8 @@ import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
@@ -122,6 +124,11 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider
      * The set of registered entities.
      */
     private Set<String> entities = new TreeSet<String>();
+
+    /**
+     * The date formatter for outputting dates.
+     */
+    private DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
     // ===========================================================================
     /**
@@ -511,8 +518,11 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider
      */
     public void _pers_entities(CommandContext ci) throws Throwable
     {
+        ci.tableHeader("Hibernate Entities");
         for (String s : entities)
-            ci.println(s);
+            ci.tableRow(s);
+
+        ci.printTable();
     }
 
     // ===========================================================================
@@ -528,11 +538,27 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider
         Session hibernateSession = factory.openSession();
         hibernateSession.beginTransaction();
 
-        List<SQLStatement> l = hibernateSession.createCriteria(SQLStatement.class).list();
-        for (SQLStatement s : l)
-            ci.println(s.getId(), Boolean.toString(s.isSuccess()), s.getStatement());
+        try
+        {
+            ci.tableHeader("Id", "Date", "Successful", "Statement", "Message");
+            ci.tableMaxColumnWidth(0, 0, 0, 40, 0);
+            List<SQLStatement> l = hibernateSession.createCriteria(SQLStatement.class).list();
+            for (SQLStatement s : l)
+            {
+                String stmt = s.getStatement().replace('\r', ' ');
+                stmt = s.getStatement().replace('\n', ' ');
+                ci.tableRow(s.getId(), format.format(s.getExecutionTime()), Boolean.toString(s.isSuccess()), stmt, s.getMessage());
+            }
 
-        hibernateSession.getTransaction().commit();
+            ci.printTable();
+
+            hibernateSession.getTransaction().commit();
+        }
+        catch (Throwable e)
+        {
+            hibernateSession.getTransaction().rollback();
+            throw e;
+        }
     }
 
     // ===========================================================================

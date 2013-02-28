@@ -23,15 +23,15 @@ package org.gluewine.console.impl;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import org.gluewine.console.CommandContext;
 import org.gluewine.console.CommandProvider;
 import org.gluewine.core.Glue;
 import org.gluewine.core.glue.Gluer;
+import org.gluewine.core.glue.Service;
 import org.gluewine.launcher.Launcher;
 
 /**
@@ -59,6 +59,7 @@ public class SystemCommandProvider implements CommandProvider
         m.put("services", "Lists all active services");
         m.put("shutdown", "Shuts the framework down.");
         m.put("unresolved", "Lists all unresolved services.");
+        m.put("stop", "Stops all active services that start with the given name.");
         return m;
     }
 
@@ -83,12 +84,32 @@ public class SystemCommandProvider implements CommandProvider
     @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "NP_UNWRITTEN_FIELD")
     public void _services(CommandContext ci)
     {
-        Set<String> names = new TreeSet<String>();
-        for (Object o : gluer.getActiveServices())
-            names.add(o.getClass().getName());
+        ci.tableHeader("Service", "Enhanced", "Resolved", "Glued", "Active");
+        Map<String, Service> sorted = new TreeMap<String, Service>();
+        for (Service s : gluer.getServices())
+        {
+            sorted.put(s.getServiceClass().getCanonicalName(), s);
+        }
 
-        for (String name : names)
-            ci.println(name);
+        for (Entry<String, Service> e : sorted.entrySet())
+        {
+            int cgl_i = e.getKey().indexOf("$$Enhancer");
+            int dscl_i = e.getKey().indexOf("Enhanced");
+            boolean enhanced = dscl_i > 0;
+            enhanced |= cgl_i > 0;
+
+            String name = e.getKey();
+            if (enhanced)
+            {
+                if (dscl_i > 0) name = name.substring(0, dscl_i);
+                else if (cgl_i > 0) name = name.substring(0, cgl_i);
+            }
+
+            ci.tableRow(name, Boolean.toString(enhanced), Boolean.toString(e.getValue().isResolved()),
+                        Boolean.toString(e.getValue().isGlued()), Boolean.toString(e.getValue().isActive()));
+        }
+
+        ci.printTable();
     }
 
     // ===========================================================================
@@ -104,6 +125,138 @@ public class SystemCommandProvider implements CommandProvider
 
     // ===========================================================================
     /**
+     * Requests the framework to stop one or more services.
+     * It requires 1 parameter:
+     *
+     * - a partial class name. All classes matching the given name will be stopped.
+     *
+     * The stop will deregister() them from the framework and stop them.
+     *
+     * @param ci The current context.
+     */
+    public void _stop(CommandContext ci)
+    {
+        String name = ci.nextArgument();
+        if (name != null)
+        {
+            gluer.stop(name);
+            ci.println();
+            _services(ci);
+        }
+        else ci.println("You must specify a partial class (or package) name!");
+    }
+
+    // ===========================================================================
+    /**
+     * Requests the framework to unglue one or more services.
+     * It requires 1 parameter:
+     *
+     * - a partial class name. All classes matching the given name will be unglued.
+     *
+     * The unglue will stop() them from the framework and unglue them.
+     *
+     * @param ci The current context.
+     */
+    public void _unglue(CommandContext ci)
+    {
+        String name = ci.nextArgument();
+        if (name != null)
+        {
+            gluer.unglue(name);
+            ci.println();
+            _services(ci);
+        }
+        else ci.println("You must specify a partial class (or package) name!");
+    }
+
+    // ===========================================================================
+    /**
+     * Requests the framework to unresolve one or more services.
+     * It requires 1 parameter:
+     *
+     * - a partial class name. All classes matching the given name will be unresolved.
+     *
+     * The stop will unglue() them from the framework and unresolve them.
+     *
+     * @param ci The current context.
+     */
+    public void _unresolve(CommandContext ci)
+    {
+        String name = ci.nextArgument();
+        if (name != null)
+        {
+            gluer.unresolve(name);
+            ci.println();
+            _services(ci);
+        }
+        else ci.println("You must specify a partial class (or package) name!");
+    }
+
+    // ===========================================================================
+    /**
+     * Requests the framework to resolve one or more services.
+     * It requires 1 parameter:
+     *
+     * - a partial class name. All classes matching the given name will be resolved.
+     *
+     * @param ci The current context.
+     */
+    public void _resolve(CommandContext ci)
+    {
+        String name = ci.nextArgument();
+        if (name != null)
+        {
+            gluer.resolve(name);
+            ci.println();
+            _services(ci);
+        }
+        else ci.println("You must specify a partial class (or package) name!");
+    }
+
+    // ===========================================================================
+    /**
+     * Requests the framework to glue one or more services.
+     * It requires 1 parameter:
+     *
+     * - a partial class name. All classes matching the given name will be glued.
+     *
+     * @param ci The current context.
+     */
+    public void _glue(CommandContext ci)
+    {
+        String name = ci.nextArgument();
+        if (name != null)
+        {
+            gluer.glue(name);
+            ci.println();
+            _services(ci);
+        }
+        else ci.println("You must specify a partial class (or package) name!");
+    }
+
+    // ===========================================================================
+    /**
+     * Requests the framework to start one or more services.
+     * It requires 1 parameter:
+     *
+     * - a partial class name. All classes matching the given name will be started.
+     *
+     * @param ci The current context.
+     */
+    public void _start(CommandContext ci)
+    {
+        String name = ci.nextArgument();
+        if (name != null)
+        {
+            gluer.start(name);
+            ci.println();
+            _services(ci);
+        }
+        else ci.println("You must specify a partial class (or package) name!");
+    }
+
+    // ===========================================================================
+    /**
      * Executes the unresolved command.
      *
      * @param ci The current context.
@@ -111,16 +264,34 @@ public class SystemCommandProvider implements CommandProvider
     @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "NP_UNWRITTEN_FIELD")
     public void _unresolved(CommandContext ci)
     {
-        List<Object> active = gluer.getActiveServices();
-        List<Object> services = gluer.getDefinedServices();
-        Set<String> names = new TreeSet<String>();
-        for (Object o : services)
+        ci.tableHeader("Service", "Unresolved Fields");
+        Map<String, Service> sorted = new TreeMap<String, Service>();
+        for (Service s : gluer.getServices())
+            sorted.put(s.getServiceClass().getCanonicalName(), s);
+
+        for (Entry<String, Service> e : sorted.entrySet())
         {
-            if (!active.contains(o))
-                names.add(o.getClass().getName());
+            if (!e.getValue().isResolved())
+            {
+                int cgl_i = e.getKey().indexOf("$$Enhancer");
+                int dscl_i = e.getKey().indexOf("Enhanced");
+                boolean enhanced = dscl_i > 0;
+                enhanced |= cgl_i > 0;
+
+                String name = e.getKey();
+                if (enhanced)
+                {
+                    if (dscl_i > 0) name = name.substring(0, dscl_i);
+                    else if (cgl_i > 0) name = name.substring(0, cgl_i);
+                }
+
+                StringBuilder unres = new StringBuilder();
+                for (String s : e.getValue().getUnresolvedFields())
+                    unres.append(s).append(" ");
+                ci.tableRow(name, unres.toString());
+            }
         }
 
-        for (String name : names)
-            ci.println(name);
+        ci.printTable();
     }
 }

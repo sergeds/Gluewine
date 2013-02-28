@@ -116,10 +116,10 @@ public class DSCLEnhancer implements ClassEnhancer
 
             ClassLoader loader = new DSCLClassLoader(manager);
 
-            cus[0] = new JavaSourceFromString(cl.getName() + "Enhanced", code);
+            cus[0] = new JavaSourceFromString(cl.getName() + "$$Enhanced", code);
 
             if (compiler.getTask(null, manager, new DSCLDiagnosticListener(), null, null, Arrays.asList(cus)).call())
-                return loader.loadClass(cl.getName() + "Enhanced");
+                return loader.loadClass(cl.getName() + "$$Enhanced");
 
             else
                 throw new Throwable("Compile error for class " + cl.getName());

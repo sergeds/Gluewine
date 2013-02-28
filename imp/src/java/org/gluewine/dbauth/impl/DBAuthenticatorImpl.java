@@ -194,10 +194,11 @@ public class DBAuthenticatorImpl implements DBAuthenticator, CommandProvider
     public void _dbauth_list(CommandContext ci) throws Throwable
     {
         List<DBCredential> l = provider.getSession().getAll(DBCredential.class);
-        ci.println("Users:");
-        ci.println("------");
+        ci.tableHeader("Users");
         for (DBCredential dbc : l)
-            ci.println(dbc.getUserid());
+            ci.tableRow(dbc.getUserid());
+
+        ci.printTable();
     }
 
     // ===========================================================================

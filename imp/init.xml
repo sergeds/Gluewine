@@ -56,7 +56,6 @@
     <property name="dir.tools.checkstyle" value="${dir.lib.tools}/checkstyle"/>
     <property name="dir.tools.findbugs" value="${dir.lib.tools}/findbugs"/>
     <property name="dir.tools.te" value="${dir.lib.tools}/testability-explorer"/>
-    <property name="dir.tools.svnant" value="${dir.lib.tools}/svnant"/>
     <property name="dir.tools.cobertura" value="${dir.lib.tools}/cobertura"/>
     <property name="dir.build.cobertura" value="${dir.build}/cobertura/build"/>
 
@@ -132,9 +131,7 @@
     </path>
 
     <!-- Set some properties with useful build information -->
-    <import file="svn.xml"/>
 
-    <svn refid="svn.settings"><wcversion path=".." prefix="buildinfo.global"/></svn>
     <tstamp>
         <format property="buildinfo.timestamp" pattern="yyyy-MM-dd"/>
     </tstamp>

@@ -23,14 +23,9 @@ package org.gluewine.core.glue;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
@@ -39,13 +34,9 @@ import java.util.jar.Manifest;
 import org.apache.log4j.Logger;
 import org.gluewine.core.AspectProvider;
 import org.gluewine.core.ClassEnhancer;
-import org.gluewine.core.Glue;
-import org.gluewine.core.NoSuchServiceException;
 import org.gluewine.core.Repository;
 import org.gluewine.core.RepositoryListener;
-import org.gluewine.core.RunWhenGlued;
 import org.gluewine.core.ServiceProvider;
-import org.gluewine.core.ShutdownListener;
 import org.gluewine.core.utils.ErrorLogger;
 import org.gluewine.launcher.Launcher;
 
@@ -56,7 +47,7 @@ import org.gluewine.launcher.Launcher;
  * @author fks/Serge de Schaetzen
  *
  */
-public final class Gluer implements RepositoryListener<ShutdownListener>
+public final class Gluer
 {
     // ===========================================================================
     /**
@@ -67,12 +58,7 @@ public final class Gluer implements RepositoryListener<ShutdownListener>
     /**
      * The list of services.
      */
-    private List<Object> services = new ArrayList<Object>();
-
-    /**
-     * List of objects that have been fully resolved.
-     */
-    private List<Object> resolved = new ArrayList<Object>();
+    private List<Service> services = new ArrayList<Service>();
 
     /**
      * The set of available service providers.
@@ -94,54 +80,6 @@ public final class Gluer implements RepositoryListener<ShutdownListener>
      */
     private Repository repository = new RepositoryImpl();
 
-    /**
-     * The set of registered shutdown listeners.
-     */
-    private Set<ShutdownListener> shutdownListeners = new HashSet<ShutdownListener>();
-
-    /**
-     * Class used to invoked RunWhenGlued method in a separate thread.
-     */
-    private static class ThreadedInvoker implements Runnable
-    {
-        /**
-         * The method to invoke.
-         */
-        private Method method = null;
-
-        /**
-         * The object to be processed.
-         */
-        private Object o = null;
-
-        // ===========================================================================
-        /**
-         * Creates an instance.
-         *
-         * @param method The method to invoke.
-         * @param o The Object to process.
-         */
-        ThreadedInvoker(Method method, Object o)
-        {
-            this.method = method;
-            this.o = o;
-        }
-
-        // ===========================================================================
-        @Override
-        public void run()
-        {
-            try
-            {
-                method.invoke(o, new Object[0]);
-            }
-            catch (Throwable e)
-            {
-                ErrorLogger.log(getClass(), e);
-            }
-        }
-    }
-
     // ===========================================================================
     /**
      * Creates an instance.
@@ -151,36 +89,347 @@ public final class Gluer implements RepositoryListener<ShutdownListener>
      */
     private Gluer() throws Throwable
     {
-        System.out.println("Gluewine Framework - (c) FKS 2013");
-        System.out.println("www.gluewine.org");
-        System.out.println("Starting framework...");
+        display("----------------------------------------------------------");
+        display("           Gluewine Framework - (c) FKS 2013");
+        display("                   www.gluewine.org");
+        display("----------------------------------------------------------");
+        display("Starting framework...");
         long start = System.currentTimeMillis();
-        logger.debug("Starting Injector");
+        logger.debug("Starting Gluer");
 
         loadEnhancer();
 
-        repository.addListener(this);
-        services.add(Launcher.getInstance());
-        services.add(repository);
-        services.add(this);
+        if (enhancer != null) display("Using enhancer: " + enhancer.getClass().getName());
+        else display("Running in non-enhanced mode.");
+
+        services.add(new Service(Launcher.getInstance()));
+        services.add(new Service(repository));
+        services.add(new Service(this));
 
         index();
-        glue();
+        launch();
 
-        if (resolved.size() != services.size())
+        System.out.println("Gluewine Framework started in " + (System.currentTimeMillis() - start) + " milliseconds.");
+    }
+
+    // ===========================================================================
+    /**
+     * Will stop and unregister all services that match the given name.
+     * All services referencing the service being stopped, will be stopped as well.
+     *
+     * @param name The name of the service(s) to stop.
+     * @return The set of services that have been stopped.
+     */
+    public Set<Service> stop(String name)
+    {
+        Set<Service> stopped = new HashSet<Service>();
+        for (Service s : services)
         {
-            logger.warn("There are unresolved services !");
-            for (Object o : services)
+            String serviceName = s.getServiceClass().getName();
+            if (serviceName.startsWith(name) && s.isActive())
             {
-                if (!resolved.contains(o))
-                    logger.warn("UNRESOLVED: " + o.getClass().getName());
+                repository.unregister(s.getActualService());
+                s.deactivate();
+                stopped.add(s);
+
+                for (Service ref : services)
+                {
+                    if (ref.references(s.getActualService()))
+                    {
+                        repository.unregister(ref.getActualService());
+                        ref.deactivate();
+                        stopped.add(ref);
+                    }
+                }
+            }
+        }
+        return stopped;
+    }
+
+    // ===========================================================================
+    /**
+     * Unglues the services that match the name. The services are first being
+     * stopped. Referencing services are unglued as well.
+     *
+     * @param name The name of the service(s) to unglue.
+     * @return The set of services that were unglued.
+     */
+    public Set<Service> unglue(String name)
+    {
+        Set<Service> unglued = new HashSet<Service>();
+        Set<Service> stopped = stop(name);
+        for (Service s : stopped)
+            if (s.isGlued())
+            {
+                s.unglue();
+                unglued.add(s);
+            }
+
+        for (Service s : services)
+        {
+            String serviceName = s.getServiceClass().getName();
+            if (serviceName.startsWith(name) && s.isGlued())
+            {
+                s.unglue();
+                unglued.add(s);
             }
         }
 
-        initiate();
-        registerRepositoryListeners();
+        return unglued;
+    }
 
-        System.out.println("Gluewine Framework started in " + (System.currentTimeMillis() - start) + " milliseconds.");
+    // ===========================================================================
+    /**
+     * Unresolves the services that match the name. The services are first being
+     * unglued. Referencing services are unresolved as well.
+     *
+     * @param name The name of the service(s) to unresolve.
+     * @return The set of services that were unresolve.
+     */
+    public Set<Service> unresolve(String name)
+    {
+        Set<Service> unresolved = new HashSet<Service>();
+        Set<Service> unglued = unglue(name);
+        for (Service s : unglued)
+            if (s.isResolved())
+            {
+                s.unresolve();
+                unresolved.add(s);
+            }
+
+        for (Service s : services)
+        {
+            String serviceName = s.getServiceClass().getName();
+            if (serviceName.startsWith(name) && s.isResolved())
+            {
+                s.unresolve();
+                unresolved.add(s);
+            }
+        }
+
+        return unresolved;
+    }
+
+    // ===========================================================================
+    /**
+     * Resolves, glues and starts all services that match the given name.
+     *
+     * @param name The name of the service(s) to start.
+     */
+    public void start(String name)
+    {
+        for (Service s : services)
+        {
+            String serviceName = s.getServiceClass().getName();
+            if (serviceName.startsWith(name) && !s.isActive())
+            {
+                s.activate();
+                registerObject(s.getActualService());
+            }
+        }
+    }
+
+    // ===========================================================================
+    /**
+     * Resolves, glues and starts all services that match the given name.
+     *
+     * @param name The name of the service(s) to start.
+     */
+    public void glue(String name)
+    {
+        for (Service s : services)
+        {
+            String serviceName = s.getServiceClass().getName();
+            if (serviceName.startsWith(name) && !s.isGlued())
+                s.glue();
+        }
+    }
+
+    // ===========================================================================
+    /**
+     * Resolves, glues and starts all services that match the given name.
+     *
+     * @param name The name of the service(s) to start.
+     */
+    public void resolve(String name)
+    {
+        List<Object> actuals = new ArrayList<Object>(services.size());
+        for (Service s : services)
+            actuals.add(s.getActualService());
+
+        for (Service s : services)
+        {
+            String serviceName = s.getServiceClass().getName();
+            if (serviceName.startsWith(name) && !s.isResolved())
+                s.resolve(actuals, providers);
+        }
+    }
+
+    // ===========================================================================
+    /**
+     * Deregisters the given object from the repository. If the object
+     * is a RepositoryListener, it is removed as a listener as well.
+     *
+     * @param o The object to deregister.
+     */
+    private void deregisterObject(Object o)
+    {
+        repository.unregister(o);
+        if (o instanceof RepositoryListener<?>)
+            repository.removeListener((RepositoryListener<?>) o);
+    }
+
+    // ===========================================================================
+    /**
+     * Launches the framework.
+     */
+    private void launch()
+    {
+        if (!resolve()) warn("There are unresolved services!");
+        glue();
+        activate();
+        registerRepositoryListeners();
+    }
+
+    // ===========================================================================
+    /**
+     * Activates all glued services.
+     *
+     * @return True if all glued services were activated.
+     */
+    private boolean activate()
+    {
+        boolean active = true;
+
+        for (Service s : services)
+        {
+            if (s.isGlued() && !s.activate())
+            {
+                warn(s.getActualService().getClass().getName() + " could not be activated !");
+                active = false;
+            }
+        }
+
+        return active;
+    }
+
+    // ===========================================================================
+    /**
+     * Dectivates all activated services.
+     */
+    private void deactivate()
+    {
+        for (Service s : services)
+        {
+            if (s.isActive())
+                s.deactivate();
+        }
+    }
+
+    // ===========================================================================
+    /**
+     * Unglues all glued services.
+     *
+     * @return True if all glued services were unglued.
+     */
+    private boolean unglue()
+    {
+        boolean unglued = true;
+
+        for (Service s : services)
+        {
+            if (s.isGlued() && !s.unglue())
+            {
+                warn(s.getActualService().getClass().getName() + " could not be unglued !");
+                unglued = false;
+            }
+        }
+
+        return unglued;
+    }
+
+    // ===========================================================================
+    /**
+     * Unresolves all resolved services.
+     */
+    private void unresolve()
+    {
+        for (Service s : services)
+        {
+            if (s.isResolved())
+                s.unresolve();
+        }
+    }
+
+    // ===========================================================================
+    /**
+     * Glues all resolved services.
+     *
+     * @return True if all resolved services were glued.
+     */
+    private boolean glue()
+    {
+        boolean glued = true;
+
+        for (Service s : services)
+        {
+            if (s.isResolved() && !s.glue())
+            {
+                warn(s.getActualService().getClass().getName() + " could not be glued !");
+                glued = false;
+            }
+        }
+
+        return glued;
+    }
+
+    // ===========================================================================
+    /**
+     * Resolves all services.
+     *
+     * @return True if ALL services were resolved.
+     */
+    private boolean resolve()
+    {
+        List<Object> actuals = new ArrayList<Object>(services.size());
+        for (Service s : services)
+            actuals.add(s.getActualService());
+
+        boolean resolved = true;
+        for (Service s : services)
+        {
+            if (!s.resolve(actuals, providers))
+            {
+                warn(s.getActualService().getClass().getName() + " could not be fully resolved !");
+                resolved = false;
+            }
+        }
+
+        return resolved;
+    }
+
+    // ===========================================================================
+    /**
+     * Outputs a String to StdOut as in the logger.
+     *
+     * @param s The String to display.
+     */
+    private void display(String s)
+    {
+        System.out.println(s);
+        logger.info(s);
+    }
+
+    // ===========================================================================
+    /**
+     * Outputs a String to StdOut as in the logger.
+     *
+     * @param s The String to display.
+     */
+    private void warn(String s)
+    {
+        System.out.println(s);
+        logger.warn(s);
     }
 
     // ===========================================================================
@@ -203,19 +452,39 @@ public final class Gluer implements RepositoryListener<ShutdownListener>
 
     // ===========================================================================
     /**
-     * Registers all services that implement the RegistryListener
-     * with the registry.
+     * Registers all active services that implement the RepositoryListener with
+     * the repository.
      */
     private void registerRepositoryListeners()
     {
-        for (Object o : resolved)
-        {
-            repository.register(o);
-            if (o instanceof RepositoryListener<?>)
-                repository.addListener((RepositoryListener<?>) o);
-        }
+        for (Service s : services)
+            registerObject(s.getActualService());
+    }
 
-        repository.register(this);
+    // ===========================================================================
+    /**
+     * Registers the given object with the Repository. If the object implements
+     * RepositoryListener, it is registered as a listener as well.
+     *
+     * @param Object The object to register.
+     */
+    private void registerObject(Object o)
+    {
+        repository.register(o);
+
+        if (o instanceof RepositoryListener<?>)
+            repository.addListener((RepositoryListener<?>) o);
+    }
+
+    // ===========================================================================
+    /**
+     * Deregisters all active services that implement the RepositoryListener from
+     * the repository.
+     */
+    private void deregisterRepositoryListeners()
+    {
+        for (Service s : services)
+            deregisterObject(s.getActualService());
     }
 
     // ===========================================================================
@@ -225,55 +494,23 @@ public final class Gluer implements RepositoryListener<ShutdownListener>
      */
     public void shutdown()
     {
-        Set<ShutdownListener> toShutdown = new HashSet<ShutdownListener>(shutdownListeners.size());
-        toShutdown.addAll(shutdownListeners);
-        for (ShutdownListener l : toShutdown)
-        {
-            try
-            {
-                l.shuttingDown();
-            }
-            catch (Throwable e)
-            {
-                logger.error(e);
-            }
-        }
-
+        deregisterRepositoryListeners();
+        deactivate();
+        unglue();
+        unresolve();
         System.exit(0);
     }
 
     // ===========================================================================
     /**
-     * Invokes the <b>RunAfterInjection</b> annotated methods on all services
-     * that were resolved.
-     */
-    private void initiate()
-    {
-        for (final Object o : resolved)
-        {
-            for (final Method method : o.getClass().getMethods())
-            {
-                RunWhenGlued annot = getRunAfterInjection(o.getClass(), method);
-                if (annot != null && method.getParameterTypes().length == 0)
-                {
-                    Runnable r = new ThreadedInvoker(method, o);
-                    if (annot.runThreaded()) new Thread(r).start();
-                    else r.run();
-                }
-            }
-        }
-    }
-
-    // ===========================================================================
-    /**
-     * Returns the list of active services.
+     * Returns the list of services.
      *
      * @return The list of services.
      */
-    public List<Object> getActiveServices()
+    public List<Service> getServices()
     {
-        List<Object> l = new ArrayList<Object>(resolved.size());
-        l.addAll(resolved);
+        List<Service> l = new ArrayList<Service>(services.size());
+        l.addAll(services);
         return l;
     }
 
@@ -308,148 +545,6 @@ public final class Gluer implements RepositoryListener<ShutdownListener>
 
     // ===========================================================================
     /**
-     * Returns the RunAfterInjection annotation if present in the class specified
-     * (either in the class given, or one of its parents).
-     * If the method hasn't got the annotation, null is returned.
-     *
-     * @param cl The class to process.
-     * @param m The method to check.
-     * @return The (possibly bnull) annotation.
-     */
-    private RunWhenGlued getRunAfterInjection(Class<?> cl, Method m)
-    {
-        RunWhenGlued annot = null;
-        Class<?> c = cl;
-        while (annot == null && m != null && c != null)
-        {
-            annot = m.getAnnotation(RunWhenGlued.class);
-            if (annot == null)
-            {
-                c = c.getSuperclass();
-                try
-                {
-                    if (c != null)
-                        m = c.getMethod(m.getName(), m.getParameterTypes());
-                }
-                catch (NoSuchMethodException e)
-                {
-                    m = null;
-                }
-            }
-        }
-
-        return annot;
-    }
-
-    // ===========================================================================
-    /**
-     * Glues all members.
-     */
-    private void glue()
-    {
-        for (Object o : services)
-        {
-            boolean glued = true;
-            for (Field field : getAllFields(o.getClass()))
-            {
-                Glue glue = field.getAnnotation(Glue.class);
-                if (glue != null)
-                {
-                    boolean fieldGlued = false;
-                    // First check the local services:
-                    for (Object i : services)
-                    {
-                        if (field.getType().isInstance(i))
-                            try
-                            {
-                                boolean accessible = field.isAccessible();
-                                field.setAccessible(true);
-                                field.set(o, i);
-                                fieldGlued = true;
-                                field.setAccessible(accessible);
-                            }
-                            catch (Throwable e)
-                            {
-                                ErrorLogger.log(getClass(), e);
-                            }
-                    }
-
-                    if (!fieldGlued)
-                    {
-                        // Check the remote providers:
-                        Iterator<ServiceProvider> provIter = providers.iterator();
-                        while (provIter.hasNext() && !fieldGlued)
-                        {
-                            try
-                            {
-                                ServiceProvider provider = provIter.next();
-                                Object proxy = provider.getService(field.getType());
-                                if (proxy != null)
-                                {
-                                    try
-                                    {
-                                        boolean accessible = field.isAccessible();
-                                        field.setAccessible(true);
-                                        field.set(o, proxy);
-                                        fieldGlued = true;
-                                        field.setAccessible(accessible);
-                                    }
-                                    catch (Throwable e)
-                                    {
-                                        ErrorLogger.log(getClass(), e);
-                                    }
-                                }
-                            }
-                            catch (NoSuchServiceException e)
-                            {
-                                ErrorLogger.log(getClass(), e);
-                                // Allowed to fail as not all providers are
-                                // required to be able to provide all services.
-                            }
-                        }
-                        if (!fieldGlued)
-                            logger.warn("Could not set " + field.getType() + " to " + o.getClass().getName());
-                    }
-
-                    glued &= fieldGlued;
-                }
-            }
-
-            if (glued)
-                resolved.add(o);
-        }
-    }
-
-    // ===========================================================================
-    /**
-     * Returns the list of ALL fields of a class. This is done recursively.
-     * Note that overriden fields are excluded.
-     *
-     * @param clazz The class to process.
-     * @return The list of fields.
-     */
-    private List<Field> getAllFields(Class<?> clazz)
-    {
-        Map<String, Field> fields = new HashMap<String, Field>();
-        Class<?> c = clazz;
-        while (c != null)
-        {
-            for (Field field : c.getDeclaredFields())
-            {
-                if (!fields.containsKey(field.getName()))
-                    fields.put(field.getName(), field);
-            }
-
-            c = c.getSuperclass();
-        }
-
-        List<Field> l = new ArrayList<Field>(fields.size());
-        l.addAll(fields.values());
-        return l;
-    }
-
-    // ===========================================================================
-    /**
      * Looks for an enhancer and if found uses it. The search will stop when the
      * first enhancer is encountered.
      */
@@ -467,7 +562,7 @@ public final class Gluer implements RepositoryListener<ShutdownListener>
                 if (manifest != null)
                 {
                     Attributes attr = manifest.getMainAttributes();
-                    String enh = attr.getValue("gluewine-enhancer");
+                    String enh = attr.getValue("Gluewine-Enhancer");
                     if (enh != null)
                     {
                         enh = enh.trim();
@@ -516,7 +611,7 @@ public final class Gluer implements RepositoryListener<ShutdownListener>
                 if (manifest != null)
                 {
                     Attributes attr = manifest.getMainAttributes();
-                    String act = attr.getValue("gluewine-glue");
+                    String act = attr.getValue("Gluewine-Services");
                     if (act != null)
                     {
                         act = act.trim();
@@ -537,7 +632,7 @@ public final class Gluer implements RepositoryListener<ShutdownListener>
                             if (AspectProvider.class.isAssignableFrom(clazz))
                                 interceptor.register((AspectProvider) o);
 
-                            services.add(o);
+                            services.add(new Service(o));
 
                             if (o instanceof ServiceProvider)
                                 providers.add((ServiceProvider) o);
@@ -565,19 +660,5 @@ public final class Gluer implements RepositoryListener<ShutdownListener>
                 }
             }
         }
-    }
-
-    // ===========================================================================
-    @Override
-    public void registered(ShutdownListener l)
-    {
-        shutdownListeners.add(l);
-    }
-
-    // ===========================================================================
-    @Override
-    public void unregistered(ShutdownListener l)
-    {
-        shutdownListeners.remove(l);
     }
 }
