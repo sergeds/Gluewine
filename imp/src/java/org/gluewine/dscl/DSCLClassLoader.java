@@ -40,13 +40,21 @@ public class DSCLClassLoader extends ClassLoader
 
     // ===========================================================================
     /**
+     * The classloader to dispatch requests to.
+     */
+    private ClassLoader dispatcher = null;
+
+    // ===========================================================================
+    /**
      * Creates an instance.
      *
      * @param manager The manager containing the newly compiled classes.
+     * @param dispatcher The loader to dispatch requests to.
      */
-    DSCLClassLoader(DSCLJavaFileManager manager)
+    DSCLClassLoader(DSCLJavaFileManager manager, ClassLoader dispacher)
     {
         this.manager = manager;
+        this.dispatcher = dispacher;
     }
 
     // ===========================================================================
@@ -59,7 +67,7 @@ public class DSCLClassLoader extends ClassLoader
     {
         JavaClassFromArray javaclass = manager.getJavaClass(name);
         if (javaclass == null)
-            return getClass().getClassLoader().loadClass(name);
+                return dispatcher.loadClass(name);
 
         else
         {
@@ -72,7 +80,7 @@ public class DSCLClassLoader extends ClassLoader
     @Override
     protected URL findResource(String name)
     {
-        return getClass().getClassLoader().getResource(name);
+        return dispatcher.getResource(name);
     }
 
     // ===========================================================================

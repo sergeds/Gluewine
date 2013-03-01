@@ -25,15 +25,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -55,13 +54,18 @@ import java.util.Properties;
  * @author fks/Serge de Schaetzen
  *
  */
-public final class Launcher extends URLClassLoader
+public final class Launcher
 {
     // ===========================================================================
     /**
      * The list of available files.
      */
     private List<File> jarFiles = new ArrayList<File>();
+
+    /**
+     * The classloader to use per directory.
+     */
+    private Map<File, ClassLoader> directories = new HashMap<File, ClassLoader>();
 
     /**
      * The directory containing the configuration file(s).
@@ -73,13 +77,17 @@ public final class Launcher extends URLClassLoader
      */
     private static Launcher instance = null;
 
+    /**
+     * The root directory.
+     */
+    private File root = null;
+
     // ===========================================================================
     /**
      * Creates an instance.
      */
     private Launcher()
     {
-        super(new URL[0]);
         initialize();
     }
 
@@ -93,10 +101,9 @@ public final class Launcher extends URLClassLoader
         File currDir = new File(path).getParentFile();
         if (path.toLowerCase(Locale.getDefault()).endsWith(".jar")) currDir = currDir.getParentFile();
 
-        File libDir = null;
         String propLib = System.getProperty("gluewine.libdir");
-        if (propLib != null) libDir = new File(propLib);
-        else libDir = new File(currDir, "lib");
+        if (propLib != null) root = new File(propLib);
+        else root = new File(currDir, "lib");
 
         String propCfg = System.getProperty("gluewine.cfgdir");
         if (propCfg != null) configDirectory = new File(propCfg);
@@ -108,19 +115,28 @@ public final class Launcher extends URLClassLoader
             if (log4j.exists()) System.setProperty("log4j.configuration", "file:/" + log4j.getAbsolutePath().replace('\\', '/'));
         }
 
-        if (libDir.exists())
-            processDirectory(libDir);
+        if (root.exists())
+            processDirectory(root);
 
-        Collections.sort(jarFiles, new JarComparator());
+        Map<File, ClassLoader> temp = new HashMap<File, ClassLoader>();
+        temp.putAll(directories);
+        List<File> files = new ArrayList<File>(directories.size());
+        files.addAll(directories.keySet());
+        Collections.sort(files, new DirectoryNameComparator());
+        directories.clear();
 
-        try
+        for (int i = 0; i < files.size(); i++)
         {
-            for (File jar : jarFiles)
-                addURL(jar.toURI().toURL());
-        }
-        catch (MalformedURLException e)
-        {
-            e.printStackTrace();
+            DirectoryJarClassLoader cl = (DirectoryJarClassLoader) temp.get(files.get(i));
+            directories.put(files.get(i), cl);
+
+            // Add all previous classloaders:
+            for (int j = i - 1; j >= 0; j--)
+                cl.addDispatcher((DirectoryJarClassLoader) temp.get(files.get(j)));
+
+            // Add all next classloaders:
+            for (int j = i + 1; j < files.size(); j++)
+                cl.addDispatcher((DirectoryJarClassLoader) temp.get(files.get(j)));
         }
     }
 
@@ -132,18 +148,14 @@ public final class Launcher extends URLClassLoader
      */
     private void processDirectory(File dir)
     {
-        File[] jars = dir.listFiles();
-        if (jars != null)
+        DirectoryJarClassLoader loader = new DirectoryJarClassLoader(dir);
+        directories.put(dir, loader);
+        jarFiles.addAll(loader.getFiles());
+        File[] files = dir.listFiles();
+        if (files != null)
         {
-            for (File jar : jars)
-            {
-                String name = jar.getName().toLowerCase(Locale.getDefault());
-
-                if (jar.isDirectory()) processDirectory(jar);
-
-                else if (name.endsWith("jar") || name.endsWith("zip"))
-                    jarFiles.add(jar);
-            }
+            for (File file : files)
+                if (file.isDirectory()) processDirectory(file);
         }
     }
 
@@ -199,6 +211,21 @@ public final class Launcher extends URLClassLoader
 
     // ===========================================================================
     /**
+     * Returns the classloader to use for the given jar.
+     *
+     * @param jar The jar file to use.
+     * @return The classloader.
+     */
+    public ClassLoader getClassLoaderForJar(File jar)
+    {
+        if (jar.isDirectory())
+            return directories.get(jar);
+
+        else return getClassLoaderForJar(jar.getParentFile());
+    }
+
+    // ===========================================================================
+    /**
      * Returns the singleton instance.
      *
      * @return The instance.
@@ -234,7 +261,7 @@ public final class Launcher extends URLClassLoader
             if (clazz.equals("console")) clazz = "org.gluewine.console.impl.ConsoleClient";
 
             Launcher fw = getInstance();
-            Class<?> cl = Class.forName(clazz, true, fw);
+            Class<?> cl = fw.directories.get(fw.root).loadClass(clazz);
             String[] params = new String[args.length - 1];
             if (args.length > 1) System.arraycopy(args, 1, params, 0, params.length);
 

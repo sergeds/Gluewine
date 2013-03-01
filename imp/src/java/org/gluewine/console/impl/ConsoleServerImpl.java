@@ -198,17 +198,20 @@ public class ConsoleServerImpl implements ConsoleServer, CommandProvider
             }
         }
 
+        ci.tableHeader("Command", "Description");
+
+        String prevLetter = null;
         for (Entry<String, String> e : m.entrySet())
         {
-            StringBuilder b = new StringBuilder();
-            b.append(e.getKey());
-            for (int i = 0; i < max - e.getKey().length(); i++)
-                b.append(" ");
+            String firstLetter = e.getKey().substring(0, 1);
+            if (prevLetter != null && !prevLetter.equals(firstLetter))
+                ci.tableRow("@@-@@", "@@-@@");
 
-            b.append("  ");
-            b.append(e.getValue());
-            ci.println(b.toString());
+            ci.tableRow(e.getKey(), e.getValue());
+            prevLetter = firstLetter;
         }
+
+        ci.printTable();
     }
 
     // ===========================================================================

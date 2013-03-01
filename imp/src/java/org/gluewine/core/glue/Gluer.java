@@ -614,13 +614,14 @@ public final class Gluer
                     String act = attr.getValue("Gluewine-Services");
                     if (act != null)
                     {
+                        ClassLoader loader = Launcher.getInstance().getClassLoaderForJar(file);
                         act = act.trim();
                         String[] cl = act.split(",");
                         for (String c : cl)
                         {
                             c = c.trim();
                             logger.debug("Instantiating class " + c);
-                            Class<?> clazz = getClass().getClassLoader().loadClass(c);
+                            Class<?> clazz = loader.loadClass(c);
 
                             Object o = null;
                             if (enhancer == null || AspectProvider.class.isAssignableFrom(clazz))

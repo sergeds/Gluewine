@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Gluewine CGLIB Enhancer Module
+ * Gluewine Launcher Module
  *
  * Copyright (C) 2013 FKS bvba               http://www.fks.be/
  *
@@ -19,51 +19,33 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  **************************************************************************/
-package org.gluewine.cglib;
+package org.gluewine.launcher;
 
-import java.net.URL;
+import java.io.File;
+import java.io.Serializable;
+import java.util.Comparator;
+import java.util.Locale;
 
 /**
- * This classloader will dispatch all requests to load classes starting with 'net.sf.cglib'
- * to the parent classloader, and all other classes to the wrapped classloader.
+ * Compares two directories based on their name (lowercased).
  *
  * @author fks/Serge de Schaetzen
  *
  */
-public class CGLIBClassLoader extends ClassLoader
+public class DirectoryNameComparator implements Comparator<File>, Serializable
 {
     // ===========================================================================
     /**
-     * The classloader to dispatch requests to.
+     * The serial uid.
      */
-    private ClassLoader dispatcher = null;
-
-    // ===========================================================================
-    /**
-     * Creates an instance.
-     *
-     * @param dispatcher The loader to dispatch requests to.
-     */
-    CGLIBClassLoader(ClassLoader dispatcher)
-    {
-        this.dispatcher = dispatcher;
-    }
+    private static final long serialVersionUID = -1549551523009469888L;
 
     // ===========================================================================
     @Override
-    protected Class<?> findClass(String name) throws ClassNotFoundException
+    public int compare(File o1, File o2)
     {
-        if (name.startsWith("net.sf.cglib"))
-            return Class.forName(name);
-
-        else
-            return dispatcher.loadClass(name);
-    }
-
-    // ===========================================================================
-    @Override
-    protected URL findResource(String name)
-    {
-        return dispatcher.getResource(name);
+        String n1 = o1.getAbsolutePath().toLowerCase(Locale.getDefault());
+        String n2 = o2.getAbsolutePath().toLowerCase(Locale.getDefault());
+        return n1.compareTo(n2);
     }
 }

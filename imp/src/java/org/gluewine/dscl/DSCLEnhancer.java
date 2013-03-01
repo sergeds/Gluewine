@@ -114,7 +114,7 @@ public class DSCLEnhancer implements ClassEnhancer
             JavaSourceFromString[] cus = new JavaSourceFromString[1];
             String code = getSubclassCode(cl);
 
-            ClassLoader loader = new DSCLClassLoader(manager);
+            ClassLoader loader = new DSCLClassLoader(manager, cl.getClassLoader());
 
             cus[0] = new JavaSourceFromString(cl.getName() + "$$Enhanced", code);
 

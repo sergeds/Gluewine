@@ -24,7 +24,10 @@ package org.gluewine.core.glue;
 import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 import org.gluewine.core.Repository;
@@ -195,5 +198,109 @@ public class RepositoryImpl implements Repository
     {
         logger.debug("Deregistered listener: " + listener.getClass().getName());
         listeners.remove(listener);
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the number of registered object.
+     *
+     * @return The number of objects.
+     */
+    public int getRegisteredObjectCount()
+    {
+        return objects.size();
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the number of registered listeners.
+     *
+     * @return The number of listeners.
+     */
+    public int getRegisteredListenerCount()
+    {
+        return listeners.size();
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the set of registered objects.
+     *
+     * @return The set of objects.
+     */
+    public Set<String> getRegisteredObjects()
+    {
+        TreeSet<String> s = new TreeSet<String>();
+        synchronized (objects)
+        {
+            for (Object o : objects)
+                s.add(o.toString());
+        }
+        return s;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the map of registered objects sorted on the toString() of the
+     * objects.
+     *
+     * @return The map of objects.
+     */
+    public Map<String, Object> getRegisteredObjectMap()
+    {
+        Map<String, Object> m = new TreeMap<String, Object>();
+        synchronized (objects)
+        {
+            for (Object o : objects)
+                m.put(o.toString(), o);
+        }
+        return m;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the set of registered listeners.
+     *
+     * @return The set of listeners.
+     */
+    public Set<String> getRegisteredListeners()
+    {
+        TreeSet<String> s = new TreeSet<String>();
+        synchronized (listeners)
+        {
+            for (Object o : listeners)
+                s.add(o.toString());
+        }
+        return s;
+    }
+
+    // ===========================================================================
+    /**
+     * Removes all registered objects and listeners that matches start with the
+     * given name.
+     *
+     * @param name The name to be matched.
+     */
+    void remove(String name)
+    {
+        synchronized (listeners)
+        {
+            Iterator<RepositoryListener<?>> liter = listeners.iterator();
+            while (liter.hasNext())
+            {
+                if (liter.next().getClass().getName().startsWith(name))
+                    liter.remove();
+            }
+
+            synchronized (objects)
+            {
+                Iterator<Object> oiter = objects.iterator();
+                while (oiter.hasNext())
+                {
+                    if (oiter.next().getClass().getName().startsWith(name))
+                        oiter.remove();
+                }
+            }
+        }
     }
 }
