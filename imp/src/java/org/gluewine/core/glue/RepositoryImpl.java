@@ -263,14 +263,10 @@ public class RepositoryImpl implements Repository
      *
      * @return The set of listeners.
      */
-    public Set<String> getRegisteredListeners()
+    public Set<RepositoryListener<?>> getRegisteredListeners()
     {
-        TreeSet<String> s = new TreeSet<String>();
-        synchronized (listeners)
-        {
-            for (Object o : listeners)
-                s.add(o.toString());
-        }
+        Set<RepositoryListener<?>> s = new HashSet<RepositoryListener<?>>();
+        s.addAll(listeners);
         return s;
     }
 

@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
@@ -34,6 +35,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Launches the Gluewine framework. It acceps one parameter: The name of the class
@@ -63,9 +66,24 @@ public final class Launcher
     private List<File> jarFiles = new ArrayList<File>();
 
     /**
+     * The map of files and their short name.
+     */
+    private Map<File, String> jarFileNames = new HashMap<File, String>();
+
+    /**
      * The classloader to use per directory.
      */
-    private Map<File, ClassLoader> directories = new HashMap<File, ClassLoader>();
+    private Map<File, DirectoryJarClassLoader> directories = new HashMap<File, DirectoryJarClassLoader>();
+
+    /**
+     * The map of all available classloaders indexed on the file they loaded.
+     */
+    private Map<File, ClassLoader> loaders = new HashMap<File, ClassLoader>();
+
+    /**
+     * The list of directories, sorted using the DirectoryNameComparator.
+     */
+    private List<File> sortedDirectories = new ArrayList<File>();
 
     /**
      * The directory containing the configuration file(s).
@@ -115,28 +133,35 @@ public final class Launcher
             if (log4j.exists()) System.setProperty("log4j.configuration", "file:/" + log4j.getAbsolutePath().replace('\\', '/'));
         }
 
-        if (root.exists())
-            processDirectory(root);
+        if (root.exists()) processDirectory(root);
 
-        Map<File, ClassLoader> temp = new HashMap<File, ClassLoader>();
+        processMapping();
+    }
+
+    // ===========================================================================
+    /**
+     * Processes the mapping between all the DirectoryJarClassLoaders.
+     */
+    private void processMapping()
+    {
+        Map<File, DirectoryJarClassLoader> temp = new HashMap<File, DirectoryJarClassLoader>();
         temp.putAll(directories);
-        List<File> files = new ArrayList<File>(directories.size());
-        files.addAll(directories.keySet());
-        Collections.sort(files, new DirectoryNameComparator());
+        Collections.sort(sortedDirectories, new DirectoryNameComparator());
         directories.clear();
 
-        for (int i = 0; i < files.size(); i++)
+        for (int i = 0; i < sortedDirectories.size(); i++)
         {
-            DirectoryJarClassLoader cl = (DirectoryJarClassLoader) temp.get(files.get(i));
-            directories.put(files.get(i), cl);
+            DirectoryJarClassLoader cl = temp.get(sortedDirectories.get(i));
+            cl.clearDispatchers();
+            directories.put(sortedDirectories.get(i), cl);
 
             // Add all previous classloaders:
             for (int j = i - 1; j >= 0; j--)
-                cl.addDispatcher((DirectoryJarClassLoader) temp.get(files.get(j)));
+                cl.addDispatcher(temp.get(sortedDirectories.get(j)));
 
             // Add all next classloaders:
-            for (int j = i + 1; j < files.size(); j++)
-                cl.addDispatcher((DirectoryJarClassLoader) temp.get(files.get(j)));
+            for (int j = i + 1; j < sortedDirectories.size(); j++)
+                cl.addDispatcher(temp.get(sortedDirectories.get(j)));
         }
     }
 
@@ -150,13 +175,104 @@ public final class Launcher
     {
         DirectoryJarClassLoader loader = new DirectoryJarClassLoader(dir);
         directories.put(dir, loader);
-        jarFiles.addAll(loader.getFiles());
+        sortedDirectories.add(dir);
+        loaders.put(dir, loader);
+
         File[] files = dir.listFiles();
-        if (files != null)
+        for (File file : files)
         {
-            for (File file : files)
-                if (file.isDirectory()) processDirectory(file);
+            if (files != null)
+            {
+                if (file.isDirectory())
+                    processDirectory(file);
+
+                else
+                {
+                    String name = file.getName().toLowerCase(Locale.getDefault());
+                    if (name.endsWith(".jar") || name.endsWith(".zip"))
+                    {
+                        try
+                        {
+                            SingleJarClassLoader cl = new SingleJarClassLoader(file, loader);
+                            loader.addLoader(cl);
+                            jarFiles.add(file);
+                            jarFileNames.put(file, getShortName(file));
+                            loaders.put(file, cl);
+                        }
+                        catch (MalformedURLException e)
+                        {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
         }
+    }
+
+    // ===========================================================================
+    /**
+     * Adds the files specified.
+     *
+     * @param files The files to add.
+     */
+    public void add(List<File> files)
+    {
+        for (File file : files)
+        {
+            DirectoryJarClassLoader pcl = directories.get(file.getParentFile());
+            if (pcl == null)
+                processDirectory(file.getParentFile());
+
+            else
+            {
+                String name = file.getName().toLowerCase(Locale.getDefault());
+                if (name.endsWith(".jar") || name.endsWith(".zip"))
+                {
+                    try
+                    {
+                        SingleJarClassLoader cl = new SingleJarClassLoader(file, pcl);
+                        pcl.addLoader(cl);
+                        jarFiles.add(file);
+                        jarFileNames.put(file, getShortName(file));
+                        loaders.put(file, cl);
+                    }
+                    catch (MalformedURLException e)
+                    {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+
+        processMapping();
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the short name of the given file. This is the name starting from
+     * the root library.
+     *
+     * @param file The file to process.
+     * @return The shortname.
+     */
+    private String getShortName(File file)
+    {
+        String name = file.getAbsolutePath();
+        name = name.substring(root.getAbsolutePath().length() + 1);
+        return name.replace('\\', '/');
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the set of jar file names.
+     *
+     * @return The set of jar file names.
+     */
+    public Set<String> getJarFileNames()
+    {
+        Set<String> s = new TreeSet<String>();
+        s.addAll(jarFileNames.values());
+        return s;
     }
 
     // ===========================================================================
@@ -211,6 +327,17 @@ public final class Launcher
 
     // ===========================================================================
     /**
+     * Returns the root directory.
+     *
+     * @return The root directory.
+     */
+    public File getRoot()
+    {
+        return root;
+    }
+
+    // ===========================================================================
+    /**
      * Returns the classloader to use for the given jar.
      *
      * @param jar The jar file to use.
@@ -218,10 +345,76 @@ public final class Launcher
      */
     public ClassLoader getClassLoaderForJar(File jar)
     {
-        if (jar.isDirectory())
-            return directories.get(jar);
+        return loaders.get(jar);
+    }
 
-        else return getClassLoaderForJar(jar.getParentFile());
+    // ===========================================================================
+    /**
+     * Removes the list of files specified.
+     *
+     * @param files The list of files to remove.
+     */
+    public void remove(List<File> files)
+    {
+        for (File file : files)
+        {
+            DirectoryJarClassLoader cl = null;
+            if (file.isFile())
+            {
+                cl = directories.get(file.getParentFile());
+                if (cl != null)
+                {
+                    ClassLoader loader = loaders.remove(file);
+                    if (loader instanceof SingleJarClassLoader)
+                    {
+                        remove((SingleJarClassLoader) loader);
+                        cl.remove((SingleJarClassLoader) loader);
+                    }
+                }
+            }
+            else
+            {
+                cl = directories.get(file);
+                if (cl != null)
+                {
+                    for (SingleJarClassLoader sl : cl.getFileLoaders())
+                    {
+                        remove(sl);
+                        cl.remove(sl);
+                    }
+                }
+            }
+
+            if (cl != null && cl.isEmpty())
+            {
+                this.directories.remove(cl.getDirectory());
+                this.jarFileNames.remove(cl.getDirectory());
+                this.jarFiles.remove(cl.getDirectory());
+                this.loaders.remove(cl.getDirectory());
+            }
+        }
+
+        processMapping();
+    }
+
+    // ===========================================================================
+    /**
+     * Removes (and closes) the given instance of the classloader.
+     *
+     * @param loader The loader to close.
+     */
+    private void remove(SingleJarClassLoader loader)
+    {
+        try
+        {
+            loader.close();
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+        jarFileNames.remove(loader.getFile());
+        jarFiles.remove(loader.getFile());
     }
 
     // ===========================================================================

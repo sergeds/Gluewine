@@ -22,14 +22,20 @@
 package org.gluewine.console.impl;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeMap;
 
 import org.gluewine.console.CommandContext;
 import org.gluewine.console.CommandProvider;
 import org.gluewine.core.Glue;
+import org.gluewine.core.JarListener;
+import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.glue.Gluer;
 import org.gluewine.core.glue.Service;
 import org.gluewine.launcher.Launcher;
@@ -40,7 +46,7 @@ import org.gluewine.launcher.Launcher;
  * @author fks/Serge de Schaetzen
  *
  */
-public class SystemCommandProvider implements CommandProvider
+public class SystemCommandProvider implements CommandProvider, RepositoryListener<JarListener>
 {
     // ===========================================================================
     /**
@@ -49,6 +55,11 @@ public class SystemCommandProvider implements CommandProvider
     @Glue
     @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "UWF_NULL_FIELD")
     private Gluer gluer = null;
+
+    /**
+     * The set of registered jar listeners.
+     */
+    private Set<JarListener> listeners = new HashSet<JarListener>();
 
     // ===========================================================================
     @Override
@@ -59,6 +70,7 @@ public class SystemCommandProvider implements CommandProvider
         m.put("services", "Lists all active services");
         m.put("shutdown", "Shuts the framework down.");
         m.put("unresolved", "Lists all unresolved services.");
+        m.put("remove", "<jar> Removes the jar specified.");
         m.put("stop", "Stops all active services that start with the given name.");
         return m;
     }
@@ -71,8 +83,8 @@ public class SystemCommandProvider implements CommandProvider
      */
     public void _ls(CommandContext ci)
     {
-        for (File file : Launcher.getInstance().getJarFiles())
-            ci.println(file.getName());
+        for (String s : Launcher.getInstance().getJarFileNames())
+            ci.println(s);
     }
 
     // ===========================================================================
@@ -293,5 +305,70 @@ public class SystemCommandProvider implements CommandProvider
         }
 
         ci.printTable();
+    }
+
+    // ===========================================================================
+    /**
+     * Executes the remove command.
+     *
+     * @param ci The current context.
+     */
+    public void _remove(CommandContext ci)
+    {
+        String jar = ci.nextArgument();
+        List<File> toRemove = new ArrayList<File>();
+        if (jar != null)
+        {
+            List<File> files = Launcher.getInstance().getJarFiles();
+            for (File file : files)
+            {
+                String name = file.getAbsolutePath().replace('\\', '/');
+                if (name.endsWith(jar))
+                    toRemove.add(file);
+            }
+
+            for (JarListener jl : listeners)
+                jl.jarsRemoved(toRemove);
+
+            Launcher.getInstance().remove(toRemove);
+        }
+        else ci.println("You must specify a jar file to be removed!");
+    }
+
+    // ===========================================================================
+    /**
+     * Executes the install command.
+     *
+     * @param ci The current context.
+     */
+    public void _install(CommandContext ci)
+    {
+        String jar = ci.nextArgument();
+        List<File> toRemove = new ArrayList<File>();
+
+        while (jar != null)
+        {
+            File f = new File(Launcher.getInstance().getRoot(), jar);
+            toRemove.add(f);
+        }
+
+        Launcher.getInstance().add(toRemove);
+
+        for (JarListener jl : listeners)
+            jl.jarsAdded(toRemove);
+    }
+
+    // ===========================================================================
+    @Override
+    public void registered(JarListener t)
+    {
+        listeners.add(t);
+    }
+
+    // ===========================================================================
+    @Override
+    public void unregistered(JarListener t)
+    {
+        listeners.remove(t);
     }
 }

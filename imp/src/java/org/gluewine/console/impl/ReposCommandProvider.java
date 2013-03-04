@@ -24,10 +24,13 @@ package org.gluewine.console.impl;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.gluewine.console.CommandContext;
 import org.gluewine.console.CommandProvider;
 import org.gluewine.core.Glue;
+import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.glue.RepositoryImpl;
 
 /**
@@ -78,8 +81,13 @@ public class ReposCommandProvider implements CommandProvider
     public void _repos_listeners(CommandContext cc) throws Throwable
     {
         cc.tableHeader("Listener");
-        for (String s : repos.getRegisteredListeners())
+        Set<String> sl = new TreeSet<String>();
+        for (RepositoryListener<?> l : repos.getRegisteredListeners())
+            sl.add(l.toString());
+
+        for (String s : sl)
             cc.tableRow(s);
+
         cc.printTable();
     }
 

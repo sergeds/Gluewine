@@ -33,6 +33,7 @@ import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -54,6 +55,7 @@ import org.gluewine.console.CommandContext;
 import org.gluewine.console.CommandProvider;
 import org.gluewine.core.AspectProvider;
 import org.gluewine.core.Glue;
+import org.gluewine.core.JarListener;
 import org.gluewine.core.Repository;
 import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.RunWhenGlued;
@@ -75,9 +77,21 @@ import org.hibernate.service.ServiceRegistryBuilder;
  * @author fks/Serge de Schaetzen
  *
  */
-public class SessionAspectProvider implements AspectProvider, CommandProvider
+public class SessionAspectProvider implements AspectProvider, CommandProvider, JarListener
 {
     // ===========================================================================
+    /**
+     * Comparator that compare classes based on their name.
+     */
+    private static class ClassComparator implements Comparator<Class<?>>
+    {
+        @Override
+        public int compare(Class<?> o1, Class<?> o2)
+        {
+            return o1.getName().compareTo(o2.getName());
+        }
+    }
+
     /**
      * The session provider to use.
      */
@@ -123,12 +137,17 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider
     /**
      * The set of registered entities.
      */
-    private Set<String> entities = new TreeSet<String>();
+    private Set<Class<?>> entities = new TreeSet<Class<?>>(new ClassComparator());
 
     /**
      * The date formatter for outputting dates.
      */
     private DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+
+    /**
+     * A lock to synchronize the access to the session factory.
+     */
+    private Object factoryLocker = new Object();
 
     // ===========================================================================
     /**
@@ -145,70 +164,7 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider
      */
     public SessionAspectProvider() throws IOException, ClassNotFoundException, NoSuchAlgorithmException
     {
-        Launcher launcher = Launcher.getInstance();
-        Configuration config = new Configuration();
-        config.setProperties(launcher.getProperties(HIBERNATE_FILE));
-
-        // Load all entities:
-        for (File file : launcher.getJarFiles())
-        {
-            JarFile jar = null;
-            try
-            {
-                jar = new JarFile(file);
-                Manifest manifest = jar.getManifest();
-                if (manifest != null)
-                {
-                    Attributes attr = manifest.getMainAttributes();
-                    String ent = attr.getValue("gluewine-entities");
-                    if (ent != null)
-                    {
-                        ent = ent.trim();
-                        String[] cl = ent.split(",");
-                        for (String c : cl)
-                        {
-                            c = c.trim();
-                            Class<?> clazz = getClass().getClassLoader().loadClass(c);
-                            config.addAnnotatedClass(clazz);
-                            entities.add(clazz.getName());
-                        }
-                    }
-                }
-
-                Enumeration<JarEntry> entries = jar.entries();
-                while (entries.hasMoreElements())
-                {
-                    JarEntry entry = entries.nextElement();
-                    String name = entry.getName().toLowerCase(Locale.getDefault());
-                    if (name.endsWith(".sql"))
-                    {
-                        BufferedReader reader = null;
-                        try
-                        {
-                            List<String> content = new ArrayList<String>();
-                            reader = new BufferedReader(new InputStreamReader(jar.getInputStream(entry)));
-                            while (reader.ready())
-                                content.add(reader.readLine());
-
-                            updateSQLStatements(content);
-                        }
-                        finally
-                        {
-                            if (reader != null) reader.close();
-                        }
-                    }
-                }
-            }
-            finally
-            {
-                if (jar != null) jar.close();
-            }
-        }
-
-        ServiceRegistry serviceRegistry = new ServiceRegistryBuilder().applySettings(config.getProperties()).buildServiceRegistry();
-        factory = config.buildSessionFactory(serviceRegistry);
-
-        checkStatements();
+        jarsAdded(Launcher.getInstance().getJarFiles());
     }
 
     // ===========================================================================================
@@ -359,10 +315,13 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider
         HibernateTransactionalSessionImpl session = provider.getBoundSession();
         if (session == null)
         {
-            Session hibernateSession = factory.openSession();
-            hibernateSession.beginTransaction();
-            session = new HibernateTransactionalSessionImpl(hibernateSession, preProcessors, postProcessors);
-            provider.bindSession(session);
+            synchronized (factoryLocker)
+            {
+                Session hibernateSession = factory.openSession();
+                hibernateSession.beginTransaction();
+                session = new HibernateTransactionalSessionImpl(hibernateSession, preProcessors, postProcessors);
+                provider.bindSession(session);
+            }
         }
 
         if (increase) session.increaseReferenceCount();
@@ -519,8 +478,8 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider
     public void _pers_entities(CommandContext ci) throws Throwable
     {
         ci.tableHeader("Hibernate Entities");
-        for (String s : entities)
-            ci.tableRow(s);
+        for (Class<?> s : entities)
+            ci.tableRow(s.getName());
 
         ci.printTable();
     }
@@ -569,5 +528,139 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider
         m.put("pers_entities", "Lists all registered entities");
         m.put("pers_statements", "Lists all executed statements");
         return m;
+    }
+
+    // ===========================================================================
+    @Override
+    public void jarsAdded(List<File> files)
+    {
+        synchronized (factoryLocker)
+        {
+            try
+            {
+                Configuration config = new Configuration();
+                config.setProperties(Launcher.getInstance().getProperties(HIBERNATE_FILE));
+                ServiceRegistry serviceRegistry = new ServiceRegistryBuilder().applySettings(config.getProperties()).buildServiceRegistry();
+
+                for (File file : files)
+                {
+                    JarFile jar = null;
+                    try
+                    {
+                        jar = new JarFile(file);
+                        Manifest manifest = jar.getManifest();
+                        if (manifest != null)
+                        {
+                            Attributes attr = manifest.getMainAttributes();
+                            String ent = attr.getValue("Gluewine-Entities");
+                            if (ent != null)
+                            {
+                                ent = ent.trim();
+                                String[] cl = ent.split(",");
+                                for (String c : cl)
+                                {
+                                    c = c.trim();
+                                    Class<?> clazz = getClass().getClassLoader().loadClass(c);
+                                    entities.add(clazz);
+                                }
+                            }
+                        }
+
+                        Enumeration<JarEntry> entries = jar.entries();
+                        while (entries.hasMoreElements())
+                        {
+                            JarEntry entry = entries.nextElement();
+                            String name = entry.getName().toLowerCase(Locale.getDefault());
+                            if (name.endsWith(".sql"))
+                            {
+                                BufferedReader reader = null;
+                                try
+                                {
+                                    List<String> content = new ArrayList<String>();
+                                    reader = new BufferedReader(new InputStreamReader(jar.getInputStream(entry)));
+                                    while (reader.ready())
+                                        content.add(reader.readLine());
+
+                                    updateSQLStatements(content);
+                                }
+                                finally
+                                {
+                                    if (reader != null) reader.close();
+                                }
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        if (jar != null) jar.close();
+                    }
+                }
+
+                for (Class<?> cl : entities)
+                    config.addAnnotatedClass(cl);
+
+                factory = config.buildSessionFactory(serviceRegistry);
+                checkStatements();
+            }
+            catch (Throwable e)
+            {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    // ===========================================================================
+    @Override
+    public void jarsRemoved(List<File> files)
+    {
+        synchronized (factoryLocker)
+        {
+            try
+            {
+                Configuration config = new Configuration();
+                config.setProperties(Launcher.getInstance().getProperties(HIBERNATE_FILE));
+                ServiceRegistry serviceRegistry = new ServiceRegistryBuilder().applySettings(config.getProperties()).buildServiceRegistry();
+
+                for (File file : files)
+                {
+                    JarFile jar = null;
+                    try
+                    {
+                        jar = new JarFile(file);
+                        Manifest manifest = jar.getManifest();
+                        if (manifest != null)
+                        {
+                            Attributes attr = manifest.getMainAttributes();
+                            String ent = attr.getValue("Gluewine-Entities");
+                            if (ent != null)
+                            {
+                                ent = ent.trim();
+                                String[] cl = ent.split(",");
+                                for (String c : cl)
+                                {
+                                    c = c.trim();
+                                    Class<?> clazz = getClass().getClassLoader().loadClass(c);
+                                    entities.remove(clazz);
+                                }
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        if (jar != null) jar.close();
+                    }
+                }
+
+                for (Class<?> cl : entities)
+                    config.addAnnotatedClass(cl);
+
+                factory = config.buildSessionFactory(serviceRegistry);
+                checkStatements();
+            }
+            catch (Throwable e)
+            {
+                e.printStackTrace();
+            }
+        }
     }
 }

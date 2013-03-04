@@ -25,6 +25,7 @@ import java.io.File;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.jar.Attributes;
@@ -34,7 +35,7 @@ import java.util.jar.Manifest;
 import org.apache.log4j.Logger;
 import org.gluewine.core.AspectProvider;
 import org.gluewine.core.ClassEnhancer;
-import org.gluewine.core.Repository;
+import org.gluewine.core.JarListener;
 import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.ServiceProvider;
 import org.gluewine.core.utils.ErrorLogger;
@@ -47,7 +48,7 @@ import org.gluewine.launcher.Launcher;
  * @author fks/Serge de Schaetzen
  *
  */
-public final class Gluer
+public final class Gluer implements JarListener
 {
     // ===========================================================================
     /**
@@ -78,7 +79,7 @@ public final class Gluer
     /**
      * The repository instance to use.
      */
-    private Repository repository = new RepositoryImpl();
+    private RepositoryImpl repository = new RepositoryImpl();
 
     // ===========================================================================
     /**
@@ -106,7 +107,7 @@ public final class Gluer
         services.add(new Service(repository));
         services.add(new Service(this));
 
-        index();
+        jarsAdded(Launcher.getInstance().getJarFiles());
         launch();
 
         System.out.println("Gluewine Framework started in " + (System.currentTimeMillis() - start) + " milliseconds.");
@@ -128,7 +129,7 @@ public final class Gluer
             String serviceName = s.getServiceClass().getName();
             if (serviceName.startsWith(name) && s.isActive())
             {
-                repository.unregister(s.getActualService());
+                deregisterObject(s.getActualService());
                 s.deactivate();
                 stopped.add(s);
 
@@ -136,7 +137,7 @@ public final class Gluer
                 {
                     if (ref.references(s.getActualService()))
                     {
-                        repository.unregister(ref.getActualService());
+                        deregisterObject(ref.getActualService());
                         ref.deactivate();
                         stopped.add(ref);
                     }
@@ -212,6 +213,56 @@ public final class Gluer
 
     // ===========================================================================
     /**
+     * Invoked when a classloader has been removed from the framework.
+     * This will stop, unglue and unresolve all services that were loaded using
+     * the classloader, and clean up the repository by removing all objects
+     * and listeners that were loaded with this classloader.
+     *
+     * @param loader The classloader to check.
+     */
+    public void removed(ClassLoader loader)
+    {
+        Iterator<Service> siter = services.iterator();
+        while (siter.hasNext())
+        {
+            Service s = siter.next();
+
+            if (getClassLoaderForObject(s.getActualService()) == loader)
+            {
+                unresolve(s.getActualService().getClass().getName());
+                siter.remove();
+            }
+        }
+
+        for (Object o : repository.getRegisteredObjectMap().values())
+        {
+            if (getClassLoaderForObject(o) == loader)
+                repository.unregister(o);
+        }
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the classloader for the given object.
+     * Enhancement is taken into account.
+     *
+     * @param o The object to process.
+     * @return The classloader of that object.
+     */
+    private ClassLoader getClassLoaderForObject(Object o)
+    {
+        ClassLoader cl = o.getClass().getClassLoader();
+        if (isEnhancedMode())
+        {
+            if (o.getClass().getName().indexOf("$$Enhancer") > 0)
+                cl = o.getClass().getSuperclass().getClassLoader();
+        }
+
+        return cl;
+    }
+
+    // ===========================================================================
+    /**
      * Resolves, glues and starts all services that match the given name.
      *
      * @param name The name of the service(s) to start.
@@ -274,9 +325,9 @@ public final class Gluer
      */
     private void deregisterObject(Object o)
     {
-        repository.unregister(o);
         if (o instanceof RepositoryListener<?>)
             repository.removeListener((RepositoryListener<?>) o);
+        repository.unregister(o);
     }
 
     // ===========================================================================
@@ -288,7 +339,7 @@ public final class Gluer
         if (!resolve()) warn("There are unresolved services!");
         glue();
         activate();
-        registerRepositoryListeners();
+        registerAllServices();
     }
 
     // ===========================================================================
@@ -455,7 +506,7 @@ public final class Gluer
      * Registers all active services that implement the RepositoryListener with
      * the repository.
      */
-    private void registerRepositoryListeners()
+    private void registerAllServices()
     {
         for (Service s : services)
             registerObject(s.getActualService());
@@ -478,10 +529,9 @@ public final class Gluer
 
     // ===========================================================================
     /**
-     * Deregisters all active services that implement the RepositoryListener from
-     * the repository.
+     * Deregisters all active services from the repository.
      */
-    private void deregisterRepositoryListeners()
+    private void deregisterAllObjects()
     {
         for (Service s : services)
             deregisterObject(s.getActualService());
@@ -494,7 +544,7 @@ public final class Gluer
      */
     public void shutdown()
     {
-        deregisterRepositoryListeners();
+        deregisterAllObjects();
         deactivate();
         unglue();
         unresolve();
@@ -596,12 +646,10 @@ public final class Gluer
     }
 
     // ===========================================================================
-    /**
-     * Indexes all jar/zip files and checks the manifests.
-     */
-    private void index()
+    @Override
+    public void jarsAdded(List<File> files)
     {
-        for (File file : Launcher.getInstance().getJarFiles())
+        for (File file : files)
         {
             JarFile jar = null;
             try
@@ -660,6 +708,17 @@ public final class Gluer
                     }
                 }
             }
+        }
+    }
+
+    // ===========================================================================
+    @Override
+    public void jarsRemoved(List<File> files)
+    {
+        for (File file : files)
+        {
+            ClassLoader loader = Launcher.getInstance().getClassLoaderForJar(file);
+            removed(loader);
         }
     }
 }
