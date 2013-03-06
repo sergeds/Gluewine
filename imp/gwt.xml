@@ -154,10 +154,10 @@
             <classpath refid="classpath.gwt.full"/>
             <!-- arg value="-draftCompile" -->
             <arg value="-startupUrl"/>
-            <arg value="Gluewine.html"/>
+            <arg value="${starthtml}"/>
             <arg value="-war"/>
             <arg value="${dir.gwt.warbuild}"/>
-            <arg value="org.gwt.gluewine.Gluewine"/>
+            <arg value="${gwt.basepackage}"/>
         </java>
     </target>
 
@@ -171,7 +171,7 @@
                         <arg value="PRETTY"/-->
             <arg value="-war"/>
             <arg value="${dir.gwt.warbuild}"/>
-            <arg value="org.gwt.gluewine.Gluewine"/>
+            <arg value="${gwt.basepackage}"/>
         </java>
         <copy todir="${dir.gwt.warbuild}/WEB-INF/lib">
             <fileset dir="${dir.gwt.runtime}" includes="**/*.jar"/>

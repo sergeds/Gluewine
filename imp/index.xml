@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Index" basedir=".">
+    <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpath="${dir.lib.tools}/ant-contrib-1.0b3.jar"/>
+
+    <target name="index.create">
+        <delete file="${dir.dist.lib}/packages.idx"/>
+        <!-- Don't ever set this to parallel -->
+        <foreach target="index.addone" param="usefulfile" parallel="false">
+            <path id="usefulfiles">
+                <fileset dir="${dir.dist.lib}">
+                    <include name="**/*.jar"/>
+                    <include name="**/*.war"/>
+                </fileset>
+            </path>
+        </foreach>
+    </target>
+
+    <target name="index.addone">
+        <checksum algorithm="sha1" file="${usefulfile}" property="sha1sum"/>
+
+        <loadproperties>
+            <zipentry zipfile="${usefulfile}" name="META-INF/MANIFEST.MF"/>
+            <filterchain>
+                <LineContainsRegExp>
+                    <regexp pattern="^X-Fks-Checksum" />
+                </LineContainsRegExp>
+            </filterchain>
+        </loadproperties>
+        <basename property="basename" file="${usefulfile}"/>
+        <if>
+            <isset property="X-Fks-Checksum"/>
+            <then>
+                <echo file="${dir.dist.lib}/packages.idx" append="true">${basename};${sha1sum};${X-Fks-Checksum}${line.separator}</echo>
+            </then>
+            <else>
+                <echo file="${dir.dist.lib}/packages.idx" append="true">${basename};${sha1sum}${line.separator}</echo>
+            </else>
+        </if>
+    </target>
+</project>

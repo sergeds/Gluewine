@@ -4,6 +4,11 @@
     <property name="product" value="gluewine"/>
     <property name="version" value="0.0.1"/>
 
+    <property name="starthtml" value="Gluewine.html"/>
+    <property name="gwt.basepackage" value="org.gwt.gluewine.Gluewine"/>
+    <property name="vcs" value="git"/>
+    <property name="framework" value="gluewine"/>
+
     <!-- Java Compiler specific options -->
     <property name="debuginfo" value="on"/>
     <property name="debuglevel" value="source,lines,vars"/>
@@ -132,13 +137,24 @@
     </path>
 
     <!-- Set some properties with useful build information -->
-    <exec executable="git" failifexecutionfails="false" outputproperty="buildinfo.globalrevision">
-        <arg value="log"/>
-        <arg value="--format=%h"/>
-        <arg value="-1"/>
-        <arg value="--"/>
-        <arg value=".."/>
-    </exec>
+    <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpath="${dir.lib.tools}/ant-contrib-1.0b3.jar"/>
+    <if>
+        <equals arg1="${vcs}" arg2="git" />
+        <then>
+            <exec executable="git" failifexecutionfails="false" outputproperty="buildinfo.globalrevision">
+                <arg value="log"/>
+                <arg value="--format=%h"/>
+                <arg value="-1"/>
+                <arg value="--"/>
+                <arg value=".."/>
+            </exec>
+        </then>
+        <else>
+            <exec executable="svnversion" failifexecutionfails="false" outputproperty="buildinfo.globalrevision">
+                <arg value=".."/>
+            </exec>
+        </else>
+    </if>
     <tstamp>
         <format property="buildinfo.timestamp" pattern="yyyy-MM-dd"/>
     </tstamp>

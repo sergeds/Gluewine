@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="Bundles" basedir=".">
-
     <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpath="${dir.lib.tools}/ant-contrib-1.0b3.jar"/>
 
     <target name="bundles.package">
@@ -17,25 +16,49 @@
 
     <target name="bundles.bundle">
         <propertyregex property="manfile" input="${manifest}" regexp="java[\\/](.*)" select="\1" casesensitive="false"/>
-        <basename property="bundlename" file="${manifest}" suffix=".manifest"/>
         <propertyregex property="manbasefile" input="${manifest}" regexp="([^\\/]*)$" select="\1" casesensitive="false"/>
         <propertyregex property="tpack" input="${manfile}" regexp="(.*?)/?${manbasefile}" select="\1" casesensitive="false"/>
         <propertyregex property="pack" input="${tpack}" regexp="(.)$" replace="\1/" casesensitive="false" defaultValue="" />
+
         <loadproperties srcfile="${manifest}" encoding="utf8">
             <filterchain>
                 <LineContainsRegExp>
-                    <regexp pattern="^Jar-Version" />
+                    <regexp pattern="^(Bundle-|Jar-Version)" />
                 </LineContainsRegExp>
             </filterchain>
         </loadproperties>
-        <propertyregex property="fileversion" input="${Jar-Version}" regexp="([^.]*\.[^.]*)(\..*)*" select="\1" casesensitive="false"/>
 
-        <exec executable="git" outputproperty="bundle.revision">
-            <arg value="show"/>
-            <arg value="-s"/>
-            <arg value="--pretty=format:%h"/>
-            <arg value="${dir.src.osgi}/${pack}"/>
-        </exec>
+        <if>
+            <equals arg1="${framework}" arg2="osgi" />
+            <then>
+                <property name="bundlename" value="${Bundle-SymbolicName}" />
+                <propertyregex property="fileversion" input="${Bundle-Version}" regexp="([^.]*\.[^.]*)(\..*)*" select="\1" casesensitive="false"/>
+            </then>
+        </if>
+        <if>
+            <equals arg1="${framework}" arg2="gluewine" />
+            <then>
+                <basename property="bundlename" file="${manifest}" suffix=".manifest"/>
+                <propertyregex property="fileversion" input="${Jar-Version}" regexp="([^.]*\.[^.]*)(\..*)*" select="\1" casesensitive="false"/>
+            </then>
+        </if>
+
+        <if>
+            <equals arg1="${vcs}" arg2="git" />
+            <then>
+                <exec executable="git" outputproperty="bundle.revision">
+                    <arg value="show"/>
+                    <arg value="-s"/>
+                    <arg value="--pretty=format:%h"/>
+                    <arg value="${dir.src.osgi}/${pack}"/>
+                </exec>
+            </then>
+            <else>
+                <exec executable="svnversion" outputproperty="bundle.revision">
+                    <arg value="${dir.src.osgi}/${pack}"/>
+                </exec>
+            </else>
+        </if>
 
         <mkdir dir="${dir.bundle.extra}/${pack}"/>
         <union id="contents">
@@ -62,7 +85,7 @@
         </checksum>
 
         <mkdir dir="${dir.bundle.extra}/${pack}"/>
-        <jar jarfile="${dir.dist.lib}/${bundlename}_${fileversion}.jar" manifest="${dir.src.osgi}/${manfile}">
+        <jar jarfile="${dir.dist.lib}/${bundlename}-${fileversion}.jar" manifest="${dir.src.osgi}/${manfile}">
             <manifest>
                 <attribute name="X-Fks-BuildDate" value="${buildinfo.timestamp}"/>
                 <attribute name="X-Fks-Revision" value="${bundle.revision}"/>

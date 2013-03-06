@@ -5,6 +5,7 @@
     <import file="gwt.xml"/>
     <import file="junit.xml"/>
     <import file="osgi.xml"/>
+    <import file="index.xml"/>
 
     <target name="default" depends="osgi.default" description="Run a moderately fast default build."/>
     <target name="dist" depends="osgi.dist" description="Creates the OSGi and GWT distribution."/>
