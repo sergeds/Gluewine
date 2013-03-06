@@ -55,7 +55,7 @@ import org.gluewine.core.CodeSourceListener;
 import org.gluewine.core.Glue;
 import org.gluewine.core.Repository;
 import org.gluewine.core.RepositoryListener;
-import org.gluewine.core.RunWhenGlued;
+import org.gluewine.core.RunOnActivate;
 import org.gluewine.launcher.CodeSource;
 import org.gluewine.launcher.Launcher;
 import org.gluewine.launcher.sources.JarCodeSource;
@@ -259,7 +259,7 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
     /**
      * Initialization method.
      */
-    @RunWhenGlued
+    @RunOnActivate
     public void initialize()
     {
         registry.addListener(new RepositoryListener<QueryPreProcessor>()

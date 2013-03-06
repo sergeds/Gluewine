@@ -30,7 +30,7 @@ import org.gluewine.console.CommandContext;
 import org.gluewine.console.CommandProvider;
 import org.gluewine.console.ConsoleServer;
 import org.gluewine.core.Glue;
-import org.gluewine.core.RunWhenGlued;
+import org.gluewine.core.RunOnActivate;
 import org.gluewine.dbauth.DBAuthenticator;
 import org.gluewine.persistence.PersistenceException;
 import org.gluewine.persistence.SessionProvider;
@@ -68,7 +68,7 @@ public class DBAuthenticatorImpl implements DBAuthenticator, CommandProvider
      *
      * @throws AuthenticationException If an error occurs setting the initial credential.
      */
-    @RunWhenGlued
+    @RunOnActivate
     @Transactional
     public void checkInitialUser() throws AuthenticationException
     {

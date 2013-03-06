@@ -224,22 +224,28 @@ public final class Gluer implements CodeSourceListener
     {
         Set<Service> unglued = new HashSet<Service>();
         Set<Service> stopped = stop(ids);
-        for (Service s : stopped)
-            if (s.isGlued())
-            {
-                s.unglue();
-                unglued.add(s);
-            }
 
         for (int id : ids)
         {
             Service s = serviceMap.get(Integer.valueOf(id));
             if (s != null && s.isGlued())
             {
+                ungluedServices.put(Integer.valueOf(s.getId()), s.getName());
                 s.unglue();
                 unglued.add(s);
             }
         }
+
+        for (Service s : stopped)
+        {
+            if (s.isGlued())
+            {
+                s.unglue();
+                unglued.add(s);
+            }
+        }
+
+        Launcher.getInstance().savePersistentMap();
 
         return unglued;
     }
@@ -256,12 +262,6 @@ public final class Gluer implements CodeSourceListener
     {
         Set<Service> unresolved = new HashSet<Service>();
         Set<Service> unglued = unglue(ids);
-        for (Service s : unglued)
-            if (s.isResolved())
-            {
-                s.unresolve();
-                unresolved.add(s);
-            }
 
         for (int id : ids)
         {
@@ -270,8 +270,20 @@ public final class Gluer implements CodeSourceListener
             {
                 s.unresolve();
                 unresolved.add(s);
+                unresolvedServices.put(Integer.valueOf(s.getId()), s.getName());
             }
         }
+
+        for (Service s : unglued)
+        {
+            if (s.isResolved())
+            {
+                s.unresolve();
+                unresolved.add(s);
+            }
+        }
+
+        Launcher.getInstance().savePersistentMap();
 
         return unresolved;
     }
@@ -419,6 +431,12 @@ public final class Gluer implements CodeSourceListener
 
         for (Service s : serviceMap.values())
         {
+            if (stoppedServices.containsKey(Integer.valueOf(s.getId())))
+            {
+                String name = stoppedServices.get(Integer.valueOf(s.getId()));
+                if (name.equals(s.getName())) continue;
+            }
+
             if (s.isGlued() && !s.activate())
             {
                 warn(s.getActualService().getClass().getName() + " could not be activated !");
@@ -489,6 +507,12 @@ public final class Gluer implements CodeSourceListener
 
         for (Service s : serviceMap.values())
         {
+            if (ungluedServices.containsKey(Integer.valueOf(s.getId())))
+            {
+                String name = ungluedServices.get(Integer.valueOf(s.getId()));
+                if (name.equals(s.getName())) continue;
+            }
+
             if (s.isResolved() && !s.glue())
             {
                 warn(s.getActualService().getClass().getName() + " could not be glued !");
@@ -514,6 +538,11 @@ public final class Gluer implements CodeSourceListener
         boolean resolved = true;
         for (Service s : serviceMap.values())
         {
+            if (unresolvedServices.containsKey(Integer.valueOf(s.getId())))
+            {
+                String name = unresolvedServices.get(Integer.valueOf(s.getId()));
+                if (name.equals(s.getName())) continue;
+            }
             if (!s.resolve(actuals, providers))
             {
                 warn(s.getActualService().getClass().getName() + " could not be fully resolved !");
@@ -574,7 +603,10 @@ public final class Gluer implements CodeSourceListener
     private void registerAllServices()
     {
         for (Service s : serviceMap.values())
-            registerObject(s.getActualService());
+        {
+            if (s.isActive())
+                registerObject(s.getActualService());
+        }
     }
 
     // ===========================================================================

@@ -39,7 +39,7 @@ import org.gluewine.console.SyntaxException;
 import org.gluewine.core.Glue;
 import org.gluewine.core.Repository;
 import org.gluewine.core.RepositoryListener;
-import org.gluewine.core.RunWhenGlued;
+import org.gluewine.core.RunOnActivate;
 
 /**
  * Default implementation of ConsoleServer.
@@ -76,7 +76,7 @@ public class ConsoleServerImpl implements ConsoleServer, CommandProvider
     /**
      * Checks for available authenticators and registers them.
      */
-    @RunWhenGlued
+    @RunOnActivate
     public void checkAuthenticators()
     {
         repository.addListener(new RepositoryListener<Authenticator>()

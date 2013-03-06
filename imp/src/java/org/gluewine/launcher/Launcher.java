@@ -23,9 +23,11 @@ package org.gluewine.launcher;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.security.AccessController;
@@ -150,7 +152,7 @@ public final class Launcher
 
         String propPersist = System.getProperty("gluewine.persistfile");
         if (propPersist != null) persistentFile = new File(propPersist);
-        else persistentFile = new File(configDirectory, "gluewine.cfg");
+        else persistentFile = new File(configDirectory, "gluewine.state");
 
         if (System.getProperty("log4j.configuration") == null)
         {
@@ -225,7 +227,30 @@ public final class Launcher
     {
         synchronized (persistentMap)
         {
-
+            ObjectOutputStream out = null;
+            try
+            {
+                out = new ObjectOutputStream(new FileOutputStream(persistentFile));
+                out.writeObject(persistentMap);
+            }
+            catch (Throwable e)
+            {
+                e.printStackTrace();
+            }
+            finally
+            {
+                if (out != null)
+                {
+                    try
+                    {
+                        out.close();
+                    }
+                    catch (IOException e)
+                    {
+                        e.printStackTrace();
+                    }
+                }
+            }
         }
     }
 

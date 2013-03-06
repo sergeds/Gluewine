@@ -14,8 +14,8 @@ import java.util.TreeSet;
 
 import org.gluewine.core.Glue;
 import org.gluewine.core.NoSuchServiceException;
-import org.gluewine.core.RunBeforeUngluing;
-import org.gluewine.core.RunWhenGlued;
+import org.gluewine.core.RunOnDeactivate;
+import org.gluewine.core.RunOnActivate;
 import org.gluewine.core.ServiceProvider;
 import org.gluewine.core.utils.ErrorLogger;
 
@@ -372,7 +372,7 @@ public class Service
             active = true;
             for (final Method method : actual.getClass().getMethods())
             {
-                RunWhenGlued annot = getRunWhenGlued(actual.getClass(), method);
+                RunOnActivate annot = getRunWhenGlued(actual.getClass(), method);
                 if (annot != null && method.getParameterTypes().length == 0)
                 {
                     boolean methodActive = false;
@@ -428,13 +428,13 @@ public class Service
      * @param m The method to check.
      * @return The (possibly bnull) annotation.
      */
-    private RunBeforeUngluing getRunBeforeUngluing(Class<?> cl, Method m)
+    private RunOnDeactivate getRunBeforeUngluing(Class<?> cl, Method m)
     {
-        RunBeforeUngluing annot = null;
+        RunOnDeactivate annot = null;
         Class<?> c = cl;
         while (annot == null && m != null && c != null)
         {
-            annot = m.getAnnotation(RunBeforeUngluing.class);
+            annot = m.getAnnotation(RunOnDeactivate.class);
             if (annot == null)
             {
                 c = c.getSuperclass();
@@ -463,13 +463,13 @@ public class Service
      * @param m The method to check.
      * @return The (possibly bnull) annotation.
      */
-    private RunWhenGlued getRunWhenGlued(Class<?> cl, Method m)
+    private RunOnActivate getRunWhenGlued(Class<?> cl, Method m)
     {
-        RunWhenGlued annot = null;
+        RunOnActivate annot = null;
         Class<?> c = cl;
         while (annot == null && m != null && c != null)
         {
-            annot = m.getAnnotation(RunWhenGlued.class);
+            annot = m.getAnnotation(RunOnActivate.class);
             if (annot == null)
             {
                 c = c.getSuperclass();
