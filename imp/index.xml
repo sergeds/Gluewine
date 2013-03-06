@@ -2,7 +2,7 @@
 <project name="Index" basedir=".">
     <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpath="${dir.lib.tools}/ant-contrib-1.0b3.jar"/>
 
-    <target name="index.create">
+    <target name="index.create" description="Create packages.idx file">
         <delete file="${dir.dist.lib}/packages.idx"/>
         <!-- Don't ever set this to parallel -->
         <foreach target="index.addone" param="usefulfile" parallel="false">

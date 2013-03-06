@@ -12,7 +12,7 @@
 
     <target name="gwt.quickchecks" depends="gwt.checkstyle, gwt.findbugs"/>
 
-    <target name="gwt.antTemplates" depends="gwt.clean">
+    <target name="gwt.antTemplates" depends="gwt.clean" if="${usesgwt}">
         <mkdir dir="${dir.gwt.warbuild}/WEB-INF"/>
         <delete file="${dir.gwt.warbuild}/WEB-INF/web.xml"/>
 
@@ -55,7 +55,7 @@
         </concat>
     </target>
 
-    <target name="gwt.checkstyle" depends="gwt.compile">
+    <target name="gwt.checkstyle" depends="gwt.compile" if="${usesgwt}">
         <antcall target="qa.checkstyle">
             <param name="target" value="gwt"/>
             <param name="sourcedir" value="${dir.src.gwt}"/>
@@ -63,7 +63,7 @@
         </antcall>
     </target>
 
-    <target name="gwt.compile" depends="gwt.antTemplates, gwt.gxoshared">
+    <target name="gwt.compile" depends="gwt.antTemplates, gwt.gxoshared" if="${usesgwt}">
         <javac destdir="${dir.build.gwt.generated.classes}" includes="**" debug="on" debuglevel="lines,vars,source" source="1.5" target="1.5" includeantruntime="false" encoding="utf8">
             <src>
                 <pathelement path="${dir.build.gwt.generated.src}"/>
@@ -81,7 +81,7 @@
         </javac>
     </target>
 
-    <target name="gwt.package" depends="gwt.compile">
+    <target name="gwt.package" depends="gwt.compile" if="${usesgwt}">
         <jar destfile="${dir.build.gwt.lib}/${product}.jar">
             <fileset dir="${dir.build.gwt}">
                 <include name="**/*.class"/>
@@ -104,7 +104,7 @@
     </target>
 
     <!-- Generate API documentation -->
-    <target name="gwt.javadoc" depends="gwt.compile">
+    <target name="gwt.javadoc" depends="gwt.compile" if="${usesgwt}">
         <mkdir dir="${dir.doc.api.gwt}"/>
         <javadoc packagenames="be.*" destdir="${dir.doc.api.gwt}" version="true" author="true" splitindex="true" access="package" failonerror="true" encoding="utf8">
             <sourcepath>
@@ -119,7 +119,7 @@
     </target>
 
     <!-- Creates a zip containing the API doc -->
-    <target name="gwt.zipdoc" depends="gwt.javadoc">
+    <target name="gwt.zipdoc" depends="gwt.javadoc" if="${usesgwt}">
         <mkdir dir="${dir.dist.doc}"/>
         <zip zipfile="${dir.dist.doc}/${product}_${version}_gwt_doc.zip">
             <fileset dir="${dir.doc.api.gwt}">
@@ -130,7 +130,7 @@
             </fileset>
         </zip>
     </target>
-    <target name="gwt.findbugs" depends="gwt.compile">
+    <target name="gwt.findbugs" depends="gwt.compile" if="${usesgwt}">
         <antcall target="qa.findbugs">
             <param name="target" value="gwt"/>
             <param name="sourcedir" value="${dir.src.gwt}"/>
@@ -140,7 +140,7 @@
     </target>
 
     <!-- Produce testability report -->
-    <target name="gwt.testability" depends="gwt.compile">
+    <target name="gwt.testability" depends="gwt.compile" if="${usesgwt}">
         <antcall target="qa.testability">
             <param name="target" value="gwt"/>
             <param name="classdir" value="${dir.build.osgi}"/>
@@ -148,7 +148,7 @@
         </antcall>
     </target>
 
-    <target name="gwt.run" description="gwt.run" depends="gwt.package">
+    <target name="gwt.run" description="gwt.run" depends="gwt.package" if="${usesgwt}">
         <java fork="true" classname="com.google.gwt.dev.DevMode">
             <jvmarg value="-Xmx512M"/>
             <classpath refid="classpath.gwt.full"/>
@@ -161,7 +161,7 @@
         </java>
     </target>
 
-    <target name="gwt.war" description="gwt.war" depends="gwt.package, gwt.allchecks, gwt.zipdoc">
+    <target name="gwt.war" description="gwt.war" depends="gwt.package, gwt.allchecks, gwt.zipdoc" if="${usesgwt}">
         <java fork="true" classname="com.google.gwt.dev.Compiler">
             <jvmarg value="-Xmx1024M"/>
             <classpath refid="classpath.gwt.full"/>
@@ -185,7 +185,7 @@
         <zip destfile="${dir.gwt.dist}/${product}.war" basedir="${dir.gwt.warbuild}"/>
     </target>
 
-    <target name="gwt.gxoshared">
+    <target name="gwt.gxoshared" if="${usesgwt}">
         <java classname="be.fks.gxo.GxoFlatten">
             <classpath>
                 <pathelement location="${dir.gwt.runtime}/be.fks.gxo_1.3.jar"/>
@@ -198,7 +198,7 @@
         </copy>
     </target>
 
-    <target name="gwt.clean" depends="gwt.init">
+    <target name="gwt.clean" depends="gwt.init" if="${usesgwt}">
         <!-- Delete the antbin directory tree -->
         <delete file="${dir.gwt.dist}/${product}.war"/>
         <delete>
@@ -210,7 +210,7 @@
         </delete>
     </target>
 
-    <target name="gwt.init">
+    <target name="gwt.init" if="${usesgwt}">
         <echo>============================================================</echo>
         <echo>|Om een specifieke OSGIServer te gebruiken :               |</echo>
         <echo>|GEBRUIK: ant -Dosgihost=host -Dosgiport=port              |</echo>
@@ -226,7 +226,7 @@
         <mkdir dir="${dir.gwt.dist}"/>
     </target>
 
-    <target name="gwt.dist" depends="gwt.allchecks, gwt.war, gwt.zipdoc"/>
+    <target name="gwt.dist" depends="gwt.allchecks, gwt.war, gwt.zipdoc" if="${usesgwt}"/>
 
-    <target name="gwt.default" depends="gwt.quickchecks, gwt.package"/>
+    <target name="gwt.default" depends="gwt.quickchecks, gwt.package" if="${usesgwt}"/>
 </project>

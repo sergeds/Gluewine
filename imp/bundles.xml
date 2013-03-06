@@ -2,7 +2,7 @@
 <project name="Bundles" basedir=".">
     <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpath="${dir.lib.tools}/ant-contrib-1.0b3.jar"/>
 
-    <target name="bundles.package">
+    <target name="bundles.package" depends="bundleextra">
         <mkdir dir="${dir.build.osgi}/manifests"/>
         <mkdir dir="${dir.build.osgi}/sums"/>
         <foreach target="bundles.bundle" param="manifest" parallel="true">
@@ -54,11 +54,14 @@
                     <arg value="${dir.src.osgi}/${pack}"/>
                 </exec>
             </then>
-            <else>
+        </if>
+        <if>
+            <equals arg1="${vcs}" arg2="svn" />
+            <then>
                 <exec executable="svnversion" outputproperty="bundle.revision">
                     <arg value="${dir.src.osgi}/${pack}"/>
                 </exec>
-            </else>
+            </then>
         </if>
 
         <mkdir dir="${dir.bundle.extra}/${pack}"/>

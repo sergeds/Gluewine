@@ -1,20 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="Init" basedir="." default="init">
-    <!-- Change for your project -->
-    <property name="product" value="gluewine"/>
-    <property name="version" value="0.0.1"/>
-
-    <property name="starthtml" value="Gluewine.html"/>
-    <property name="gwt.basepackage" value="org.gwt.gluewine.Gluewine"/>
-    <property name="vcs" value="git"/>
-    <property name="framework" value="gluewine"/>
-
-    <!-- Java Compiler specific options -->
-    <property name="debuginfo" value="on"/>
-    <property name="debuglevel" value="source,lines,vars"/>
-    <property name="target" value="1.6"/>
-    <property name="source" value="1.6"/>
-
     <!-- Directories -->
     <property name="dir.gwt" value="src/gwt"/>
     <property name="dir.build" value="../build"/>
@@ -147,11 +132,14 @@
                 <arg value="--pretty=format:%h"/>
             </exec>
         </then>
-        <else>
+    </if>
+    <if>
+        <equals arg1="${vcs}" arg2="svn" />
+        <then>
             <exec executable="svnversion" failifexecutionfails="false" outputproperty="buildinfo.globalrevision">
                 <arg value=".."/>
             </exec>
-        </else>
+        </then>
     </if>
     <tstamp>
         <format property="buildinfo.timestamp" pattern="yyyy-MM-dd"/>
