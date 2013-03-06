@@ -142,11 +142,9 @@
         <equals arg1="${vcs}" arg2="git" />
         <then>
             <exec executable="git" failifexecutionfails="false" outputproperty="buildinfo.globalrevision">
-                <arg value="log"/>
-                <arg value="--format=%h"/>
-                <arg value="-1"/>
-                <arg value="--"/>
-                <arg value=".."/>
+                <arg value="show"/>
+                <arg value="-s"/>
+                <arg value="--pretty=format:%h"/>
             </exec>
         </then>
         <else>

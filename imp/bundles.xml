@@ -47,9 +47,10 @@
             <equals arg1="${vcs}" arg2="git" />
             <then>
                 <exec executable="git" outputproperty="bundle.revision">
-                    <arg value="show"/>
-                    <arg value="-s"/>
-                    <arg value="--pretty=format:%h"/>
+                    <arg value="log"/>
+                    <arg value="--format=%h"/>
+                    <arg value="-1"/>
+                    <arg value="--"/>
                     <arg value="${dir.src.osgi}/${pack}"/>
                 </exec>
             </then>
