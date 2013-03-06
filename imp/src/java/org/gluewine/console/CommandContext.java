@@ -50,6 +50,14 @@ public interface CommandContext
 
     // ===========================================================================
     /**
+     * Returns the number of arguments present.
+     *
+     * @return The number of arguments.
+     */
+    int getArgumentCount();
+
+    // ===========================================================================
+    /**
      * Parses the options specified, and throws a Runtime exception if
      * the CLI arguments don't match the given option rules.
      *

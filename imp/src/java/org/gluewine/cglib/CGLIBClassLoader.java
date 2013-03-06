@@ -53,11 +53,17 @@ public class CGLIBClassLoader extends ClassLoader
     @Override
     protected Class<?> findClass(String name) throws ClassNotFoundException
     {
-        if (name.startsWith("net.sf.cglib"))
-            return Class.forName(name);
+        Class<?> c = findLoadedClass(name);
 
-        else
-            return dispatcher.loadClass(name);
+        if (c == null)
+        {
+            if (name.startsWith("net.sf.cglib"))
+                return Class.forName(name);
+
+            else
+                return dispatcher.loadClass(name);
+        }
+        else return c;
     }
 
     // ===========================================================================

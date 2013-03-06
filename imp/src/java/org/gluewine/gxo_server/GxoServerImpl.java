@@ -40,6 +40,7 @@ import java.util.UUID;
 
 import org.apache.log4j.Logger;
 import org.gluewine.core.RepositoryListener;
+import org.gluewine.core.RunBeforeUngluing;
 import org.gluewine.core.RunWhenGlued;
 import org.gluewine.gxo.CloseBean;
 import org.gluewine.gxo.CompressedBlockInputStream;
@@ -185,6 +186,7 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
      * Deactivates the server and requests the server socket to be closed.
      * The server can no longer be used after this method has been invoked.
      */
+    @RunBeforeUngluing
     public void deactivate()
     {
         stopRequested = true;

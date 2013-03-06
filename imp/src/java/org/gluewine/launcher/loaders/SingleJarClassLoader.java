@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  **************************************************************************/
-package org.gluewine.launcher;
+package org.gluewine.launcher.loaders;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,6 +31,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+
+import org.gluewine.launcher.GluewineClassLoader;
 
 /**
  * A Gluewine classloader that handles a single jar/zip file.
@@ -229,5 +231,19 @@ public class SingleJarClassLoader extends URLClassLoader implements GluewineClas
                 }
             }
         }
+    }
+
+    // ===========================================================================
+    @Override
+    public String toString()
+    {
+        return "SJC:" + file.getAbsolutePath();
+    }
+
+    // ===========================================================================
+    @Override
+    public GluewineClassLoader[] getAllDispatchers()
+    {
+        return new GluewineClassLoader[] {dispatcher};
     }
 }

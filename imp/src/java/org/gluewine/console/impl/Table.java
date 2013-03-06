@@ -136,7 +136,7 @@ public class Table
                 if (i < headers.length - 1)
                     b.append(" | ");
             }
-            cc.println(b.toString());
+            cc.println(" " + b.toString());
             b.delete(0, b.length());
             for (int i = 0; i < columnWidth.length; i++)
             {
@@ -145,7 +145,7 @@ public class Table
                 if (i < columnWidth.length - 1)
                     b.append("-|-");
             }
-            cc.println(b.toString());
+            cc.println(" " + b.toString());
             b.delete(0, b.length());
         }
 
@@ -181,7 +181,7 @@ public class Table
                         b.append("|");
                 }
             }
-            cc.println(b.toString());
+            cc.println(" " + b.toString());
             b.delete(0, b.length());
         }
     }

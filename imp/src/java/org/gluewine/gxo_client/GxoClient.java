@@ -26,6 +26,7 @@ import java.io.OutputStreamWriter;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 
 import org.apache.log4j.Logger;
@@ -206,7 +207,9 @@ public class GxoClient
 
             if (!connected)
             {
-                socket = new Socket(host, port);
+                socket = new Socket();
+                socket.connect(new InetSocketAddress(host, port), 10000);
+                socket.setSoTimeout(10000);
                 CompressedBlockInputStream cin = new CompressedBlockInputStream(socket.getInputStream());
                 CompressedBlockOutputStream cout = new CompressedBlockOutputStream(socket.getOutputStream(), 1024);
                 in = new InputStreamReader(cin, "UTF-8");

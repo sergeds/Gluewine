@@ -65,6 +65,7 @@ public class CGLIBEnhancer implements ClassEnhancer
                 net.sf.cglib.proxy.Enhancer e = new net.sf.cglib.proxy.Enhancer();
                 e.setSuperclass(c);
                 e.setClassLoader(new CGLIBClassLoader(c.getClassLoader()));
+               // e.setClassLoader(c.getClassLoader());
                 e.setCallback(interceptor);
                 return (T) e.create();
             }

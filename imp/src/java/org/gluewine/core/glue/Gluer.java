@@ -21,24 +21,22 @@
  **************************************************************************/
 package org.gluewine.core.glue;
 
-import java.io.File;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.jar.Attributes;
-import java.util.jar.JarFile;
-import java.util.jar.Manifest;
 
 import org.apache.log4j.Logger;
 import org.gluewine.core.AspectProvider;
 import org.gluewine.core.ClassEnhancer;
-import org.gluewine.core.JarListener;
+import org.gluewine.core.CodeSourceListener;
 import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.ServiceProvider;
-import org.gluewine.core.utils.ErrorLogger;
+import org.gluewine.launcher.CodeSource;
 import org.gluewine.launcher.Launcher;
 
 /**
@@ -48,7 +46,7 @@ import org.gluewine.launcher.Launcher;
  * @author fks/Serge de Schaetzen
  *
  */
-public final class Gluer implements JarListener
+public final class Gluer implements CodeSourceListener
 {
     // ===========================================================================
     /**
@@ -59,7 +57,12 @@ public final class Gluer implements JarListener
     /**
      * The list of services.
      */
-    private List<Service> services = new ArrayList<Service>();
+   // private List<Service> services = new ArrayList<Service>();
+
+    /**
+     * The map of services indexed on their id.
+     */
+    private Map<Integer, Service> serviceMap = new HashMap<Integer, Service>();
 
     /**
      * The set of available service providers.
@@ -75,6 +78,11 @@ public final class Gluer implements JarListener
      * The class "enhancer".
      */
     private ClassEnhancer enhancer = null;
+
+    /**
+     * The next id for the services.
+     */
+    private int nextId = 0;
 
     /**
      * The repository instance to use.
@@ -103,11 +111,11 @@ public final class Gluer implements JarListener
         if (enhancer != null) display("Using enhancer: " + enhancer.getClass().getName());
         else display("Running in non-enhanced mode.");
 
-        services.add(new Service(Launcher.getInstance()));
-        services.add(new Service(repository));
-        services.add(new Service(this));
+        addService(new Service(Launcher.getInstance(), getNextId()));
+        addService(new Service(repository, getNextId()));
+        addService(new Service(this, getNextId()));
 
-        jarsAdded(Launcher.getInstance().getJarFiles());
+        processSources(Launcher.getInstance().getSources());
         launch();
 
         System.out.println("Gluewine Framework started in " + (System.currentTimeMillis() - start) + " milliseconds.");
@@ -115,25 +123,47 @@ public final class Gluer implements JarListener
 
     // ===========================================================================
     /**
-     * Will stop and unregister all services that match the given name.
+     * Adds a service to the map of registered services.
+     *
+     * @param service The service to add.
+     */
+    private void addService(Service service)
+    {
+        serviceMap.put(Integer.valueOf(service.getId()), service);
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the next available id.
+     *
+     * @return The next id.
+     */
+    private synchronized int getNextId()
+    {
+        return ++nextId;
+    }
+
+    // ===========================================================================
+    /**
+     * Will stop and unregister all services that match the given ids.
      * All services referencing the service being stopped, will be stopped as well.
      *
-     * @param name The name of the service(s) to stop.
+     * @param ids The ids of the services to stop.
      * @return The set of services that have been stopped.
      */
-    public Set<Service> stop(String name)
+    public Set<Service> stop(int[] ids)
     {
         Set<Service> stopped = new HashSet<Service>();
-        for (Service s : services)
+        for (int id : ids)
         {
-            String serviceName = s.getServiceClass().getName();
-            if (serviceName.startsWith(name) && s.isActive())
+            Service s = serviceMap.get(Integer.valueOf(id));
+            if (s != null && s.isActive())
             {
                 deregisterObject(s.getActualService());
                 s.deactivate();
                 stopped.add(s);
 
-                for (Service ref : services)
+                for (Service ref : serviceMap.values())
                 {
                     if (ref.references(s.getActualService()))
                     {
@@ -149,16 +179,16 @@ public final class Gluer implements JarListener
 
     // ===========================================================================
     /**
-     * Unglues the services that match the name. The services are first being
+     * Unglues the services with the given ids. The services are first being
      * stopped. Referencing services are unglued as well.
      *
-     * @param name The name of the service(s) to unglue.
+     * @param ids The ids of the service(s) to unglue.
      * @return The set of services that were unglued.
      */
-    public Set<Service> unglue(String name)
+    public Set<Service> unglue(int[] ids)
     {
         Set<Service> unglued = new HashSet<Service>();
-        Set<Service> stopped = stop(name);
+        Set<Service> stopped = stop(ids);
         for (Service s : stopped)
             if (s.isGlued())
             {
@@ -166,10 +196,10 @@ public final class Gluer implements JarListener
                 unglued.add(s);
             }
 
-        for (Service s : services)
+        for (int id : ids)
         {
-            String serviceName = s.getServiceClass().getName();
-            if (serviceName.startsWith(name) && s.isGlued())
+            Service s = serviceMap.get(Integer.valueOf(id));
+            if (s != null && s.isGlued())
             {
                 s.unglue();
                 unglued.add(s);
@@ -181,16 +211,16 @@ public final class Gluer implements JarListener
 
     // ===========================================================================
     /**
-     * Unresolves the services that match the name. The services are first being
+     * Unresolves the services that match the ids. The services are first being
      * unglued. Referencing services are unresolved as well.
      *
-     * @param name The name of the service(s) to unresolve.
+     * @param ids The ids of the service(s) to unresolve.
      * @return The set of services that were unresolve.
      */
-    public Set<Service> unresolve(String name)
+    public Set<Service> unresolve(int[] ids)
     {
         Set<Service> unresolved = new HashSet<Service>();
-        Set<Service> unglued = unglue(name);
+        Set<Service> unglued = unglue(ids);
         for (Service s : unglued)
             if (s.isResolved())
             {
@@ -198,10 +228,10 @@ public final class Gluer implements JarListener
                 unresolved.add(s);
             }
 
-        for (Service s : services)
+        for (int id : ids)
         {
-            String serviceName = s.getServiceClass().getName();
-            if (serviceName.startsWith(name) && s.isResolved())
+            Service s = serviceMap.get(Integer.valueOf(id));
+            if (s != null && s.isResolved())
             {
                 s.unresolve();
                 unresolved.add(s);
@@ -222,14 +252,14 @@ public final class Gluer implements JarListener
      */
     public void removed(ClassLoader loader)
     {
-        Iterator<Service> siter = services.iterator();
+        Iterator<Service> siter = serviceMap.values().iterator();
         while (siter.hasNext())
         {
             Service s = siter.next();
 
             if (getClassLoaderForObject(s.getActualService()) == loader)
             {
-                unresolve(s.getActualService().getClass().getName());
+                unresolve(new int[] {s.getId()});
                 siter.remove();
             }
         }
@@ -263,16 +293,16 @@ public final class Gluer implements JarListener
 
     // ===========================================================================
     /**
-     * Resolves, glues and starts all services that match the given name.
+     * Resolves, glues and starts all services that given ids.
      *
-     * @param name The name of the service(s) to start.
+     * @param ids The ids of the service(s) to start.
      */
-    public void start(String name)
+    public void start(int[] ids)
     {
-        for (Service s : services)
+        for (int id : ids)
         {
-            String serviceName = s.getServiceClass().getName();
-            if (serviceName.startsWith(name) && !s.isActive())
+            Service s = serviceMap.get(Integer.valueOf(id));
+            if (s != null && !s.isActive())
             {
                 s.activate();
                 registerObject(s.getActualService());
@@ -282,36 +312,36 @@ public final class Gluer implements JarListener
 
     // ===========================================================================
     /**
-     * Resolves, glues and starts all services that match the given name.
+     * Resolves, glues and starts all services with the given id.
      *
-     * @param name The name of the service(s) to start.
+     * @param ids[] The service ids.
      */
-    public void glue(String name)
+    public void glue(int[] ids)
     {
-        for (Service s : services)
+        for (int id : ids)
         {
-            String serviceName = s.getServiceClass().getName();
-            if (serviceName.startsWith(name) && !s.isGlued())
+            Service s = serviceMap.get(Integer.valueOf(id));
+            if (s != null && !s.isGlued())
                 s.glue();
         }
     }
 
     // ===========================================================================
     /**
-     * Resolves, glues and starts all services that match the given name.
+     * Resolves, glues and starts all services with the given ids.
      *
-     * @param name The name of the service(s) to start.
+     * @param ids The ids of the services to resolve.
      */
-    public void resolve(String name)
+    public void resolve(int[] ids)
     {
-        List<Object> actuals = new ArrayList<Object>(services.size());
-        for (Service s : services)
+        List<Object> actuals = new ArrayList<Object>(serviceMap.size());
+        for (Service s : serviceMap.values())
             actuals.add(s.getActualService());
 
-        for (Service s : services)
+        for (int id : ids)
         {
-            String serviceName = s.getServiceClass().getName();
-            if (serviceName.startsWith(name) && !s.isResolved())
+            Service s = serviceMap.get(Integer.valueOf(id));
+            if (s != null && !s.isResolved())
                 s.resolve(actuals, providers);
         }
     }
@@ -352,7 +382,7 @@ public final class Gluer implements JarListener
     {
         boolean active = true;
 
-        for (Service s : services)
+        for (Service s : serviceMap.values())
         {
             if (s.isGlued() && !s.activate())
             {
@@ -370,7 +400,7 @@ public final class Gluer implements JarListener
      */
     private void deactivate()
     {
-        for (Service s : services)
+        for (Service s : serviceMap.values())
         {
             if (s.isActive())
                 s.deactivate();
@@ -387,7 +417,7 @@ public final class Gluer implements JarListener
     {
         boolean unglued = true;
 
-        for (Service s : services)
+        for (Service s : serviceMap.values())
         {
             if (s.isGlued() && !s.unglue())
             {
@@ -405,7 +435,7 @@ public final class Gluer implements JarListener
      */
     private void unresolve()
     {
-        for (Service s : services)
+        for (Service s : serviceMap.values())
         {
             if (s.isResolved())
                 s.unresolve();
@@ -422,7 +452,7 @@ public final class Gluer implements JarListener
     {
         boolean glued = true;
 
-        for (Service s : services)
+        for (Service s : serviceMap.values())
         {
             if (s.isResolved() && !s.glue())
             {
@@ -442,12 +472,12 @@ public final class Gluer implements JarListener
      */
     private boolean resolve()
     {
-        List<Object> actuals = new ArrayList<Object>(services.size());
-        for (Service s : services)
+        List<Object> actuals = new ArrayList<Object>(serviceMap.size());
+        for (Service s : serviceMap.values())
             actuals.add(s.getActualService());
 
         boolean resolved = true;
-        for (Service s : services)
+        for (Service s : serviceMap.values())
         {
             if (!s.resolve(actuals, providers))
             {
@@ -508,7 +538,7 @@ public final class Gluer implements JarListener
      */
     private void registerAllServices()
     {
-        for (Service s : services)
+        for (Service s : serviceMap.values())
             registerObject(s.getActualService());
     }
 
@@ -533,7 +563,7 @@ public final class Gluer implements JarListener
      */
     private void deregisterAllObjects()
     {
-        for (Service s : services)
+        for (Service s : serviceMap.values())
             deregisterObject(s.getActualService());
     }
 
@@ -559,8 +589,8 @@ public final class Gluer implements JarListener
      */
     public List<Service> getServices()
     {
-        List<Service> l = new ArrayList<Service>(services.size());
-        l.addAll(services);
+        List<Service> l = new ArrayList<Service>(serviceMap.size());
+        l.addAll(serviceMap.values());
         return l;
     }
 
@@ -572,8 +602,8 @@ public final class Gluer implements JarListener
      */
     public List<Object> getDefinedServices()
     {
-        List<Object> l = new ArrayList<Object>(services.size());
-        l.addAll(services);
+        List<Object> l = new ArrayList<Object>(serviceMap.size());
+        l.addAll(serviceMap.values());
         return l;
     }
 
@@ -600,46 +630,64 @@ public final class Gluer implements JarListener
      */
     private void loadEnhancer()
     {
-        List<File> files = Launcher.getInstance().getJarFiles();
-        for (int i = 0; i < files.size() && enhancer == null; i++)
+        List<CodeSource> sources = Launcher.getInstance().getSources();
+        for (int i = 0; i < sources.size() && enhancer == null; i++)
         {
-            File file = files.get(i);
-            JarFile jar = null;
-            try
+            CodeSource source = sources.get(i);
+            for (int j = 0; j < source.getEnhancers().length && enhancer == null; j++)
             {
-                jar = new JarFile(file);
-                Manifest manifest = jar.getManifest();
-                if (manifest != null)
+                try
                 {
-                    Attributes attr = manifest.getMainAttributes();
-                    String enh = attr.getValue("Gluewine-Enhancer");
-                    if (enh != null)
-                    {
-                        enh = enh.trim();
-                        logger.debug("Instantiating enchancer " + enh);
-                        Class<?> clazz = getClass().getClassLoader().loadClass(enh);
-                        Constructor<?> constructor = clazz.getConstructor(Interceptor.class);
-                        enhancer = (ClassEnhancer) constructor.newInstance(interceptor);
-                    }
+                    String enh = source.getEnhancers()[j];
+                    logger.debug("Instantiating enchancer " + enh);
+                    Class<?> clazz = source.getSourceClassLoader().loadClass(enh);
+                    Constructor<?> constructor = clazz.getConstructor(Interceptor.class);
+                    enhancer = (ClassEnhancer) constructor.newInstance(interceptor);
+                }
+                catch (Throwable e)
+                {
+                    logger.error(e);
                 }
             }
-            catch (Throwable e)
+        }
+    }
+
+    // ===========================================================================
+    /**
+     * Processes the sources specified.
+     *
+     * @param sources The sources to process.
+     */
+    private void processSources(List<CodeSource> sources)
+    {
+        for (CodeSource source : sources)
+        {
+            ClassLoader loader = source.getSourceClassLoader();
+            for (String cl : source.getServices())
             {
-                ErrorLogger.log(getClass(), e);
-                throw new RuntimeException(e);
-            }
-            finally
-            {
-                if (jar != null)
+                try
                 {
-                    try
-                    {
-                        jar.close();
-                    }
-                    catch (Throwable e)
-                    {
-                        ErrorLogger.log(getClass(), e);
-                    }
+                    logger.debug("Instantiating class " + cl);
+                    Class<?> clazz = loader.loadClass(cl);
+
+                    Object o = null;
+                    if (enhancer == null || AspectProvider.class.isAssignableFrom(clazz))
+                        o = clazz.newInstance();
+
+                    else o = enhancer.getEnhanced(clazz);
+
+                    if (AspectProvider.class.isAssignableFrom(clazz))
+                        interceptor.register((AspectProvider) o);
+
+                    addService(new Service(o, getNextId()));
+
+                    if (o instanceof ServiceProvider)
+                        providers.add((ServiceProvider) o);
+                }
+                catch (Throwable e)
+                {
+                    e.printStackTrace();
+                    logger.error(e);
                 }
             }
         }
@@ -647,78 +695,19 @@ public final class Gluer implements JarListener
 
     // ===========================================================================
     @Override
-    public void jarsAdded(List<File> files)
+    public void codeSourceAdded(List<CodeSource> sources)
     {
-        for (File file : files)
-        {
-            JarFile jar = null;
-            try
-            {
-                jar = new JarFile(file);
-                Manifest manifest = jar.getManifest();
-                if (manifest != null)
-                {
-                    Attributes attr = manifest.getMainAttributes();
-                    String act = attr.getValue("Gluewine-Services");
-                    if (act != null)
-                    {
-                        ClassLoader loader = Launcher.getInstance().getClassLoaderForJar(file);
-                        act = act.trim();
-                        String[] cl = act.split(",");
-                        for (String c : cl)
-                        {
-                            c = c.trim();
-                            logger.debug("Instantiating class " + c);
-                            Class<?> clazz = loader.loadClass(c);
-
-                            Object o = null;
-                            if (enhancer == null || AspectProvider.class.isAssignableFrom(clazz))
-                                o = clazz.newInstance();
-
-                            else
-                                o = enhancer.getEnhanced(clazz);
-
-                            if (AspectProvider.class.isAssignableFrom(clazz))
-                                interceptor.register((AspectProvider) o);
-
-                            services.add(new Service(o));
-
-                            if (o instanceof ServiceProvider)
-                                providers.add((ServiceProvider) o);
-                        }
-                    }
-                }
-            }
-            catch (Throwable e)
-            {
-                ErrorLogger.log(getClass(), e);
-                throw new RuntimeException(e);
-            }
-            finally
-            {
-                if (jar != null)
-                {
-                    try
-                    {
-                        jar.close();
-                    }
-                    catch (Throwable e)
-                    {
-                        ErrorLogger.log(getClass(), e);
-                    }
-                }
-            }
-        }
+        processSources(sources);
+        launch();
     }
 
     // ===========================================================================
     @Override
-    public void jarsRemoved(List<File> files)
+    public void codeSourceRemoved(List<CodeSource> sources)
     {
-        for (File file : files)
-        {
-            ClassLoader loader = Launcher.getInstance().getClassLoaderForJar(file);
-            removed(loader);
-        }
+        for (CodeSource source : sources)
+            removed(source.getSourceClassLoader());
+
+        launch();
     }
 }

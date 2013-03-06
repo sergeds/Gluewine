@@ -21,16 +21,17 @@
  **************************************************************************/
 package org.gluewine.core;
 
-import java.io.File;
 import java.util.List;
+
+import org.gluewine.launcher.CodeSource;
 
 /**
  * Interface to be implemented by classes wanting to be notified
- * of the presence of new jars or the removal of one.
+ * of the presence of new codesource or the removal of one.
  *
  * <p>Note that an update of existing files will result in the
- * invocation of <code>jarRemove(files)</code> followed by the
- * invocation of <code>jarAdded(files)</code>.
+ * invocation of <code>codeSourceRemove(codesources)</code> followed by the
+ * invocation of <code>codeSourceAdded(codesources)</code>.
  *
  * <p>To register these listeners simply implement them (from a Glued service)
  * or register them with the repository.
@@ -38,21 +39,21 @@ import java.util.List;
  * @author fks/Serge de Schaetzen
  *
  */
-public interface JarListener
+public interface CodeSourceListener
 {
     // ===========================================================================
     /**
-     * Invoked when new files have been added to the network.
+     * Invoked when new codesources have been added to the network.
      *
-     * @param files The files that have been added.
+     * @param sources The codesources that have been added.
      */
-    void jarsAdded(List<File> files);
+    void codeSourceAdded(List<CodeSource> sources);
 
     // ===========================================================================
     /**
-     * Invoked when files have been removed from the network.
+     * Invoked when codesources have been removed from the network.
      *
-     * @param files The files that have been removed.
+     * @param sources The codesources that have been removed.
      */
-    void jarsRemoved(List<File> files);
+    void codeSourceRemoved(List<CodeSource> sources);
 }

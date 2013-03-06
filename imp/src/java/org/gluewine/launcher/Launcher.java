@@ -35,8 +35,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.TreeMap;
+
+import org.gluewine.launcher.loaders.DirectoryJarClassLoader;
+import org.gluewine.launcher.loaders.SingleJarClassLoader;
+import org.gluewine.launcher.sources.DirectoryCodeSource;
+import org.gluewine.launcher.sources.JarCodeSource;
 
 /**
  * Launches the Gluewine framework. It acceps one parameter: The name of the class
@@ -61,29 +65,34 @@ public final class Launcher
 {
     // ===========================================================================
     /**
-     * The list of available files.
-     */
-    private List<File> jarFiles = new ArrayList<File>();
-
-    /**
-     * The map of files and their short name.
-     */
-    private Map<File, String> jarFileNames = new HashMap<File, String>();
-
-    /**
      * The classloader to use per directory.
      */
-    private Map<File, DirectoryJarClassLoader> directories = new HashMap<File, DirectoryJarClassLoader>();
+    private Map<CodeSource, DirectoryJarClassLoader> directories = new HashMap<CodeSource, DirectoryJarClassLoader>();
 
     /**
      * The map of all available classloaders indexed on the file they loaded.
      */
-    private Map<File, ClassLoader> loaders = new HashMap<File, ClassLoader>();
+    private Map<CodeSource, ClassLoader> loaders = new HashMap<CodeSource, ClassLoader>();
+
+    /**
+     * Map of parent/children CodeSources.
+     */
+    private Map<CodeSource, List<CodeSource>> parentChildren = new HashMap<CodeSource, List<CodeSource>>();
+
+    /**
+     * Map of children/parent CodeSources.
+     */
+    private Map<CodeSource, CodeSource> childrenParent = new HashMap<CodeSource, CodeSource>();
+
+    /**
+     * The map of sources indexed on their shortname
+     */
+    private Map<String, CodeSource> sources = new TreeMap<String, CodeSource>();
 
     /**
      * The list of directories, sorted using the DirectoryNameComparator.
      */
-    private List<File> sortedDirectories = new ArrayList<File>();
+    private List<CodeSource> sortedDirectories = new ArrayList<CodeSource>();
 
     /**
      * The directory containing the configuration file(s).
@@ -133,7 +142,14 @@ public final class Launcher
             if (log4j.exists()) System.setProperty("log4j.configuration", "file:/" + log4j.getAbsolutePath().replace('\\', '/'));
         }
 
-        if (root.exists()) processDirectory(root);
+        try
+        {
+            if (root.exists()) processDirectory(root);
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
 
         processMapping();
     }
@@ -144,9 +160,9 @@ public final class Launcher
      */
     private void processMapping()
     {
-        Map<File, DirectoryJarClassLoader> temp = new HashMap<File, DirectoryJarClassLoader>();
+        Map<CodeSource, DirectoryJarClassLoader> temp = new HashMap<CodeSource, DirectoryJarClassLoader>();
         temp.putAll(directories);
-        Collections.sort(sortedDirectories, new DirectoryNameComparator());
+        Collections.sort(sortedDirectories, new CodeSourceNameComparator());
         directories.clear();
 
         for (int i = 0; i < sortedDirectories.size(); i++)
@@ -170,13 +186,14 @@ public final class Launcher
      * Processes the given directory recursively and loads all jars/zips found.
      *
      * @param dir The directory to process.
+     * @return The CodeSource for that directory.
+     * @throws IOException If an exception occurs.
      */
-    private void processDirectory(File dir)
+    private List<CodeSource> processDirectory(File dir) throws IOException
     {
-        DirectoryJarClassLoader loader = new DirectoryJarClassLoader(dir);
-        directories.put(dir, loader);
-        sortedDirectories.add(dir);
-        loaders.put(dir, loader);
+        List<CodeSource> newSources = new ArrayList<CodeSource>();
+        CodeSource dcs = createSourceForDirectory(dir);
+        newSources.add(dcs);
 
         File[] files = dir.listFiles();
         for (File file : files)
@@ -193,11 +210,104 @@ public final class Launcher
                     {
                         try
                         {
-                            SingleJarClassLoader cl = new SingleJarClassLoader(file, loader);
-                            loader.addLoader(cl);
-                            jarFiles.add(file);
-                            jarFileNames.put(file, getShortName(file));
-                            loaders.put(file, cl);
+                            CodeSource jcs = createSourceForFile(file);
+                            newSources.add(jcs);
+                        }
+                        catch (IOException e)
+                        {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        }
+
+        return newSources;
+    }
+
+    // ===========================================================================
+    /**
+     * Creates a CodeSource for the given file.
+     *
+     * @param file The file to process.
+     * @return The code source.
+     * @throws IOException If a read error occurs.
+     */
+    private CodeSource createSourceForFile(File file) throws IOException
+    {
+        String parent = getShortName(file.getParentFile());
+        CodeSource pcs = sources.get(parent);
+        if (pcs == null) pcs = createSourceForDirectory(file.getParentFile());
+
+        DirectoryJarClassLoader dcl = (DirectoryJarClassLoader) pcs.getSourceClassLoader();
+        SingleJarClassLoader cl = new SingleJarClassLoader(file, (GluewineClassLoader) pcs.getSourceClassLoader());
+        dcl.addLoader(cl);
+        JarCodeSource jcs = new JarCodeSource(file);
+        jcs.setSourceClassLoader(cl);
+        jcs.setDisplayName(getShortName(file));
+
+        loaders.put(jcs, jcs.getSourceClassLoader());
+        sources.put(jcs.getDisplayName(), jcs);
+        parentChildren.get(pcs).add(jcs);
+        childrenParent.put(jcs, pcs);
+
+        return jcs;
+    }
+
+    // ===========================================================================
+    /**
+     * Creates a CodeSource for the given directory.
+     *
+     * @param dir The directory to process.
+     * @return The code source.
+     * @throws IOException If a read error occurs.
+     */
+    private CodeSource createSourceForDirectory(File dir) throws IOException
+    {
+        DirectoryJarClassLoader loader = new DirectoryJarClassLoader(dir);
+        DirectoryCodeSource dcs = new DirectoryCodeSource(dir);
+        dcs.setDisplayName(getShortName(dir));
+        dcs.setSourceClassLoader(loader);
+
+        sortedDirectories.add(dcs);
+        directories.put(dcs, loader);
+        loaders.put(dcs, dcs.getSourceClassLoader());
+        sources.put(dcs.getDisplayName(), dcs);
+        List<CodeSource> children = new ArrayList<CodeSource>();
+        parentChildren.put(dcs, children);
+
+        return dcs;
+    }
+
+    // ===========================================================================
+    /**
+     * Adds the objects specified and returns a list of codesources.
+     *
+     * @param toadd The objects to add.
+     * @return The list of new CodeSources.
+     */
+    public List<CodeSource> add(List<String> toadd)
+    {
+        List<CodeSource> added = new ArrayList<CodeSource>();
+        try
+        {
+            for (String s : toadd)
+            {
+                File file = new File(getRoot(), s);
+
+                DirectoryJarClassLoader pcl = directories.get(file.getParentFile());
+                if (pcl == null)
+                    added.addAll(processDirectory(file.getParentFile()));
+
+                else
+                {
+                    String name = file.getName().toLowerCase(Locale.getDefault());
+                    if (name.endsWith(".jar") || name.endsWith(".zip"))
+                    {
+                        try
+                        {
+                            CodeSource source = createSourceForFile(file);
+                            added.add(source);
                         }
                         catch (MalformedURLException e)
                         {
@@ -207,44 +317,13 @@ public final class Launcher
                 }
             }
         }
-    }
-
-    // ===========================================================================
-    /**
-     * Adds the files specified.
-     *
-     * @param files The files to add.
-     */
-    public void add(List<File> files)
-    {
-        for (File file : files)
+        catch (IOException e)
         {
-            DirectoryJarClassLoader pcl = directories.get(file.getParentFile());
-            if (pcl == null)
-                processDirectory(file.getParentFile());
-
-            else
-            {
-                String name = file.getName().toLowerCase(Locale.getDefault());
-                if (name.endsWith(".jar") || name.endsWith(".zip"))
-                {
-                    try
-                    {
-                        SingleJarClassLoader cl = new SingleJarClassLoader(file, pcl);
-                        pcl.addLoader(cl);
-                        jarFiles.add(file);
-                        jarFileNames.put(file, getShortName(file));
-                        loaders.put(file, cl);
-                    }
-                    catch (MalformedURLException e)
-                    {
-                        e.printStackTrace();
-                    }
-                }
-            }
+            e.printStackTrace();
         }
 
         processMapping();
+        return added;
     }
 
     // ===========================================================================
@@ -257,35 +336,13 @@ public final class Launcher
      */
     private String getShortName(File file)
     {
-        String name = file.getAbsolutePath();
-        name = name.substring(root.getAbsolutePath().length() + 1);
-        return name.replace('\\', '/');
-    }
-
-    // ===========================================================================
-    /**
-     * Returns the set of jar file names.
-     *
-     * @return The set of jar file names.
-     */
-    public Set<String> getJarFileNames()
-    {
-        Set<String> s = new TreeSet<String>();
-        s.addAll(jarFileNames.values());
-        return s;
-    }
-
-    // ===========================================================================
-    /**
-     * Returns the list of available jar/zip files.
-     *
-     * @return The list of files.
-     */
-    public List<File> getJarFiles()
-    {
-        List<File> f = new ArrayList<File>(jarFiles.size());
-        f.addAll(jarFiles);
-        return f;
+        if (file.equals(root)) return "/";
+        else
+        {
+            String name = file.getAbsolutePath();
+            name = name.substring(root.getAbsolutePath().length());
+            return name.replace('\\', '/');
+        }
     }
 
     // ===========================================================================
@@ -338,6 +395,19 @@ public final class Launcher
 
     // ===========================================================================
     /**
+     * Returns the list of available code sources.
+     *
+     * @return The list of codesources.
+     */
+    public List<CodeSource> getSources()
+    {
+        List<CodeSource> l = new ArrayList<CodeSource>();
+        l.addAll(sources.values());
+        return l;
+    }
+
+    // ===========================================================================
+    /**
      * Returns the classloader to use for the given jar.
      *
      * @param jar The jar file to use.
@@ -350,71 +420,74 @@ public final class Launcher
 
     // ===========================================================================
     /**
-     * Removes the list of files specified.
+     * Removes the list of objects specified.
      *
-     * @param files The list of files to remove.
+     * @param toRemove The objects to remove.
+     * @return The list of removed codesources.
      */
-    public void remove(List<File> files)
+    public List<CodeSource> remove(List<String> toRemove)
     {
-        for (File file : files)
-        {
-            DirectoryJarClassLoader cl = null;
-            if (file.isFile())
-            {
-                cl = directories.get(file.getParentFile());
-                if (cl != null)
-                {
-                    ClassLoader loader = loaders.remove(file);
-                    if (loader instanceof SingleJarClassLoader)
-                    {
-                        remove((SingleJarClassLoader) loader);
-                        cl.remove((SingleJarClassLoader) loader);
-                    }
-                }
-            }
-            else
-            {
-                cl = directories.get(file);
-                if (cl != null)
-                {
-                    for (SingleJarClassLoader sl : cl.getFileLoaders())
-                    {
-                        remove(sl);
-                        cl.remove(sl);
-                    }
-                }
-            }
+        List<CodeSource> removed = new ArrayList<CodeSource>();
 
-            if (cl != null && cl.isEmpty())
+        for (String s : toRemove)
+        {
+            List<String> displayNames = new ArrayList<String>();
+            displayNames.addAll(sources.keySet());
+            for (String disp : displayNames)
             {
-                this.directories.remove(cl.getDirectory());
-                this.jarFileNames.remove(cl.getDirectory());
-                this.jarFiles.remove(cl.getDirectory());
-                this.loaders.remove(cl.getDirectory());
+                if (disp.startsWith(s))
+                {
+                    CodeSource source = sources.get(disp);
+                    if (source instanceof JarCodeSource)
+                    {
+                        CodeSource parent = childrenParent.get(source);
+                        ((DirectoryJarClassLoader) parent.getSourceClassLoader()).remove((SingleJarClassLoader) source.getSourceClassLoader());
+                        source.closeLoader();
+                        List<CodeSource> children = parentChildren.get(parent);
+                        children.remove(source);
+                    }
+                    else
+                    {
+                        DirectoryJarClassLoader dirLoader = (DirectoryJarClassLoader) source.getSourceClassLoader();
+                        List<CodeSource> children = parentChildren.remove(source);
+                        for (CodeSource child : children)
+                        {
+                            SingleJarClassLoader jarLoader = (SingleJarClassLoader) child.getSourceClassLoader();
+                            dirLoader.remove(jarLoader);
+                            childrenParent.remove(child);
+                            loaders.remove(jarLoader);
+                            sources.remove(child.getDisplayName());
+                            removed.add(source);
+                        }
+
+                        sortedDirectories.remove(source);
+                    }
+
+                    loaders.remove(source);
+                    sources.remove(source.getDisplayName());
+
+                    removed.add(source);
+                }
+            }
+        }
+
+        // Clean up all remaining directory sources with no children:
+        List<CodeSource> dirs = new ArrayList<CodeSource>(sortedDirectories.size());
+        dirs.addAll(sortedDirectories);
+        for (CodeSource cs : dirs)
+        {
+            List<CodeSource> children = parentChildren.get(cs);
+            if (children != null && children.isEmpty())
+            {
+                sortedDirectories.remove(cs);
+                loaders.remove(cs);
+                sources.remove(cs.getDisplayName());
+                removed.add(cs);
             }
         }
 
         processMapping();
-    }
-
-    // ===========================================================================
-    /**
-     * Removes (and closes) the given instance of the classloader.
-     *
-     * @param loader The loader to close.
-     */
-    private void remove(SingleJarClassLoader loader)
-    {
-        try
-        {
-            loader.close();
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-        jarFileNames.remove(loader.getFile());
-        jarFiles.remove(loader.getFile());
+        return removed;
     }
 
     // ===========================================================================
@@ -454,7 +527,8 @@ public final class Launcher
             if (clazz.equals("console")) clazz = "org.gluewine.console.impl.ConsoleClient";
 
             Launcher fw = getInstance();
-            Class<?> cl = fw.directories.get(fw.root).loadClass(clazz);
+            CodeSource rootCs = fw.sources.get(fw.getShortName(fw.root));
+            Class<?> cl = rootCs.getSourceClassLoader().loadClass(clazz);
             String[] params = new String[args.length - 1];
             if (args.length > 1) System.arraycopy(args, 1, params, 0, params.length);
 

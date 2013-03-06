@@ -94,6 +94,13 @@ public class BufferedCommandInterpreter implements CommandContext
 
     // ===========================================================================
     @Override
+    public int getArgumentCount()
+    {
+        return split.length;
+    }
+
+    // ===========================================================================
+    @Override
     public boolean hasOption(String option)
     {
         return options.containsKey(option);

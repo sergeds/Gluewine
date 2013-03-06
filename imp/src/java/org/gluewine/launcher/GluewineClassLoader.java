@@ -81,4 +81,12 @@ public interface GluewineClassLoader
      * @return True if the path can be handled.
      */
     boolean canProvidePath(String path);
+
+    // ===========================================================================
+    /**
+     * Returns the dispatchers of this classloader.
+     *
+     * @return The dispatchers.
+     */
+    GluewineClassLoader[] getAllDispatchers();
 }

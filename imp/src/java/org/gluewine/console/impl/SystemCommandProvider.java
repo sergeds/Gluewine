@@ -21,8 +21,9 @@
  **************************************************************************/
 package org.gluewine.console.impl;
 
-import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -33,12 +34,15 @@ import java.util.TreeMap;
 
 import org.gluewine.console.CommandContext;
 import org.gluewine.console.CommandProvider;
+import org.gluewine.core.CodeSourceListener;
 import org.gluewine.core.Glue;
-import org.gluewine.core.JarListener;
 import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.glue.Gluer;
 import org.gluewine.core.glue.Service;
+import org.gluewine.launcher.CodeSource;
+import org.gluewine.launcher.GluewineClassLoader;
 import org.gluewine.launcher.Launcher;
+import org.gluewine.launcher.loaders.DirectoryJarClassLoader;
 
 /**
  * CommandProvider providing some system commands.
@@ -46,7 +50,7 @@ import org.gluewine.launcher.Launcher;
  * @author fks/Serge de Schaetzen
  *
  */
-public class SystemCommandProvider implements CommandProvider, RepositoryListener<JarListener>
+public class SystemCommandProvider implements CommandProvider, RepositoryListener<CodeSourceListener>
 {
     // ===========================================================================
     /**
@@ -59,7 +63,36 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
     /**
      * The set of registered jar listeners.
      */
-    private Set<JarListener> listeners = new HashSet<JarListener>();
+    private Set<CodeSourceListener> listeners = new HashSet<CodeSourceListener>();
+
+    /**
+     * Compares services based on the service name.
+     */
+    private static class ServiceNameComparator implements Comparator<Service>
+    {
+        @Override
+        public int compare(Service o1, Service o2)
+        {
+            return o1.getActualService().getClass().getName().compareTo(o2.getActualService().getClass().getName());
+        }
+    }
+
+    /**
+     * Compares services based on the service id.
+     */
+    private static class ServiceIdComparator implements Comparator<Service>
+    {
+        @Override
+        public int compare(Service o1, Service o2)
+        {
+            int i1 = o1.getId();
+            int i2 = o2.getId();
+
+            if (i1 < i2) return -1;
+            else if (i1 > i2) return 1;
+            else return 0;
+        }
+    }
 
     // ===========================================================================
     @Override
@@ -71,7 +104,8 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
         m.put("shutdown", "Shuts the framework down.");
         m.put("unresolved", "Lists all unresolved services.");
         m.put("remove", "<jar> Removes the jar specified.");
-        m.put("stop", "Stops all active services that start with the given name.");
+        m.put("stop", "<service name> Stops all active services that start with the given name.");
+        m.put("loaders", "<service name> Shows the classloader dispatching of the given service(s).");
         return m;
     }
 
@@ -83,8 +117,11 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
      */
     public void _ls(CommandContext ci)
     {
-        for (String s : Launcher.getInstance().getJarFileNames())
-            ci.println(s);
+        ci.tableHeader("Name", "Type", "# Entities", "# Services");
+        for (CodeSource source : Launcher.getInstance().getSources())
+            ci.tableRow(source.getDisplayName(), source.getType(), Integer.toString(source.getEntities().length), Integer.toString(source.getServices().length));
+
+        ci.printTable();
     }
 
     // ===========================================================================
@@ -94,34 +131,100 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
      * @param ci The current context.
      */
     @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "NP_UNWRITTEN_FIELD")
-    public void _services(CommandContext ci)
+    public void _services(CommandContext ci) throws Throwable
     {
-        ci.tableHeader("Service", "Enhanced", "Resolved", "Glued", "Active");
-        Map<String, Service> sorted = new TreeMap<String, Service>();
-        for (Service s : gluer.getServices())
-        {
-            sorted.put(s.getServiceClass().getCanonicalName(), s);
-        }
+        Map<String, boolean[]> opts = new HashMap<String, boolean[]>();
+        opts.put("-id", new boolean[] {false, false});
+        ci.parseOptions(opts, "[-id]");
 
-        for (Entry<String, Service> e : sorted.entrySet())
+        ci.tableHeader("ID", "Service", "Enhanced", "Resolved", "Glued", "Active");
+
+        List<Service> services = gluer.getServices();
+
+        if (ci.hasOption("-id")) Collections.sort(services, new ServiceIdComparator());
+        else Collections.sort(services, new ServiceNameComparator());
+
+        for (Service service : services)
         {
-            int cgl_i = e.getKey().indexOf("$$Enhancer");
-            int dscl_i = e.getKey().indexOf("Enhanced");
+            String name = service.getActualService().getClass().getName();
+            int cgl_i = name.indexOf("$$Enhancer");
+            int dscl_i = name.indexOf("Enhanced");
             boolean enhanced = dscl_i > 0;
             enhanced |= cgl_i > 0;
 
-            String name = e.getKey();
             if (enhanced)
             {
                 if (dscl_i > 0) name = name.substring(0, dscl_i);
                 else if (cgl_i > 0) name = name.substring(0, cgl_i);
             }
 
-            ci.tableRow(name, Boolean.toString(enhanced), Boolean.toString(e.getValue().isResolved()),
-                        Boolean.toString(e.getValue().isGlued()), Boolean.toString(e.getValue().isActive()));
+            ci.tableRow(Integer.toString(service.getId()), name, Boolean.toString(enhanced), Boolean.toString(service.isResolved()),
+                        Boolean.toString(service.isGlued()), Boolean.toString(service.isActive()));
         }
 
         ci.printTable();
+    }
+
+    // ===========================================================================
+    /**
+     * Executes the loaders command.
+     *
+     * @param cc The current context.
+     */
+    public void _loaders(CommandContext cc)
+    {
+        String service = cc.nextArgument();
+        if (service != null)
+        {
+            for (Service s : gluer.getServices())
+            {
+                Class<?> c = s.getActualService().getClass();
+                String name = c.getName();
+                if (name.indexOf("$$Enhancer") > 0 || name.indexOf("Enhanced") > 0)
+                {
+                    c = c.getSuperclass();
+                    name = c.getName();
+                }
+
+                if (name.startsWith(service))
+                {
+                    ClassLoader cl = c.getClassLoader();
+                    cc.println("Service     : " + name);
+                    cc.println("Base Loader : " + cl.toString());
+
+                    if (cl instanceof GluewineClassLoader)
+                        displayDispatchers((GluewineClassLoader) cl, "\t", new HashSet<GluewineClassLoader>(), cc);
+                }
+            }
+        }
+        else cc.println("You must specify a service name!");
+    }
+
+    // ===========================================================================
+    /**
+     * Displays the dispatching chaing of the given classloader.
+     *
+     * @param cl The classloader to display.
+     * @param prefix The prefix to use for indentation.
+     * @param loaders The set of loaders already displayed, to avoid infinite looping.
+     * @param cc The current context.
+     */
+    private void displayDispatchers(GluewineClassLoader cl, String prefix, Set<GluewineClassLoader> loaders, CommandContext cc)
+    {
+        GluewineClassLoader gwl = (GluewineClassLoader) cl;
+        loaders.add(gwl);
+
+        cc.println(prefix + "Dispatches to : ");
+        for (GluewineClassLoader disp : gwl.getAllDispatchers())
+        {
+            if (!loaders.contains(disp))
+            {
+                loaders.add(disp);
+                cc.println(prefix + "\t" + disp.toString());
+                if (disp instanceof DirectoryJarClassLoader)
+                    displayDispatchers(disp, prefix + "\t", loaders, cc);
+            }
+        }
     }
 
     // ===========================================================================
@@ -146,16 +249,9 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
      *
      * @param ci The current context.
      */
-    public void _stop(CommandContext ci)
+    public void _stop(CommandContext ci) throws Throwable
     {
-        String name = ci.nextArgument();
-        if (name != null)
-        {
-            gluer.stop(name);
-            ci.println();
-            _services(ci);
-        }
-        else ci.println("You must specify a partial class (or package) name!");
+        gluer.stop(getIds(ci));
     }
 
     // ===========================================================================
@@ -169,16 +265,9 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
      *
      * @param ci The current context.
      */
-    public void _unglue(CommandContext ci)
+    public void _unglue(CommandContext ci) throws Throwable
     {
-        String name = ci.nextArgument();
-        if (name != null)
-        {
-            gluer.unglue(name);
-            ci.println();
-            _services(ci);
-        }
-        else ci.println("You must specify a partial class (or package) name!");
+        gluer.unglue(getIds(ci));
     }
 
     // ===========================================================================
@@ -192,16 +281,9 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
      *
      * @param ci The current context.
      */
-    public void _unresolve(CommandContext ci)
+    public void _unresolve(CommandContext ci) throws Throwable
     {
-        String name = ci.nextArgument();
-        if (name != null)
-        {
-            gluer.unresolve(name);
-            ci.println();
-            _services(ci);
-        }
-        else ci.println("You must specify a partial class (or package) name!");
+        gluer.unresolve(getIds(ci));
     }
 
     // ===========================================================================
@@ -213,16 +295,9 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
      *
      * @param ci The current context.
      */
-    public void _resolve(CommandContext ci)
+    public void _resolve(CommandContext ci) throws Throwable
     {
-        String name = ci.nextArgument();
-        if (name != null)
-        {
-            gluer.resolve(name);
-            ci.println();
-            _services(ci);
-        }
-        else ci.println("You must specify a partial class (or package) name!");
+        gluer.resolve(getIds(ci));
     }
 
     // ===========================================================================
@@ -234,16 +309,9 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
      *
      * @param ci The current context.
      */
-    public void _glue(CommandContext ci)
+    public void _glue(CommandContext ci) throws Throwable
     {
-        String name = ci.nextArgument();
-        if (name != null)
-        {
-            gluer.glue(name);
-            ci.println();
-            _services(ci);
-        }
-        else ci.println("You must specify a partial class (or package) name!");
+        gluer.glue(getIds(ci));
     }
 
     // ===========================================================================
@@ -255,16 +323,30 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
      *
      * @param ci The current context.
      */
-    public void _start(CommandContext ci)
+    public void _start(CommandContext ci) throws Throwable
     {
-        String name = ci.nextArgument();
-        if (name != null)
+        gluer.start(getIds(ci));
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the array of ids entered in the console.
+     *
+     * @param ci The current context.
+     * @return The array of ids.
+     */
+    private int[] getIds(CommandContext ci)
+    {
+        int[] ids = new int[ci.getArgumentCount()];
+
+        for (int i = 0; i < ids.length; i++)
         {
-            gluer.start(name);
-            ci.println();
-            _services(ci);
+            String n = ci.nextArgument();
+            if (n != null && n.trim().length() > 0)
+                ids[i] = Integer.valueOf(n);
         }
-        else ci.println("You must specify a partial class (or package) name!");
+
+        return ids;
     }
 
     // ===========================================================================
@@ -316,23 +398,17 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
     public void _remove(CommandContext ci)
     {
         String jar = ci.nextArgument();
-        List<File> toRemove = new ArrayList<File>();
-        if (jar != null)
+        List<String> toRemove = new ArrayList<String>();
+
+        while (jar != null)
         {
-            List<File> files = Launcher.getInstance().getJarFiles();
-            for (File file : files)
-            {
-                String name = file.getAbsolutePath().replace('\\', '/');
-                if (name.endsWith(jar))
-                    toRemove.add(file);
-            }
-
-            for (JarListener jl : listeners)
-                jl.jarsRemoved(toRemove);
-
-            Launcher.getInstance().remove(toRemove);
+            toRemove.add(jar);
+            jar = ci.nextArgument();
         }
-        else ci.println("You must specify a jar file to be removed!");
+
+        List<CodeSource> removed = Launcher.getInstance().remove(toRemove);
+        for (CodeSourceListener jl : listeners)
+            jl.codeSourceRemoved(removed);
     }
 
     // ===========================================================================
@@ -344,30 +420,29 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
     public void _install(CommandContext ci)
     {
         String jar = ci.nextArgument();
-        List<File> toRemove = new ArrayList<File>();
+        List<String> toAdd = new ArrayList<String>();
 
         while (jar != null)
         {
-            File f = new File(Launcher.getInstance().getRoot(), jar);
-            toRemove.add(f);
+            toAdd.add(jar);
+            jar = ci.nextArgument();
         }
 
-        Launcher.getInstance().add(toRemove);
-
-        for (JarListener jl : listeners)
-            jl.jarsAdded(toRemove);
+        List<CodeSource> added = Launcher.getInstance().add(toAdd);
+        for (CodeSourceListener jl : listeners)
+            jl.codeSourceAdded(added);
     }
 
     // ===========================================================================
     @Override
-    public void registered(JarListener t)
+    public void registered(CodeSourceListener t)
     {
         listeners.add(t);
     }
 
     // ===========================================================================
     @Override
-    public void unregistered(JarListener t)
+    public void unregistered(CodeSourceListener t)
     {
         listeners.remove(t);
     }

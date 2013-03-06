@@ -11,7 +11,6 @@
 	<classpathentry kind="lib" path="imp/lib/java/compile/hsqldb.jar"/>
 	<classpathentry kind="lib" path="imp/lib/java/compile/javassist-3.12.0.GA.jar"/>
 	<classpathentry kind="lib" path="imp/lib/java/compile/antlr-2.7.6.jar"/>
-	<classpathentry kind="lib" path="imp/lib/java/runtime/cglib-nodep-2.2.2.jar"/>
 	<classpathentry kind="lib" path="imp/lib/java/runtime/log4j-1.2.15.jar"/>
 	<classpathentry kind="lib" path="imp/lib/java/runtime/jline.jar"/>
 	<classpathentry kind="lib" path="imp/lib/java/runtime/xpp3_min-1.1.4c.jar"/>
@@ -23,5 +22,6 @@
 	<classpathentry kind="lib" path="imp/lib/java/runtime/jboss-transaction-api_1.1_spec-1.0.0.Final.jar"/>
 	<classpathentry kind="lib" path="imp/lib/java/runtime/postgresql-9.1-901.jdbc4.jar"/>
 	<classpathentry kind="lib" path="imp/lib/java/runtime/xstream-hibernate-1.4.4.jar"/>
+	<classpathentry kind="lib" path="imp/lib/java/runtime/cglib-nodep-2.2.3.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -22,7 +22,6 @@
 package org.gluewine.persistence.impl;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Method;
@@ -45,22 +44,22 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeSet;
-import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.jar.Manifest;
 
 import org.apache.log4j.Logger;
 import org.gluewine.console.CommandContext;
 import org.gluewine.console.CommandProvider;
 import org.gluewine.core.AspectProvider;
+import org.gluewine.core.CodeSourceListener;
 import org.gluewine.core.Glue;
-import org.gluewine.core.JarListener;
 import org.gluewine.core.Repository;
 import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.RunWhenGlued;
 import org.gluewine.core.utils.SHA1Utils;
+import org.gluewine.launcher.CodeSource;
 import org.gluewine.launcher.Launcher;
+import org.gluewine.launcher.sources.JarCodeSource;
 import org.gluewine.persistence.QueryPostProcessor;
 import org.gluewine.persistence.QueryPreProcessor;
 import org.gluewine.persistence.TransactionCallback;
@@ -77,7 +76,7 @@ import org.hibernate.service.ServiceRegistryBuilder;
  * @author fks/Serge de Schaetzen
  *
  */
-public class SessionAspectProvider implements AspectProvider, CommandProvider, JarListener
+public class SessionAspectProvider implements AspectProvider, CommandProvider, CodeSourceListener
 {
     // ===========================================================================
     /**
@@ -164,7 +163,7 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, J
      */
     public SessionAspectProvider() throws IOException, ClassNotFoundException, NoSuchAlgorithmException
     {
-        jarsAdded(Launcher.getInstance().getJarFiles());
+        codeSourceAdded(Launcher.getInstance().getSources());
     }
 
     // ===========================================================================================
@@ -532,7 +531,7 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, J
 
     // ===========================================================================
     @Override
-    public void jarsAdded(List<File> files)
+    public void codeSourceAdded(List<CodeSource> sources)
     {
         synchronized (factoryLocker)
         {
@@ -542,57 +541,48 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, J
                 config.setProperties(Launcher.getInstance().getProperties(HIBERNATE_FILE));
                 ServiceRegistry serviceRegistry = new ServiceRegistryBuilder().applySettings(config.getProperties()).buildServiceRegistry();
 
-                for (File file : files)
+                for (CodeSource source : sources)
                 {
-                    JarFile jar = null;
-                    try
+                    for (String entity : source.getEntities())
                     {
-                        jar = new JarFile(file);
-                        Manifest manifest = jar.getManifest();
-                        if (manifest != null)
-                        {
-                            Attributes attr = manifest.getMainAttributes();
-                            String ent = attr.getValue("Gluewine-Entities");
-                            if (ent != null)
-                            {
-                                ent = ent.trim();
-                                String[] cl = ent.split(",");
-                                for (String c : cl)
-                                {
-                                    c = c.trim();
-                                    Class<?> clazz = getClass().getClassLoader().loadClass(c);
-                                    entities.add(clazz);
-                                }
-                            }
-                        }
-
-                        Enumeration<JarEntry> entries = jar.entries();
-                        while (entries.hasMoreElements())
-                        {
-                            JarEntry entry = entries.nextElement();
-                            String name = entry.getName().toLowerCase(Locale.getDefault());
-                            if (name.endsWith(".sql"))
-                            {
-                                BufferedReader reader = null;
-                                try
-                                {
-                                    List<String> content = new ArrayList<String>();
-                                    reader = new BufferedReader(new InputStreamReader(jar.getInputStream(entry)));
-                                    while (reader.ready())
-                                        content.add(reader.readLine());
-
-                                    updateSQLStatements(content);
-                                }
-                                finally
-                                {
-                                    if (reader != null) reader.close();
-                                }
-                            }
-                        }
+                        Class<?> clazz = source.getSourceClassLoader().loadClass(entity);
+                        entities.add(clazz);
                     }
-                    finally
+
+                    if (source instanceof JarCodeSource)
                     {
-                        if (jar != null) jar.close();
+                        JarFile jar = null;
+                        try
+                        {
+                            jar = new JarFile(((JarCodeSource) source).getFile());
+                            Enumeration<JarEntry> entries = jar.entries();
+                            while (entries.hasMoreElements())
+                            {
+                                JarEntry entry = entries.nextElement();
+                                String name = entry.getName().toLowerCase(Locale.getDefault());
+                                if (name.endsWith(".sql"))
+                                {
+                                    BufferedReader reader = null;
+                                    try
+                                    {
+                                        List<String> content = new ArrayList<String>();
+                                        reader = new BufferedReader(new InputStreamReader(jar.getInputStream(entry)));
+                                        while (reader.ready())
+                                            content.add(reader.readLine());
+
+                                        updateSQLStatements(content);
+                                    }
+                                    finally
+                                    {
+                                        if (reader != null) reader.close();
+                                    }
+                                }
+                            }
+                        }
+                        finally
+                        {
+                            if (jar != null) jar.close();
+                        }
                     }
                 }
 
@@ -611,7 +601,7 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, J
 
     // ===========================================================================
     @Override
-    public void jarsRemoved(List<File> files)
+    public void codeSourceRemoved(List<CodeSource> sources)
     {
         synchronized (factoryLocker)
         {
@@ -621,33 +611,13 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, J
                 config.setProperties(Launcher.getInstance().getProperties(HIBERNATE_FILE));
                 ServiceRegistry serviceRegistry = new ServiceRegistryBuilder().applySettings(config.getProperties()).buildServiceRegistry();
 
-                for (File file : files)
+                for (CodeSource source : sources)
                 {
-                    JarFile jar = null;
-                    try
+                    Iterator<Class<?>> iter = entities.iterator();
+                    while (iter.hasNext())
                     {
-                        jar = new JarFile(file);
-                        Manifest manifest = jar.getManifest();
-                        if (manifest != null)
-                        {
-                            Attributes attr = manifest.getMainAttributes();
-                            String ent = attr.getValue("Gluewine-Entities");
-                            if (ent != null)
-                            {
-                                ent = ent.trim();
-                                String[] cl = ent.split(",");
-                                for (String c : cl)
-                                {
-                                    c = c.trim();
-                                    Class<?> clazz = getClass().getClassLoader().loadClass(c);
-                                    entities.remove(clazz);
-                                }
-                            }
-                        }
-                    }
-                    finally
-                    {
-                        if (jar != null) jar.close();
+                        if (iter.next().getClassLoader() == source.getSourceClassLoader())
+                            iter.remove();
                     }
                 }
 

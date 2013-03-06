@@ -21,7 +21,6 @@
  **************************************************************************/
 package org.gluewine.launcher;
 
-import java.io.File;
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Locale;
@@ -32,7 +31,7 @@ import java.util.Locale;
  * @author fks/Serge de Schaetzen
  *
  */
-public class DirectoryNameComparator implements Comparator<File>, Serializable
+public class CodeSourceNameComparator implements Comparator<CodeSource>, Serializable
 {
     // ===========================================================================
     /**
@@ -42,10 +41,10 @@ public class DirectoryNameComparator implements Comparator<File>, Serializable
 
     // ===========================================================================
     @Override
-    public int compare(File o1, File o2)
+    public int compare(CodeSource o1, CodeSource o2)
     {
-        String n1 = o1.getAbsolutePath().toLowerCase(Locale.getDefault());
-        String n2 = o2.getAbsolutePath().toLowerCase(Locale.getDefault());
+        String n1 = o1.getDisplayName().toLowerCase(Locale.getDefault());
+        String n2 = o2.getDisplayName().toLowerCase(Locale.getDefault());
         return n1.compareTo(n2);
     }
 }

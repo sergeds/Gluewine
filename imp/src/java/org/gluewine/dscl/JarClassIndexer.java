@@ -35,7 +35,9 @@ import java.util.zip.ZipFile;
 
 import javax.tools.JavaFileObject;
 
+import org.gluewine.launcher.CodeSource;
 import org.gluewine.launcher.Launcher;
+import org.gluewine.launcher.sources.JarCodeSource;
 
 
 /**
@@ -65,34 +67,38 @@ public class JarClassIndexer
 
         try
         {
-            for (File file : Launcher.getInstance().getJarFiles())
+            for (CodeSource source : Launcher.getInstance().getSources())
             {
-                StringBuilder b = new StringBuilder("jar://");
-                String filename = file.getAbsolutePath().replace('\\', '/');
-                if (!filename.startsWith("/")) b.append("/");
-                b.append(filename).append("!/");
-                String baseUri = b.toString();
-
-                zip = new ZipFile(file);
-                Enumeration<? extends ZipEntry> entries = zip.entries();
-                while (entries.hasMoreElements())
+                if (source instanceof JarCodeSource)
                 {
-                    ZipEntry entry = entries.nextElement();
-                    String name = entry.getName();
-                    if (name.endsWith(".class"))
+                    File file = ((JarCodeSource) source).getFile();
+                    StringBuilder b = new StringBuilder("jar://");
+                    String filename = file.getAbsolutePath().replace('\\', '/');
+                    if (!filename.startsWith("/")) b.append("/");
+                    b.append(filename).append("!/");
+                    String baseUri = b.toString();
+
+                    zip = new ZipFile(file);
+                    Enumeration<? extends ZipEntry> entries = zip.entries();
+                    while (entries.hasMoreElements())
                     {
-                        String pack = getPackageName(name);
-                        String uri = baseUri + name;
-
-                        List<JavaFileObject> files = filesPerPackage.get(pack);
-                        if (files == null)
+                        ZipEntry entry = entries.nextElement();
+                        String name = entry.getName();
+                        if (name.endsWith(".class"))
                         {
-                            files = new ArrayList<JavaFileObject>();
-                            filesPerPackage.put(pack, files);
-                        }
+                            String pack = getPackageName(name);
+                            String uri = baseUri + name;
 
-                        int i = name.indexOf(".class");
-                        files.add(new JarEntryJavaClassFile(new URI(uri), name.substring(0, i).replace('/', '.'), name, file));
+                            List<JavaFileObject> files = filesPerPackage.get(pack);
+                            if (files == null)
+                            {
+                                files = new ArrayList<JavaFileObject>();
+                                filesPerPackage.put(pack, files);
+                            }
+
+                            int i = name.indexOf(".class");
+                            files.add(new JarEntryJavaClassFile(new URI(uri), name.substring(0, i).replace('/', '.'), name, file));
+                        }
                     }
                 }
             }

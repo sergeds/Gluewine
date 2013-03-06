@@ -59,6 +59,11 @@ public class Service
     private Set<String> unresolvedFields = new HashSet<String>();
 
     /**
+     * The service id.
+     */
+    private int id = 0;
+
+    /**
      * Class used to invoked RunWhenGlued method in a separate thread.
      */
     private static class ThreadedInvoker implements Runnable
@@ -129,10 +134,23 @@ public class Service
      * Creates an instance using the embedded service specified.
      *
      * @param service The actual service.
+     * @param id The id.
      */
-    Service(Object service)
+    Service(Object service, int id)
     {
         this.actual = service;
+        this.id = id;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the id of the service.
+     *
+     * @return The id.
+     */
+    public int getId()
+    {
+        return id;
     }
 
     // ===========================================================================
@@ -157,54 +175,57 @@ public class Service
      */
     boolean resolve(List<Object> services, Set<ServiceProvider> providers)
     {
-        resolved = true;
-        for (Field field : getAllFields(actual.getClass()))
+        if (!isResolved())
         {
-            Glue glue = field.getAnnotation(Glue.class);
-            if (glue != null)
+            resolved = true;
+            for (Field field : getAllFields(actual.getClass()))
             {
-                boolean fieldResolved = false;
-                // First check the local services:
-                for (Object i : services)
+                Glue glue = field.getAnnotation(Glue.class);
+                if (glue != null)
                 {
-                    if (field.getType().isInstance(i))
+                    boolean fieldResolved = false;
+                    // First check the local services:
+                    for (Object i : services)
                     {
-                        references.put(field, i);
-                        fieldResolved = true;
-                    }
-                }
-
-                Iterator<ServiceProvider> provIter = providers.iterator();
-                while (provIter.hasNext() && !fieldResolved)
-                {
-                    try
-                    {
-                        ServiceProvider provider = provIter.next();
-                        Object proxy = provider.getService(field.getType());
-                        if (proxy != null)
+                        if (field.getType().isInstance(i))
                         {
-                            try
-                            {
-                                references.put(field, proxy);
-                                fieldResolved = true;
-                            }
-                            catch (Throwable e)
-                            {
-                                ErrorLogger.log(getClass(), e);
-                            }
+                            references.put(field, i);
+                            fieldResolved = true;
                         }
                     }
-                    catch (NoSuchServiceException e)
+
+                    Iterator<ServiceProvider> provIter = providers.iterator();
+                    while (provIter.hasNext() && !fieldResolved)
                     {
-                        ErrorLogger.log(getClass(), e);
-                        // Allowed to fail as not all providers are
-                        // required to be able to provide all services.
+                        try
+                        {
+                            ServiceProvider provider = provIter.next();
+                            Object proxy = provider.getService(field.getType());
+                            if (proxy != null)
+                            {
+                                try
+                                {
+                                    references.put(field, proxy);
+                                    fieldResolved = true;
+                                }
+                                catch (Throwable e)
+                                {
+                                    ErrorLogger.log(getClass(), e);
+                                }
+                            }
+                        }
+                        catch (NoSuchServiceException e)
+                        {
+                            ErrorLogger.log(getClass(), e);
+                            // Allowed to fail as not all providers are
+                            // required to be able to provide all services.
+                        }
                     }
+
+                    if (!fieldResolved) unresolvedFields.add(field.getName());
+
+                    resolved &= fieldResolved;
                 }
-
-                if (!fieldResolved) unresolvedFields.add(field.getName());
-
-                resolved &= fieldResolved;
             }
         }
 
@@ -221,7 +242,7 @@ public class Service
      */
     boolean glue()
     {
-        if (isResolved())
+        if (isResolved() && !isGlued())
         {
             glued = true;
             for (Entry<Field, Object> e : references.entrySet())
@@ -346,7 +367,7 @@ public class Service
      */
     boolean activate()
     {
-        if (isGlued())
+        if (isGlued() && !isActive())
         {
             active = true;
             for (final Method method : actual.getClass().getMethods())

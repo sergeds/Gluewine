@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  **************************************************************************/
-package org.gluewine.launcher;
+package org.gluewine.launcher.loaders;
 
 import java.io.File;
 import java.net.URL;
@@ -27,6 +27,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import org.gluewine.launcher.GluewineClassLoader;
 
 /**
  * This classloader does not really load classes. It dispatch the requests
@@ -80,7 +82,7 @@ public class DirectoryJarClassLoader extends ClassLoader implements GluewineClas
      *
      * @return The directory.
      */
-    File getDirectory()
+    public File getDirectory()
     {
         return directory;
     }
@@ -100,7 +102,7 @@ public class DirectoryJarClassLoader extends ClassLoader implements GluewineClas
      *
      * @param cl The dispatcher.
      */
-    void addDispatcher(DirectoryJarClassLoader cl)
+    public void addDispatcher(DirectoryJarClassLoader cl)
     {
         dispatchers.add(cl);
     }
@@ -215,7 +217,7 @@ public class DirectoryJarClassLoader extends ClassLoader implements GluewineClas
      *
      * @return The list of loaders.
      */
-    List<SingleJarClassLoader> getFileLoaders()
+    public List<SingleJarClassLoader> getFileLoaders()
     {
         List<SingleJarClassLoader> l = new ArrayList<SingleJarClassLoader>(realLoaders.size());
         l.addAll(realLoaders);
@@ -228,7 +230,7 @@ public class DirectoryJarClassLoader extends ClassLoader implements GluewineClas
      *
      * @return True if empty.
      */
-    boolean isEmpty()
+    public boolean isEmpty()
     {
         return realLoaders.isEmpty();
     }
@@ -256,5 +258,22 @@ public class DirectoryJarClassLoader extends ClassLoader implements GluewineClas
     public boolean canProvidePath(String path)
     {
         return paths.contains(path);
+    }
+
+    // ===========================================================================
+    @Override
+    public String toString()
+    {
+        return "DJC:" + directory.getAbsolutePath();
+    }
+
+    // ===========================================================================
+    @Override
+    public GluewineClassLoader[] getAllDispatchers()
+    {
+        List<GluewineClassLoader> l = new ArrayList<GluewineClassLoader>();
+        l.addAll(realLoaders);
+        l.addAll(dispatchers);
+        return l.toArray(new GluewineClassLoader[l.size()]);
     }
 }
