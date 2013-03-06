@@ -28,6 +28,8 @@ import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
+import org.gluewine.launcher.utils.SHA1Utils;
+
 public class JarCodeSource extends AbstractCodeSource
 {
     // ===========================================================================
@@ -100,6 +102,45 @@ public class JarCodeSource extends AbstractCodeSource
                     String[] cl = enh.split(",");
                     for (String c : cl)
                         addEnhancer(c.trim());
+                }
+
+                String fks = attr.getValue("X-Fks-BuildDate");
+                if (fks != null)
+                    setBuildDate(fks.trim());
+
+                fks = attr.getValue("X-Fks-Revision");
+                if (fks != null)
+                    setRevision(fks.trim());
+
+                fks = attr.getValue("X-Fks-RepoRevision");
+                if (fks != null)
+                    setReposRevision(fks.trim());
+
+                fks = attr.getValue("X-Fks-BuildNumber");
+                if (fks != null)
+                    setBuildNumber(fks.trim());
+
+                fks = attr.getValue("X-Fks-Checksum");
+                if (fks != null)
+                    setChecksum(fks.trim());
+
+                fks = attr.getValue("Jar-Version");
+                if (fks != null)
+                    setVersion(fks.trim());
+            }
+
+            if (getChecksum().equals("n/a"))
+                setChecksum(SHA1Utils.getSHA1HashCode(file));
+
+            if (getVersion().equals("n/a"))
+            {
+                String name = file.getName();
+                int i = name.lastIndexOf('-');
+                if (i > 0)
+                {
+                    int j = name.lastIndexOf('.');
+                    if (j > i)
+                        setVersion(name.substring(i + 1, j));
                 }
             }
         }

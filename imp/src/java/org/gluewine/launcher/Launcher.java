@@ -25,6 +25,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -100,6 +102,11 @@ public final class Launcher
     private File configDirectory = null;
 
     /**
+     * The file used to store the persistent map.
+     */
+    private File persistentFile = null;
+
+    /**
      * The singleton instance.
      */
     private static Launcher instance = null;
@@ -108,6 +115,11 @@ public final class Launcher
      * The root directory.
      */
     private File root = null;
+
+    /**
+     * The map of persistence objects indexed on their id.
+     */
+    private Map<String, Serializable> persistentMap = new HashMap<String, Serializable>();
 
     // ===========================================================================
     /**
@@ -136,11 +148,17 @@ public final class Launcher
         if (propCfg != null) configDirectory = new File(propCfg);
         else configDirectory = new File(currDir, "cfg");
 
+        String propPersist = System.getProperty("gluewine.persistfile");
+        if (propPersist != null) persistentFile = new File(propPersist);
+        else persistentFile = new File(configDirectory, "gluewine.cfg");
+
         if (System.getProperty("log4j.configuration") == null)
         {
             File log4j = new File(configDirectory, "log4j.properties");
             if (log4j.exists()) System.setProperty("log4j.configuration", "file:/" + log4j.getAbsolutePath().replace('\\', '/'));
         }
+
+        loadPersistentMap();
 
         try
         {
@@ -152,6 +170,63 @@ public final class Launcher
         }
 
         processMapping();
+    }
+
+    // ===========================================================================
+    /**
+     * Loads the persistent map from the file.
+     */
+    @SuppressWarnings("unchecked")
+    private void loadPersistentMap()
+    {
+        if (persistentFile.exists())
+        {
+            ObjectInputStream in = null;
+            try
+            {
+                in = new GluewineObjectInputStream(new FileInputStream(persistentFile), sources.get(getShortName(root)));
+                persistentMap = (Map<String, Serializable>) in.readObject();
+            }
+            catch (Throwable e)
+            {
+                e.printStackTrace();
+            }
+            finally
+            {
+                if (in != null)
+                {
+                    try
+                    {
+                        in.close();
+                    }
+                    catch (IOException e)
+                    {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the map of persistent properties. The map will never be null.
+     */
+    public Map<String, Serializable> getPersistentMap()
+    {
+        return persistentMap;
+    }
+
+    // ===========================================================================
+    /**
+     * Requests the launcher to persist the persistent map.
+     */
+    public void savePersistentMap()
+    {
+        synchronized (persistentMap)
+        {
+
+        }
     }
 
     // ===========================================================================

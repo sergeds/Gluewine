@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  **************************************************************************/
-package org.gluewine.core.utils;
+package org.gluewine.launcher.utils;
 
 import java.io.File;
 import java.io.FileInputStream;

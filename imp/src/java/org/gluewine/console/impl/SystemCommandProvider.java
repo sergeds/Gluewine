@@ -117,9 +117,11 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
      */
     public void _ls(CommandContext ci)
     {
-        ci.tableHeader("Name", "Type", "# Entities", "# Services");
+        ci.tableHeader("Name", "Type", "Version", "Revision", "Repos. Revision", "BuildNumber", "Checksum");
         for (CodeSource source : Launcher.getInstance().getSources())
-            ci.tableRow(source.getDisplayName(), source.getType(), Integer.toString(source.getEntities().length), Integer.toString(source.getServices().length));
+            ci.tableRow(source.getDisplayName(), source.getType(),
+                        source.getVersion(), source.getRevision(), source.getReposRevision(),
+                        source.getBuildNumber(), source.getChecksum());
 
         ci.printTable();
     }
@@ -146,19 +148,8 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
 
         for (Service service : services)
         {
-            String name = service.getActualService().getClass().getName();
-            int cgl_i = name.indexOf("$$Enhancer");
-            int dscl_i = name.indexOf("Enhanced");
-            boolean enhanced = dscl_i > 0;
-            enhanced |= cgl_i > 0;
-
-            if (enhanced)
-            {
-                if (dscl_i > 0) name = name.substring(0, dscl_i);
-                else if (cgl_i > 0) name = name.substring(0, cgl_i);
-            }
-
-            ci.tableRow(Integer.toString(service.getId()), name, Boolean.toString(enhanced), Boolean.toString(service.isResolved()),
+            ci.tableRow(Integer.toString(service.getId()), service.getName(),
+                        Boolean.toString(service.isEnhanced()), Boolean.toString(service.isResolved()),
                         Boolean.toString(service.isGlued()), Boolean.toString(service.isActive()));
         }
 
@@ -178,18 +169,13 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
         {
             for (Service s : gluer.getServices())
             {
-                Class<?> c = s.getActualService().getClass();
-                String name = c.getName();
-                if (name.indexOf("$$Enhancer") > 0 || name.indexOf("Enhanced") > 0)
+                if (s.getName().startsWith(service))
                 {
-                    c = c.getSuperclass();
-                    name = c.getName();
-                }
+                    ClassLoader cl = s.getActualService().getClass().getClassLoader();
+                    if (s.isEnhanced())
+                        cl = s.getActualService().getClass().getSuperclass().getClassLoader();
 
-                if (name.startsWith(service))
-                {
-                    ClassLoader cl = c.getClassLoader();
-                    cc.println("Service     : " + name);
+                    cc.println("Service     : " + s.getName());
                     cc.println("Base Loader : " + cl.toString());
 
                     if (cl instanceof GluewineClassLoader)

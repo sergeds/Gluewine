@@ -111,4 +111,52 @@ public interface CodeSource
      * Closes the classloader.
      */
     void closeLoader();
+
+    // ===========================================================================
+    /**
+     * Returns the build date.
+     *
+     * @return The build date.
+     */
+    String getBuildDate();
+
+    // ===========================================================================
+    /**
+     * Returns the revision.
+     *
+     * @return The revision.
+     */
+    String getRevision();
+
+    // ===========================================================================
+    /**
+     * Returns the repository revision.
+     *
+     * @return The repository revision.
+     */
+    String getReposRevision();
+
+    // ===========================================================================
+    /**
+     * Returns the build number.
+     *
+     * @return The build number.
+     */
+    String getBuildNumber();
+
+    // ===========================================================================
+    /**
+     * Returns the SHA1 checksum.
+     *
+     * @return The checksum.
+     */
+    String getChecksum();
+
+    // ===========================================================================
+    /**
+     * Returns the version.
+     *
+     * @return The version.
+     */
+    String getVersion();
 }

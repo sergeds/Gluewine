@@ -520,4 +520,42 @@ public class Service
     {
         return active;
     }
+
+    // ===========================================================================
+    /**
+     * Returns the name of the service. This removes the 'enchanced' part of the
+     * name.
+     *
+     * @return The name of the service.
+     */
+    public String getName()
+    {
+        String name = actual.getClass().getName();
+        int cgl_i = name.indexOf("$$Enhancer");
+        int dscl_i = name.indexOf("Enhanced");
+        boolean enhanced = dscl_i > 0;
+        enhanced |= cgl_i > 0;
+
+        if (enhanced)
+        {
+            if (dscl_i > 0) name = name.substring(0, dscl_i);
+            else if (cgl_i > 0) name = name.substring(0, cgl_i);
+        }
+
+        return name;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns true if the service has been enhanced.
+     *
+     * @return True if enhanced.
+     */
+    public boolean isEnhanced()
+    {
+        String name = actual.getClass().getName();
+        int cgl_i = name.indexOf("$$Enhancer");
+        int dscl_i = name.indexOf("Enhanced");
+        return dscl_i > 0 || cgl_i > 0;
+    }
 }

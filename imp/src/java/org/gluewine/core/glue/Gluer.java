@@ -21,6 +21,7 @@
  **************************************************************************/
 package org.gluewine.core.glue;
 
+import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -89,6 +90,21 @@ public final class Gluer implements CodeSourceListener
      */
     private RepositoryImpl repository = new RepositoryImpl();
 
+    /**
+     * The map containing the id's of manually stopped services.
+     */
+    private HashMap<Integer, String> stoppedServices = new HashMap<Integer, String>();
+
+    /**
+     * The map containing the id's of manually unglued services.
+     */
+    private HashMap<Integer, String> ungluedServices = new HashMap<Integer, String>();
+
+    /**
+     * The map containing the id's of manually unresolved services.
+     */
+    private HashMap<Integer, String> unresolvedServices = new HashMap<Integer, String>();
+
     // ===========================================================================
     /**
      * Creates an instance.
@@ -96,6 +112,7 @@ public final class Gluer implements CodeSourceListener
      * This will effectively start the glue process.
      * @throws Throwable If an error occurs initializing the gluer.
      */
+    @SuppressWarnings("unchecked")
     private Gluer() throws Throwable
     {
         display("----------------------------------------------------------");
@@ -105,6 +122,19 @@ public final class Gluer implements CodeSourceListener
         display("Starting framework...");
         long start = System.currentTimeMillis();
         logger.debug("Starting Gluer");
+
+        Map<String, Serializable> persistentMap = Launcher.getInstance().getPersistentMap();
+        if (persistentMap.containsKey("GLUE::STOPPED"))
+            stoppedServices = (HashMap<Integer, String>) persistentMap.get("GLUE::STOPPED");
+        else persistentMap.put("GLUE::STOPPED", stoppedServices);
+
+        if (persistentMap.containsKey("GLUE::UNGLUED"))
+            ungluedServices = (HashMap<Integer, String>) persistentMap.get("GLUE::UNGLUED");
+        else persistentMap.put("GLUE::UNGLUED", ungluedServices);
+
+        if (persistentMap.containsKey("GLUE::UNRESOLVED"))
+            unresolvedServices = (HashMap<Integer, String>) persistentMap.get("GLUE::UNRESOLVED");
+        else persistentMap.put("GLUE::UNRESOLVED", unresolvedServices);
 
         loadEnhancer();
 
@@ -154,6 +184,7 @@ public final class Gluer implements CodeSourceListener
     public Set<Service> stop(int[] ids)
     {
         Set<Service> stopped = new HashSet<Service>();
+
         for (int id : ids)
         {
             Service s = serviceMap.get(Integer.valueOf(id));
@@ -162,6 +193,7 @@ public final class Gluer implements CodeSourceListener
                 deregisterObject(s.getActualService());
                 s.deactivate();
                 stopped.add(s);
+                stoppedServices.put(Integer.valueOf(s.getId()), s.getName());
 
                 for (Service ref : serviceMap.values())
                 {
@@ -174,6 +206,9 @@ public final class Gluer implements CodeSourceListener
                 }
             }
         }
+
+        Launcher.getInstance().savePersistentMap();
+
         return stopped;
     }
 

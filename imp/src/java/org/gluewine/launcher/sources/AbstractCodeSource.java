@@ -73,6 +73,36 @@ public abstract class AbstractCodeSource implements CodeSource
      */
     private URL[] urls = null;
 
+    /**
+     * The build date.
+     */
+    private String buildDate = "n/a";
+
+    /**
+     * The revision.
+     */
+    private String revision = "n/a";
+
+    /**
+     * The repos revision.
+     */
+    private String reposRevision = "n/a";
+
+    /**
+     * The buildnumber.
+     */
+    private String buildNumber = "n/a";
+
+    /**
+     * The checksum.
+     */
+    private String checksum = "n/a";
+
+    /**
+     * The version of the source.
+     */
+    private String version = "n/a";
+
     // ===========================================================================
     /**
      * Creates an instance with the given urls.
@@ -195,5 +225,113 @@ public abstract class AbstractCodeSource implements CodeSource
         {
             e.printStackTrace();
         }
+    }
+
+    // ===========================================================================
+    @Override
+    public String getBuildDate()
+    {
+        return buildDate;
+    }
+
+    // ===========================================================================
+    /**
+     * Sets the build date.
+     *
+     * @param date The date.
+     */
+    protected void setBuildDate(String date)
+    {
+        this.buildDate = date;
+    }
+
+    // ===========================================================================
+    @Override
+    public String getRevision()
+    {
+        return revision;
+    }
+
+    // ===========================================================================
+    /**
+     * Sets the revision.
+     *
+     * @param revision The revision.
+     */
+    protected void setRevision(String revision)
+    {
+        this.revision = revision;
+    }
+
+    // ===========================================================================
+    @Override
+    public String getReposRevision()
+    {
+        return reposRevision;
+    }
+
+    // ===========================================================================
+    /**
+     * Sets the repos revision.
+     *
+     * @param revision The repos revision.
+     */
+    protected void setReposRevision(String revision)
+    {
+        this.reposRevision = revision;
+    }
+
+    // ===========================================================================
+    @Override
+    public String getBuildNumber()
+    {
+        return buildNumber;
+    }
+
+    // ===========================================================================
+    /**
+     * Sets the build number.
+     *
+     * @param number The build number.
+     */
+    protected void setBuildNumber(String number)
+    {
+        this.buildNumber = number;
+    }
+
+    // ===========================================================================
+    @Override
+    public String getChecksum()
+    {
+        return checksum;
+    }
+
+    // ===========================================================================
+    /**
+     * Sets the checksum.
+     *
+     * @param check The checksum.
+     */
+    protected void setChecksum(String check)
+    {
+        this.checksum = check;
+    }
+
+    // ===========================================================================
+    @Override
+    public String getVersion()
+    {
+        return version;
+    }
+
+    // ===========================================================================
+    /**
+     * Sets the version.
+     *
+     * @param version The version.
+     */
+    protected void setVersion(String version)
+    {
+        this.version = version;
     }
 }
