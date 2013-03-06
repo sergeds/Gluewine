@@ -65,8 +65,8 @@
         <jar jarfile="${dir.dist.lib}/${bundlename}_${fileversion}.jar" manifest="${dir.src.osgi}/${manfile}">
             <manifest>
                 <attribute name="X-Fks-BuildDate" value="${buildinfo.timestamp}"/>
-                <attribute name="X-Fks-SvnRevision" value="${bundle.revision}"/>
-                <attribute name="X-Fks-RepoSvnRevision" value="${buildinfo.globalrevision}"/>
+                <attribute name="X-Fks-Revision" value="${bundle.revision}"/>
+                <attribute name="X-Fks-RepoRevision" value="${buildinfo.globalrevision}"/>
                 <attribute name="X-Fks-BuildNumber" value="${buildinfo.jenkins.build}"/>
                 <attribute name="X-Fks-Checksum" value="${bundlechecksum}"/>
             </manifest>
