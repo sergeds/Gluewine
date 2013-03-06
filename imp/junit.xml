@@ -35,13 +35,72 @@
         <depend srcdir="${dir.src.junit}" destdir="${dir.build.junit}" closure="yes"/>
     </target>
 
+    <scriptdef name="generateguid" language="javascript">
+        <attribute name="property" />
+        <![CDATA[
+        importClass( java.util.UUID );
+
+        project.setProperty( attributes.get( "property" ), UUID.randomUUID() );
+        ]]>
+    </scriptdef>
+
+    <property name="templatedb.superuser" value="test"/>
+    <property name="templatedb.superpass" value="test"/>
+    <property name="templatedb.baseurl" value="jdbc:postgresql://ibiza:5433/"/>
+    <property name="templatedb.logical" value="plainbean"/>
+    <!--<property name="templatedb.sqlfile" value="../templates/testdata/westtoer.sql"/>-->
+    <property name="templatedb.sqlfile" value="../templates/testdata/plainbean.sql"/>
+    <!--<property name="templatedb.pgpassfile" value="../templates/testdata/pgpass"/>-->
+
+
+    <target name="junit.initdb" depends="init">
+        <tempfile property="templatedb.pgpassfile" prefix="pgpass." createfile="true" deleteonexit="true" destdir="${dir.build}"/>
+        <sql driver="org.postgresql.Driver" url="${templatedb.baseurl}postgres" userid="${templatedb.superuser}" password="${templatedb.superpass}" autocommit="true" classpath="lib/java/runtime/postgresql-9.1-901.jdbc3-fksosgi-9.1.jar">
+            CREATE DATABASE "${templatedb}";
+        </sql>
+        <echo file="${templatedb.pgpassfile}">ibiza:5433:${templatedb}:test:test</echo>
+        <exec executable="chmod">
+            <arg value="600"/>
+            <arg value="${templatedb.pgpassfile}"/>
+        </exec>
+        <exec executable="psql">
+            <arg value="-h"/>
+            <arg value="ibiza"/>
+            <arg value="-p"/>
+            <arg value="5433"/>
+            <arg value="-U"/>
+            <arg value="test"/>
+            <arg value="-d"/>
+            <arg value="${templatedb}"/>
+            <arg value="-f"/>
+            <arg value="${templatedb.sqlfile}"/>
+            <env key="PGPASSFILE" file="${templatedb.pgpassfile}"/>
+        </exec>
+    </target>
+
+    <target name="junit.cleanupdb" >
+        <sql driver="org.postgresql.Driver" url="${templatedb.baseurl}postgres" userid="${templatedb.superuser}" password="${templatedb.superpass}" autocommit="true" classpath="lib/java/runtime/postgresql-9.1-901.jdbc3-fksosgi-9.1.jar">
+            DROP DATABASE "${templatedb}";
+        </sql>
+    </target>
+
     <!-- Run unit tests -->
     <target name="junit.run">
         <delete dir="${dir.reports.junit}"/>
         <mkdir dir="${dir.reports.junit}"/>
+
+        <generateguid property="templatedb" />
+        <antcall target="junit.initdb"/>
+
         <junit printsummary="yes" failureproperty="junit.fail" fork="true" forkmode="perBatch">
             <classpath refid="${junitclasspath}"/>
             <sysproperty key="net.sourceforge.cobertura.datafile" file="${dir.reports.cobertura}/cobertura.ser"/>
+            <sysproperty key="templatedb.${templatedb.logical}" value="${templatedb}"/>
+
+            <sysproperty key="templatedb.baseurl" value="${templatedb.baseurl}"/>
+            <sysproperty key="templatedb.superuser" value="${templatedb.superuser}"/>
+            <sysproperty key="templatedb.superpass" value="${templatedb.superpass}"/>
+
             <formatter type="xml"/>
             <batchtest fork="yes" todir="${dir.reports.junit}">
                 <fileset dir="${dir.build.junit}">
@@ -49,6 +108,9 @@
                 </fileset>
             </batchtest>
         </junit>
+
+        <antcall target="junit.cleanupdb"/>
+
         <junitreport todir="${dir.reports.junit}">
             <fileset dir="${dir.reports.junit}">
                 <include name="*.xml"/>

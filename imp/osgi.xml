@@ -13,11 +13,14 @@
         <javac srcdir="${dir.src.osgi}" destdir="${dir.build.osgi}" debug="on" debuglevel="${debuglevel}" source="${source}" target="${target}" includeantruntime="false" encoding="utf8">
             <classpath refid="classpath.osgi.base"/>
         </javac>
+        <copy file="${dir.src.osgi}/org/gluewine/persistence/Persistence.gwt.xml" todir="${dir.bundle.extra}/org/gluewine/persistence/org/gluewine/" />
+        <copy file="${dir.src.osgi}/org/gluewine/persistence/PersistenceException.java" todir="${dir.bundle.extra}/org/gluewine/persistence/org/gluewine/persistence" />
     </target>
 
     <!-- quality checks -->
-    <target name="osgi.allchecks" depends="junit.allchecks, osgi.checkstyle, osgi.findbugs, osgi.testability"/>
-    <target name="osgi.quickchecks" depends="osgi.checkstyle, junit.quickchecks"/>
+    <!-- junit.allchecks and junit.quickchecks disabled until there are unit tests -->
+    <target name="osgi.allchecks" depends="osgi.checkstyle, osgi.findbugs, osgi.testability"/>
+    <target name="osgi.quickchecks" depends="osgi.checkstyle"/>
 
     <!-- Clean up old class files -->
     <target name="osgi.depend" depends="osgi.init">

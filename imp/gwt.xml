@@ -82,7 +82,7 @@
     </target>
 
     <target name="gwt.package" depends="gwt.compile">
-        <jar destfile="${dir.gwt.dist}/gluewine.jar">
+        <jar destfile="${dir.build.gwt.lib}/${product}.jar">
             <fileset dir="${dir.build.gwt}">
                 <include name="**/*.class"/>
             </fileset>
@@ -180,9 +180,9 @@
             <fileset dir="${dir.gwt.runtime}" includes="gwt-servlet.jar"/>
         </copy>
         <copy todir="${dir.gwt.warbuild}/WEB-INF/lib">
-            <fileset dir="${dir.gwt.dist}" includes="gluewine.jar"/>
+            <fileset dir="${dir.build.gwt.lib}" includes="${product}.jar"/>
         </copy>
-        <zip destfile="${dir.gwt.dist}/gluewine.war" basedir="${dir.gwt.warbuild}"/>
+        <zip destfile="${dir.gwt.dist}/${product}.war" basedir="${dir.gwt.warbuild}"/>
     </target>
 
     <target name="gwt.gxoshared">
@@ -200,8 +200,7 @@
 
     <target name="gwt.clean" depends="gwt.init">
         <!-- Delete the antbin directory tree -->
-        <delete file="${dir.gwt.dist}/gluewine.jar"/>
-        <delete file="${dir.gwt.dist}/gluewine.war"/>
+        <delete file="${dir.gwt.dist}/${product}.war"/>
         <delete>
             <fileset dir="${dir.build.gwt.generated.src}"/>
             <fileset dir="${dir.build.gwt.generated.classes}"/>
@@ -227,8 +226,7 @@
         <mkdir dir="${dir.gwt.dist}"/>
     </target>
 
-    <!-- Should depend on gwt.war. To be changed back when there is usable gwt code -->
-    <target name="gwt.dist" depends="gwt.allchecks, gwt.package"/>
+    <target name="gwt.dist" depends="gwt.allchecks, gwt.war, gwt.zipdoc"/>
 
     <target name="gwt.default" depends="gwt.quickchecks, gwt.package"/>
 </project>

@@ -16,6 +16,7 @@
     <property name="dir.build.osgi" value="${dir.build}/osgi"/>
     <property name="dir.build.junit" value="${dir.build}/test"/>
     <property name="dir.build.gwt" value="${dir.build}/gwt/classes"/>
+    <property name="dir.build.gwt.lib" value="${dir.build}/gwt/lib"/>
     <property name="dir.build.gwt.generated" value="${dir.build}/gwt/generated"/>
     <property name="dir.build.gwt.generated.src" value="${dir.build.gwt.generated}/src"/>
     <property name="dir.build.gwt.generated.classes" value="${dir.build.gwt.generated}/classes"/>
@@ -131,7 +132,13 @@
     </path>
 
     <!-- Set some properties with useful build information -->
-
+    <exec executable="git" failifexecutionfails="false" outputproperty="buildinfo.globalrevision">
+        <arg value="log"/>
+        <arg value="--format=%h"/>
+        <arg value="-1"/>
+        <arg value="--"/>
+        <arg value=".."/>
+    </exec>
     <tstamp>
         <format property="buildinfo.timestamp" pattern="yyyy-MM-dd"/>
     </tstamp>
@@ -144,7 +151,4 @@
         <mkdir dir="${dir.dist}"/>
         <mkdir dir="${dir.dist.lib}"/>
     </target>
-    
-    <copy file="${dir.src.osgi}/org/gluewine/persistence/Persistence.gwt.xml" todir="${dir.bundle.extra}/org/gluewine/persistence/org/gluewine/" />
-    <copy file="${dir.src.osgi}/org/gluewine/persistence/PersistenceException.java" todir="${dir.bundle.extra}/org/gluewine/persistence/org/gluewine/persistence" />
 </project>

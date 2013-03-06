@@ -4,3 +4,4 @@ Created-By: Serge de Schaetzen
 Gluewine-Name: org.gluewine.persistence
 Gluewine-Services: org.gluewine.persistence.impl.SessionAspectProvider, org.gluewine.persistence.impl.SessionProviderImpl
 Gluewine-Entities: org.gluewine.persistence.impl.SQLStatement
+Jar-Version: 0.1

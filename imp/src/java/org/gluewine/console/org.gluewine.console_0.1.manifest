@@ -1,6 +1,0 @@
-Manifest-Version: 1.0
-Ant-Version: Apache Ant 1.6.5
-Created-By: Serge de Schaetzen
-Gluewine-Name: org.gluewine.console
-Main-Class: org.gluewine.console.ConsoleClientLauncher
-Gluewine-Services: org.gluewine.console.impl.ConsoleServerImpl,org.gluewine.console.impl.SystemCommandProvider,org.gluewine.console.impl.ReposCommandProvider
