@@ -22,5 +22,5 @@
         <copy file="${dir.src.osgi}/org/gluewine/persistence/PersistenceException.java" todir="${dir.bundle.extra}/org/gluewine/persistence/org/gluewine/persistence" />
     </target>
 
-    <import file="common.xml"/>
+    <import file="ant/common.xml"/>
 </project>

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project name="gwt" default="gwt.default" basedir=".">
     <import file="init.xml"/>
-    <import file="build.xml"/>
 
     <taskdef name="for" classpath="${dir.lib.tools}/ant-contrib-1.0b3.jar" classname="net.sf.antcontrib.logic.ForTask"/>
 
