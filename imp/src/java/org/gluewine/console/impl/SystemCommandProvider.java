@@ -21,6 +21,7 @@
  **************************************************************************/
 package org.gluewine.console.impl;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -69,8 +70,13 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
     /**
      * Compares services based on the service name.
      */
-    private static class ServiceNameComparator implements Comparator<Service>
+    private static class ServiceNameComparator implements Comparator<Service>, Serializable
     {
+        /**
+         * The serial uid.
+         */
+        private static final long serialVersionUID = -6812851888112956397L;
+
         @Override
         public int compare(Service o1, Service o2)
         {
@@ -81,8 +87,13 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
     /**
      * Compares services based on the service id.
      */
-    private static class ServiceIdComparator implements Comparator<Service>
+    private static class ServiceIdComparator implements Comparator<Service>, Serializable
     {
+        /**
+         * The serial uid.
+         */
+        private static final long serialVersionUID = -3139019409498844549L;
+
         @Override
         public int compare(Service o1, Service o2)
         {

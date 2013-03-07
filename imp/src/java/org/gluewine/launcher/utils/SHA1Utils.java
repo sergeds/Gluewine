@@ -51,6 +51,7 @@ public final class SHA1Utils
      * @return The hashcode.
      * @throws NoSuchAlgorithmException If the SHA1 algorithm is not defined.
      */
+    @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "DM_DEFAULT_ENCODING")
     public static String getSHA1HashCode(String input) throws NoSuchAlgorithmException
     {
         MessageDigest md = MessageDigest.getInstance("SHA1");

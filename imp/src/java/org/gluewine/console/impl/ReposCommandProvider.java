@@ -127,7 +127,7 @@ public class ReposCommandProvider implements CommandProvider
         for (Entry<String, Object> e : obs.entrySet())
         {
             Class<?> clazz = e.getValue().getClass();
-            if (clazz.getName().indexOf("$$Enhancer") > 0) clazz = clazz.getSuperclass();
+            if (clazz.getName().indexOf("$$EnhancerByCGLIB$$") >= 0) clazz = clazz.getSuperclass();
             String source = clazz.getProtectionDomain().getCodeSource().getLocation().getFile();
 
             cc.tableRow(e.getKey(), clazz.getName(), source);

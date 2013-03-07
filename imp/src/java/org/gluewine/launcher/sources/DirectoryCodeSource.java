@@ -98,6 +98,7 @@ public class DirectoryCodeSource extends AbstractCodeSource
      * @return The content.
      * @throws IOException Thrown if a read error occurs.
      */
+    @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "DM_DEFAULT_ENCODING")
     private List<String> readFile(File file) throws IOException
     {
         BufferedReader reader = null;

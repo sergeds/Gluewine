@@ -195,7 +195,9 @@ public abstract class AbstractCodeSource implements CodeSource
     @Override
     public URL[] getURLs()
     {
-        return urls;
+        URL[] u = new URL[urls.length];
+        System.arraycopy(urls, 0, u, 0, u.length);
+        return u;
     }
 
     // ===========================================================================

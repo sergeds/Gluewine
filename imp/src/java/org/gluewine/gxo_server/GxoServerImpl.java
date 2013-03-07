@@ -146,6 +146,7 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
      *
      * @throws Throwable If a problem occurs.
      */
+    @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "SIC_INNER_SHOULD_BE_STATIC_ANON")
     public GxoServerImpl() throws Throwable
     {
         final XStream xstream = new XStream(new StaxDriver())
@@ -169,6 +170,7 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
 
         final Class<?> emptyListType = Collections.EMPTY_LIST.getClass();
         xstream.alias(emptyListType.getName(), emptyListType);
+
         xstream.registerConverter(new ReflectionConverter(xstream.getMapper(), xstream.getReflectionProvider())
         {
             @Override

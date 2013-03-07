@@ -26,11 +26,13 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 /**
@@ -131,7 +133,7 @@ public final class GxoFlatten
                         String ll = l.trim();
                         if (ll.startsWith("import"))
                         {
-                            if (l.indexOf("java.util") > 0 || l.indexOf("java.lang") > 0 || l.indexOf("java.io.Serializable") > 0 || allowed.contains(ll))
+                            if (l.indexOf("java.util") >= 0 || l.indexOf("java.lang") >= 0 || l.indexOf("java.io.Serializable") >= 0 || allowed.contains(ll))
                                 tc.add(l);
 
                             else if (replace.containsKey(ll))
@@ -170,8 +172,8 @@ public final class GxoFlatten
             }
 
             List<String> map = new ArrayList<String>();
-            for (String s : mappings.keySet())
-                map.add(s + "=" + mappings.get(s));
+            for (Entry<String, String> e : mappings.entrySet())
+                map.add(e.getKey() + "=" + e.getValue());
 
             //writeFile(new File("../../rtf/cfg/generic/gxo_mapping.properties"), map);
         }
@@ -214,18 +216,27 @@ public final class GxoFlatten
      * @param c The content to write.
      * @throws Throwable If an error occurs accessing the file.
      */
+    @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "DM_DEFAULT_ENCODING")
     private static void writeFile(File f, List<String> c) throws Throwable
     {
         if (!f.exists())
-            f.getParentFile().mkdirs();
+            if (!f.getParentFile().mkdirs())
+                throw new IOException("Could not create directory " + f.getParentFile().getAbsolutePath());
 
-        BufferedWriter out = new BufferedWriter(new FileWriter(f));
-        for (String s : c)
+        BufferedWriter out = null;
+        try
         {
-            out.write(s);
-            out.newLine();
+            out = new BufferedWriter(new FileWriter(f));
+            for (String s : c)
+            {
+                out.write(s);
+                out.newLine();
+            }
         }
-        out.close();
+        finally
+        {
+            if (out != null) out.close();
+        }
     }
 
     // ===========================================================================
@@ -236,20 +247,28 @@ public final class GxoFlatten
      * @return The content of the file.
      * @throws Throwable If a problem occurs.
      */
+    @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "DM_DEFAULT_ENCODING")
     private static List<String> readFile(File f) throws Throwable
     {
         List<String> files = new ArrayList<String>();
 
         if (f.exists())
         {
-            BufferedReader in = new BufferedReader(new FileReader(f));
-            while (in.ready())
+            BufferedReader in = null;
+            try
             {
-                String s = in.readLine();
-                if (!s.trim().startsWith("#") && s.trim().length() > 0)
-                    files.add(s);
+                in = new BufferedReader(new FileReader(f));
+                while (in.ready())
+                {
+                    String s = in.readLine();
+                    if (s != null && !s.trim().startsWith("#") && s.trim().length() > 0)
+                        files.add(s);
+                }
             }
-            in.close();
+            finally
+            {
+                if (in != null) in.close();
+            }
         }
 
         return files;

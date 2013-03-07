@@ -2,6 +2,8 @@ package org.gluewine.core.glue;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -439,22 +441,30 @@ public class Service
         if (isResolved() && !isGlued() && referencesAreAllowedToGlue())
         {
             glued = true;
-            for (Entry<Field, Object> e : references.entrySet())
+            for (final Entry<Field, Object> e : references.entrySet())
             {
                 boolean fieldGlued = false;
-                try
+                fieldGlued = AccessController.doPrivileged(new PrivilegedAction<Boolean>()
                 {
-                    Field field = e.getKey();
-                    boolean accessible = field.isAccessible();
-                    field.setAccessible(true);
-                    field.set(actual, e.getValue());
-                    fieldGlued = true;
-                    field.setAccessible(accessible);
-                }
-                catch (Throwable t)
-                {
-                    ErrorLogger.log(getClass(), t);
-                }
+                    @Override
+                    public Boolean run()
+                    {
+                        try
+                        {
+                            Field field = e.getKey();
+                            boolean accessible = field.isAccessible();
+                            field.setAccessible(true);
+                            field.set(actual, e.getValue());
+                            field.setAccessible(accessible);
+                            return true;
+                        }
+                        catch (Throwable t)
+                        {
+                            ErrorLogger.log(getClass(), t);
+                            return false;
+                        }
+                    }
+                }).booleanValue();
 
                 glued &= fieldGlued;
             }
@@ -602,20 +612,28 @@ public class Service
     {
         if (!isActive() && isGlued())
         {
-            for (Entry<Field, Object> e : references.entrySet())
+            for (final Entry<Field, Object> e : references.entrySet())
             {
-                try
+                AccessController.doPrivileged(new PrivilegedAction<Void>()
                 {
-                    Field field = e.getKey();
-                    boolean accessible = field.isAccessible();
-                    field.setAccessible(true);
-                    field.set(actual, null);
-                    field.setAccessible(accessible);
-                }
-                catch (Throwable t)
-                {
-                    ErrorLogger.log(getClass(), t);
-                }
+                    @Override
+                    public Void run()
+                    {
+                        try
+                        {
+                            Field field = e.getKey();
+                            boolean accessible = field.isAccessible();
+                            field.setAccessible(true);
+                            field.set(actual, null);
+                            field.setAccessible(accessible);
+                        }
+                        catch (Throwable t)
+                        {
+                            ErrorLogger.log(getClass(), t);
+                        }
+                        return null;
+                    }
+                });
             }
             glued = false;
         }

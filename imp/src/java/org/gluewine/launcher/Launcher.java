@@ -121,7 +121,7 @@ public final class Launcher
     /**
      * The map of persistence objects indexed on their id.
      */
-    private Map<String, Serializable> persistentMap = new HashMap<String, Serializable>();
+    private HashMap<String, Serializable> persistentMap = new HashMap<String, Serializable>();
 
     // ===========================================================================
     /**
@@ -187,7 +187,7 @@ public final class Launcher
             try
             {
                 in = new GluewineObjectInputStream(new FileInputStream(persistentFile), sources.get(getShortName(root)));
-                persistentMap = (Map<String, Serializable>) in.readObject();
+                persistentMap = (HashMap<String, Serializable>) in.readObject();
             }
             catch (Throwable e)
             {
@@ -299,9 +299,9 @@ public final class Launcher
         newSources.add(dcs);
 
         File[] files = dir.listFiles();
-        for (File file : files)
+        if (files != null)
         {
-            if (files != null)
+            for (File file : files)
             {
                 if (file.isDirectory())
                     processDirectory(file);
@@ -398,7 +398,7 @@ public final class Launcher
             {
                 File file = new File(getRoot(), s);
 
-                DirectoryJarClassLoader pcl = directories.get(file.getParentFile());
+                DirectoryJarClassLoader pcl = directories.get(sources.get(s));
                 if (pcl == null)
                     added.addAll(processDirectory(file.getParentFile()));
 
@@ -511,18 +511,6 @@ public final class Launcher
 
     // ===========================================================================
     /**
-     * Returns the classloader to use for the given jar.
-     *
-     * @param jar The jar file to use.
-     * @return The classloader.
-     */
-    public ClassLoader getClassLoaderForJar(File jar)
-    {
-        return loaders.get(jar);
-    }
-
-    // ===========================================================================
-    /**
      * Removes the list of objects specified.
      *
      * @param toRemove The objects to remove.
@@ -558,7 +546,7 @@ public final class Launcher
                             SingleJarClassLoader jarLoader = (SingleJarClassLoader) child.getSourceClassLoader();
                             dirLoader.remove(jarLoader);
                             childrenParent.remove(child);
-                            loaders.remove(jarLoader);
+                            loaders.remove(child);
                             sources.remove(child.getDisplayName());
                             removed.add(source);
                         }

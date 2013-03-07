@@ -24,6 +24,7 @@ package org.gluewine.persistence.impl;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
@@ -81,8 +82,13 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
     /**
      * Comparator that compare classes based on their name.
      */
-    private static class ClassComparator implements Comparator<Class<?>>
+    private static class ClassComparator implements Comparator<Class<?>>, Serializable
     {
+        /**
+         * The serial uid.
+         */
+        private static final long serialVersionUID = 3213199939953097064L;
+
         @Override
         public int compare(Class<?> o1, Class<?> o2)
         {
@@ -503,7 +509,7 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
             for (SQLStatement s : l)
             {
                 String stmt = s.getStatement().replace('\r', ' ');
-                stmt = s.getStatement().replace('\n', ' ');
+                stmt = stmt.replace('\n', ' ');
                 ci.tableRow(s.getId(), format.format(s.getExecutionTime()), Boolean.toString(s.isSuccess()), stmt, s.getMessage());
             }
 
@@ -565,7 +571,7 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
                                     try
                                     {
                                         List<String> content = new ArrayList<String>();
-                                        reader = new BufferedReader(new InputStreamReader(jar.getInputStream(entry)));
+                                        reader = new BufferedReader(new InputStreamReader(jar.getInputStream(entry), "UTF-8"));
                                         while (reader.ready())
                                             content.add(reader.readLine());
 

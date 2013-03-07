@@ -161,12 +161,15 @@ public class Table
                 {
                     separator = true;
                     String fill = s.substring(2, 3);
+                    StringBuilder sb = new StringBuilder();
                     s = "";
                     for (int f = 0; f < Math.min(columnWidth[i], maxColumnWidth[i]); f++)
-                        s = s + fill;
+                        sb.append(fill);
 
                     for (int j = 0; j < i + 2; j++)
-                        s = s + fill;
+                        sb.append(fill);
+
+                    s = sb.toString();
                 }
 
                 if (!separator && s.length() > Math.min(columnWidth[i], maxColumnWidth[i]))

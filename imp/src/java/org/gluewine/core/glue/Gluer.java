@@ -174,7 +174,7 @@ public final class Gluer implements CodeSourceListener
         Class<?> cl = service.getClass();
         String name = cl.getName();
 
-        if (name.indexOf("$$EnhancerByCGLIB$$") > 0 || name.indexOf("Enhanced") > 0)
+        if (name.indexOf("$$EnhancerByCGLIB$$") >= 0)
             cl = service.getClass().getSuperclass();
 
         b.append(cl.getClassLoader().toString());
@@ -361,7 +361,7 @@ public final class Gluer implements CodeSourceListener
         ClassLoader cl = o.getClass().getClassLoader();
         if (isEnhancedMode())
         {
-            if (o.getClass().getName().indexOf("$$Enhancer") > 0)
+            if (o.getClass().getName().indexOf("$$Enhancer") >= 0)
                 cl = o.getClass().getSuperclass().getClassLoader();
         }
 

@@ -113,6 +113,22 @@ public class CLIOption implements Comparable<CLIOption>
 
     // ===========================================================================
     @Override
+    public int hashCode()
+    {
+        return getName().hashCode();
+    }
+
+    // ===========================================================================
+    @Override
+    public boolean equals(Object o)
+    {
+        if (o instanceof CLIOption)
+            return getName().equals(((CLIOption) o).getName());
+        else return false;
+    }
+
+    // ===========================================================================
+    @Override
     public int compareTo(CLIOption o)
     {
         return getName().compareTo(o.getName());

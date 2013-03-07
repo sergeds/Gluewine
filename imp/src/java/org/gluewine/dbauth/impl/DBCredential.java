@@ -144,7 +144,7 @@ public class DBCredential
             digest.update(salt);
             return digest.digest(pw.getBytes("UTF-8"));
         }
-        catch (Exception e)
+        catch (Throwable e)
         {
             throw new AuthenticationException("Error changing password");
         }
