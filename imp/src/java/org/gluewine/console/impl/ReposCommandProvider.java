@@ -21,12 +21,14 @@
  **************************************************************************/
 package org.gluewine.console.impl;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.gluewine.console.CLICommand;
 import org.gluewine.console.CommandContext;
 import org.gluewine.console.CommandProvider;
 import org.gluewine.core.Glue;
@@ -47,13 +49,13 @@ public class ReposCommandProvider implements CommandProvider
 
     // ===========================================================================
     @Override
-    public Map<String, String> getCommandsSyntax()
+    public List<CLICommand> getCommands()
     {
-        Map<String, String> m = new HashMap<String, String>();
-        m.put("repos_info", "Shows the number of registered objects and listeners in the repository.");
-        m.put("repos_objects", "Lists the registered objects.");
-        m.put("repos_listeners", "Lists the registered listeners.");
-        return m;
+        List<CLICommand> commands = new ArrayList<CLICommand>();
+        commands.add(new CLICommand("repos_info", "Shows the number of registered objects and listeners in the repository."));
+        commands.add(new CLICommand("repos_objects", "Lists the registered objects."));
+        commands.add(new CLICommand("repos_listeners", "Lists the registered listeners."));
+        return commands;
     }
 
     // ===========================================================================

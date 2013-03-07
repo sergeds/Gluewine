@@ -29,12 +29,15 @@ import java.lang.management.MonitorInfo;
 import java.lang.management.RuntimeMXBean;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.gluewine.console.CLICommand;
+import org.gluewine.console.CLIOption;
 import org.gluewine.console.CommandContext;
 import org.gluewine.console.CommandProvider;
 
@@ -140,18 +143,14 @@ public class SysmgmCommandProvider implements CommandProvider
         final ThreadMXBean tbean = ManagementFactory.getThreadMXBean();
         ThreadInfo[] infos  = tbean.getThreadInfo(tbean.getAllThreadIds(), 1);
 
-        String param = ci.nextArgument();
-        if (param != null)
-        {
-            if (param.equals("-cpu"))
-                Arrays.sort(infos, new UsageComparator(tbean));
+        if (ci.hasOption("-cpu"))
+            Arrays.sort(infos, new UsageComparator(tbean));
 
-            else if (param.equals("-state"))
-                Arrays.sort(infos, new NameComparator());
+        else if (ci.hasOption("-state"))
+            Arrays.sort(infos, new NameComparator());
 
-            else if (param.equals("-id"))
-                Arrays.sort(infos, new IdComparator());
-        }
+        else if (ci.hasOption("-id"))
+            Arrays.sort(infos, new IdComparator());
 
         ci.tableHeader("Thread", "State", "CPU Time", "Blocked Time", "Class");
         for (ThreadInfo info : infos)
@@ -332,18 +331,23 @@ public class SysmgmCommandProvider implements CommandProvider
 
     // ===========================================================================
     @Override
-    public Map<String, String> getCommandsSyntax()
+    public List<CLICommand> getCommands()
     {
+        List<CLICommand> commands = new ArrayList<CLICommand>();
 
-        Map<String, String> m = new HashMap<String, String>();
-        m.put("sysmgm_deadlock", "Finds and displays deadlocks.");
-        m.put("sysmgm_disablecontentionmgmt", "Disables Thread contention management.");
-        m.put("sysmgm_enablecontentionmgmt", "Enables Thread contention management.");
-        m.put("sysmgm_info", "Displays information about how the application was started.");
-        m.put("sysmgm_memory", "Displays information about the memory usage.");
-        m.put("sysmgm_threaddump", "Dumps all running threads.");
-        m.put("sysmgm_usage", "[-cpu] | [-state] | [-id] Returns CPU Usage information on a per thread base.");
+        CLICommand cmd = new CLICommand("sysmgm_usage", "Returns CPU Usage information on a per thread base.");
+        cmd.addOption(new CLIOption("-cpu", "sort on cpu", false, false));
+        cmd.addOption(new CLIOption("-state", "sort on state", false, false));
+        cmd.addOption(new CLIOption("-id", "sort on id", false, false));
+        commands.add(cmd);
 
-        return m;
+        commands.add(new CLICommand("sysmgm_deadlock", "Finds and displays deadlocks."));
+        commands.add(new CLICommand("sysmgm_disablecontentionmgmt", "Disables Thread contention management."));
+        commands.add(new CLICommand("sysmgm_enablecontentionmgmt", "Enables Thread contention management."));
+        commands.add(new CLICommand("sysmgm_info", "Displays information about how the application was started."));
+        commands.add(new CLICommand("sysmgm_memory", "Displays information about the memory usage."));
+        commands.add(new CLICommand("sysmgm_threaddump", "Dumps all running threads."));
+
+        return commands;
     }
 }

@@ -40,8 +40,8 @@ import java.util.UUID;
 
 import org.apache.log4j.Logger;
 import org.gluewine.core.RepositoryListener;
-import org.gluewine.core.RunOnDeactivate;
 import org.gluewine.core.RunOnActivate;
+import org.gluewine.core.RunOnDeactivate;
 import org.gluewine.gxo.CloseBean;
 import org.gluewine.gxo.CompressedBlockInputStream;
 import org.gluewine.gxo.CompressedBlockOutputStream;
@@ -499,7 +499,14 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
                             {
                                 if (logger.isDebugEnabled())
                                     logger.debug("Accepting incoming session from " + socket.getRemoteSocketAddress().toString());
-                                process(socket);
+                                try
+                                {
+                                    process(socket);
+                                }
+                                catch (Throwable e)
+                                {
+                                    logger.error(e);
+                                }
                             }
                         };
                         thread.start();

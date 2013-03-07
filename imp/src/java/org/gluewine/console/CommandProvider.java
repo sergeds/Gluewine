@@ -21,7 +21,7 @@
  **************************************************************************/
 package org.gluewine.console;
 
-import java.util.Map;
+import java.util.List;
 
 /**
  * Defines a CommandProvider.
@@ -38,10 +38,9 @@ public interface CommandProvider
 {
     // ===========================================================================
     /**
-     * Returns the map of commands and their syntax.
-     * The command name is the key in the map, the value is the command syntax.
+     * Returns the list of commands defined in this CommanProvider.
      *
-     * @return The Map of commands.
+     * @return The list of commands.
      */
-    Map<String, String> getCommandsSyntax();
+    List<CLICommand> getCommands();
 }

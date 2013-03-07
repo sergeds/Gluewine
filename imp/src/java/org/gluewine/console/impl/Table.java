@@ -164,7 +164,9 @@ public class Table
                     s = "";
                     for (int f = 0; f < Math.min(columnWidth[i], maxColumnWidth[i]); f++)
                         s = s + fill;
-                    s = s + fill + fill;
+
+                    for (int j = 0; j < i + 2; j++)
+                        s = s + fill;
                 }
 
                 if (!separator && s.length() > Math.min(columnWidth[i], maxColumnWidth[i]))

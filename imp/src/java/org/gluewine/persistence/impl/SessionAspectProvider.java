@@ -35,12 +35,10 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeSet;
@@ -48,6 +46,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 import org.apache.log4j.Logger;
+import org.gluewine.console.CLICommand;
 import org.gluewine.console.CommandContext;
 import org.gluewine.console.CommandProvider;
 import org.gluewine.core.AspectProvider;
@@ -521,12 +520,12 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
 
     // ===========================================================================
     @Override
-    public Map<String, String> getCommandsSyntax()
+    public List<CLICommand> getCommands()
     {
-        Map<String, String> m = new HashMap<String, String>();
-        m.put("pers_entities", "Lists all registered entities");
-        m.put("pers_statements", "Lists all executed statements");
-        return m;
+        List<CLICommand> commands = new ArrayList<CLICommand>();
+        commands.add(new CLICommand("pers_entities", "Lists all registered entities."));
+        commands.add(new CLICommand("pers_statements", "Lists all executed statements."));
+        return commands;
     }
 
     // ===========================================================================

@@ -125,7 +125,25 @@ public class BufferedCommandInterpreter implements CommandContext
     }
 
     // ===========================================================================
-    @Override
+    /**
+     * Parses the options specified, and throws a Runtime exception if
+     * the CLI arguments don't match the given option rules.
+     *
+     *  <p>The map has the following format:
+     *  <ul>
+     *  <li>key: the option</li>
+     *  <li>value: an array of boolean where:
+     *  <ul>
+     *  <li>element 0: whether the option is required</li>
+     *  <li>element 1: whether the option requires a value</li>
+     *  </ul>
+     *  </li>
+     *  </ul>
+     *
+     * @param options The options to parse.
+     * @param syntax The String representing the correct syntax.
+     * @throws Throwable If a required option is missing or when an option has no value when needed.
+     */
     public void parseOptions(Map<String, boolean[]> opts, String syntax) throws Throwable
     {
         String syn = ", (syntax: " + syntax + ")";

@@ -24,7 +24,6 @@ package org.gluewine.console.impl;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +31,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.gluewine.console.CLICommand;
+import org.gluewine.console.CLIOption;
 import org.gluewine.console.CommandContext;
 import org.gluewine.console.CommandProvider;
 import org.gluewine.core.CodeSourceListener;
@@ -96,17 +97,28 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
 
     // ===========================================================================
     @Override
-    public Map<String, String> getCommandsSyntax()
+    public List<CLICommand> getCommands()
     {
-        Map<String, String> m = new HashMap<String, String>();
-        m.put("ls", "Lists all jarfiles that have been loaded.");
-        m.put("services", "Lists all active services");
-        m.put("shutdown", "Shuts the framework down.");
-        m.put("unresolved", "Lists all unresolved services.");
-        m.put("remove", "<jar> Removes the jar specified.");
-        m.put("stop", "<service name> Stops all active services that start with the given name.");
-        m.put("loaders", "<service name> Shows the classloader dispatching of the given service(s).");
-        return m;
+        List<CLICommand> commands = new ArrayList<CLICommand>();
+        commands.add(new CLICommand("ls", "Lists all jarfiles that have been loaded."));
+
+        CLICommand services = new CLICommand("services", "Lists all active services.");
+        services.addOption(new CLIOption("-id", "Sorts the id", false, false));
+        commands.add(services);
+
+        commands.add(new CLICommand("shutdown", "Shuts the framework down."));
+        commands.add(new CLICommand("unresolved", "Lists all unresolved services."));
+        commands.add(new CLICommand("remove", "Removes the jar specified."));
+        commands.add(new CLICommand("stop", "Stops the service(s) with the specified id(s)."));
+        commands.add(new CLICommand("glue", "Glues the service(s) with the specified id(s)."));
+        commands.add(new CLICommand("unglue", "Unglues the service(s) with the specified id(s)."));
+        commands.add(new CLICommand("start", "Starts the service(s) with the specified id(s)."));
+        commands.add(new CLICommand("loaders", "Shows the classloader dispatching of the given service(s)."));
+        commands.add(new CLICommand("install", "Installs the code source with the given url."));
+        commands.add(new CLICommand("resolve", "Resolves the service(s) with the specified id(s)."));
+        commands.add(new CLICommand("unresolve", "Unresolves the service(s) with the specified id(s)."));
+
+        return commands;
     }
 
     // ===========================================================================
@@ -135,10 +147,6 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
     @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "NP_UNWRITTEN_FIELD")
     public void _services(CommandContext ci) throws Throwable
     {
-        Map<String, boolean[]> opts = new HashMap<String, boolean[]>();
-        opts.put("-id", new boolean[] {false, false});
-        ci.parseOptions(opts, "[-id]");
-
         ci.tableHeader("ID", "Service", "Enhanced", "Resolved", "Glued", "Active");
 
         List<Service> services = gluer.getServices();

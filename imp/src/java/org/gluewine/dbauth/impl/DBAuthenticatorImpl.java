@@ -21,11 +21,12 @@
  **************************************************************************/
 package org.gluewine.dbauth.impl;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.gluewine.console.AuthenticationException;
+import org.gluewine.console.CLICommand;
+import org.gluewine.console.CLIOption;
 import org.gluewine.console.CommandContext;
 import org.gluewine.console.CommandProvider;
 import org.gluewine.console.ConsoleServer;
@@ -145,10 +146,6 @@ public class DBAuthenticatorImpl implements DBAuthenticator, CommandProvider
      */
     public void _dbauth_add(CommandContext ci) throws Throwable
     {
-        Map<String, boolean[]> opts = new HashMap<String, boolean[]>();
-        opts.put("-user", new boolean[] {true, true});
-        opts.put("-pw", new boolean[] {true, true});
-        ci.parseOptions(opts, "dbauth_add -user <userid> -pw <password>");
         addCredential(ci.getOption("-user"), ci.getOption("-pw"));
     }
 
@@ -161,10 +158,6 @@ public class DBAuthenticatorImpl implements DBAuthenticator, CommandProvider
      */
     public void _dbauth_set(CommandContext ci) throws Throwable
     {
-        Map<String, boolean[]> opts = new HashMap<String, boolean[]>();
-        opts.put("-user", new boolean[] {true, true});
-        opts.put("-pw", new boolean[] {true, true});
-        ci.parseOptions(opts, "dbauth_set-user <userid> -pw <password>");
         resetPassword(ci.getOption("-user"), ci.getOption("-pw"));
     }
 
@@ -177,9 +170,6 @@ public class DBAuthenticatorImpl implements DBAuthenticator, CommandProvider
      */
     public void _dbauth_del(CommandContext ci) throws Throwable
     {
-        Map<String, boolean[]> opts = new HashMap<String, boolean[]>();
-        opts.put("-user", new boolean[] {true, true});
-        ci.parseOptions(opts, "dbauth_del -user <userid> -pw <password>");
         delCredential(ci.getOption("-user"));
     }
 
@@ -203,16 +193,29 @@ public class DBAuthenticatorImpl implements DBAuthenticator, CommandProvider
 
     // ===========================================================================
     @Override
-    public Map<String, String> getCommandsSyntax()
+    public List<CLICommand> getCommands()
     {
-        Map<String, String> m = new HashMap<String, String>();
+        List<CLICommand> commands = new ArrayList<CLICommand>();
 
-        m.put("dbauth_add", "-user <userid> -pw <password> : Adds a password to a user.");
-        m.put("dbauth_set", "-user <userid> -pw <password> : Sets the password of a user.");
-        m.put("dbauth_del", "-user <userid> : Deletes the password of a user.");
-        m.put("dbauth_list", "Lists all available users.");
+        CLICommand cmd = null;
 
-        return m;
+        cmd = new CLICommand("dbauth_add", "Adds a password to a user.");
+        cmd.addOption(new CLIOption("-user", "userid", true, true));
+        cmd.addOption(new CLIOption("-pw", "password", true, true));
+        commands.add(cmd);
+
+        cmd = new CLICommand("dbauth_set", "Sets the password of a user.");
+        cmd.addOption(new CLIOption("-user", "userid", true, true));
+        cmd.addOption(new CLIOption("-pw", "password", true, true));
+        commands.add(cmd);
+
+        cmd = new CLICommand("dbauth_del", "Sets the password of a user.");
+        cmd.addOption(new CLIOption("-user", "userid", true, true));
+        commands.add(cmd);
+
+        commands.add(new CLICommand("dbauth_list", "Lists all available users."));
+
+        return commands;
     }
 
     // ===========================================================================

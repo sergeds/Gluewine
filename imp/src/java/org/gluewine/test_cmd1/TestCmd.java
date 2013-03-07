@@ -1,8 +1,9 @@
 package org.gluewine.test_cmd1;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.gluewine.console.CLICommand;
 import org.gluewine.console.CommandContext;
 import org.gluewine.console.CommandProvider;
 import org.gluewine.core.Glue;
@@ -14,11 +15,11 @@ public class TestCmd implements CommandProvider
     private Tester tester = null;
 
     @Override
-    public Map<String, String> getCommandsSyntax()
+    public List<CLICommand> getCommands()
     {
-        Map<String, String> m = new HashMap<String, String>();
-        m.put("cmd1", "Returns the version of tester");
-        return m;
+        List<CLICommand> l = new ArrayList<CLICommand>();
+        l.add(new CLICommand("cmd1", "Returns the version of tester"));
+        return l;
     }
 
     public void _cmd1(CommandContext cc) throws Throwable

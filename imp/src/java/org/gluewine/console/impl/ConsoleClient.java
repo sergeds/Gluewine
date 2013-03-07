@@ -35,6 +35,7 @@ import jline.Completor;
 import jline.ConsoleReader;
 
 import org.gluewine.console.ConsoleServer;
+import org.gluewine.console.SyntaxException;
 import org.gluewine.gxo_client.GxoClient;
 
 /**
@@ -105,6 +106,10 @@ public final class ConsoleClient implements Runnable, Completor
                     {
                         String output = server.executeCommand(line);
                         System.out.println(output);
+                    }
+                    catch (SyntaxException e)
+                    {
+                        System.out.println(e.getMessage());
                     }
                     catch (Throwable e)
                     {

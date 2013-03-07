@@ -29,9 +29,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeMap;
 
 import org.gluewine.console.Authenticator;
+import org.gluewine.console.CLICommand;
+import org.gluewine.console.CLIOption;
 import org.gluewine.console.CommandContext;
 import org.gluewine.console.CommandProvider;
 import org.gluewine.console.ConsoleServer;
@@ -59,6 +62,11 @@ public class ConsoleServerImpl implements ConsoleServer, CommandProvider
      * The map of authenticator classes indexed on their user friendly name.
      */
     private Map<String, String> authenticators = new HashMap<String, String>();
+
+    /**
+     * The map of available commands.
+     */
+    private Map<String, CLICommand> commands = new TreeMap<String, CLICommand>();
 
     @Glue
     private Repository repository = null;
@@ -111,25 +119,50 @@ public class ConsoleServerImpl implements ConsoleServer, CommandProvider
         {
             CommandProvider prov = providers.get(command);
             BufferedCommandInterpreter ci = new BufferedCommandInterpreter(params);
-
-            try
+            CLICommand cmd = commands.get(command);
+            if (cmd != null)
             {
-                Method m = prov.getClass().getMethod("_" + command, CommandContext.class);
-                m.invoke(prov, new Object[] {ci});
-            }
-            catch (Throwable e)
-            {
-                if (e instanceof InvocationTargetException)
-                    e = ((InvocationTargetException) e).getCause();
-
-                if (e instanceof SyntaxException)
+                try
                 {
-                    ci.println(e.getMessage());
-                }
-                else
-                    throw e;
-            }
+                    Set<CLIOption> options = cmd.getOptions();
+                    if (!options.isEmpty())
+                    {
+                        StringBuilder syntax = new StringBuilder(cmd.getName());
+                        Map<String, boolean[]> opts = new HashMap<String, boolean[]>();
+                        for (CLIOption opt : options)
+                        {
+                            boolean[] bool = new boolean[] {opt.isRequired(), opt.needsValue()};
+                            opts.put(opt.getName(), bool);
 
+                            syntax.append(" ");
+                            if (!opt.isRequired()) syntax.append("[");
+                            syntax.append(opt.getName());
+
+                            if (opt.needsValue())
+                                syntax.append(" <").append(opt.getDescription()).append(">");
+
+                            if (!opt.isRequired()) syntax.append("]");
+                        }
+
+                        ci.parseOptions(opts, syntax.toString());
+                    }
+
+                    Method m = prov.getClass().getMethod("_" + command, CommandContext.class);
+                    m.invoke(prov, new Object[] {ci});
+                }
+                catch (Throwable e)
+                {
+                    if (e instanceof InvocationTargetException)
+                        e = ((InvocationTargetException) e).getCause();
+
+                    if (e instanceof SyntaxException)
+                    {
+                        ci.println(e.getMessage());
+                    }
+                    else
+                        throw e;
+                }
+            }
             return ci.getOutput();
         }
 
@@ -140,42 +173,22 @@ public class ConsoleServerImpl implements ConsoleServer, CommandProvider
     @Override
     public void registered(CommandProvider t)
     {
-        for (String cmd : indexCommands(t))
-            providers.put(cmd, t);
+        for (CLICommand cmd : t.getCommands())
+        {
+            commands.put(cmd.getName(), cmd);
+            providers.put(cmd.getName(), t);
+        }
     }
 
     // ===========================================================================
     @Override
     public void unregistered(CommandProvider t)
     {
-        for (String cmd : indexCommands(t))
-            providers.remove(cmd);
-    }
-
-    // ===========================================================================
-    /**
-     * Indexes the given CommandProvider and returns the list of commands it
-     * provides.
-     *
-     * @param c The CommandProvider to index.
-     * @return The list of commands.
-     */
-    private List<String> indexCommands(CommandProvider c)
-    {
-        List<String> l = new ArrayList<String>();
-
-        Method[] methods = c.getClass().getMethods();
-        for (Method method : methods)
+        for (CLICommand cmd : t.getCommands())
         {
-            if (method.getName().startsWith("_"))
-            {
-                Class<?>[] params = method.getParameterTypes();
-                if (params != null && params.length == 1 && CommandContext.class.isAssignableFrom(params[0]))
-                    l.add(method.getName().substring(1));
-            }
+            providers.remove(cmd.getName());
+            commands.remove(cmd.getName());
         }
-
-        return l;
     }
 
     // ===========================================================================
@@ -186,28 +199,40 @@ public class ConsoleServerImpl implements ConsoleServer, CommandProvider
      */
     public void _help(CommandContext ci)
     {
-        Map<String, String> m = new TreeMap<String, String>();
-
-        int max = 0;
-        for (CommandProvider p : providers.values())
-        {
-            for (Entry<String, String> e : p.getCommandsSyntax().entrySet())
-            {
-                max = Math.max(max, e.getKey().length());
-                m.put(e.getKey(), e.getValue());
-            }
-        }
-
-        ci.tableHeader("Command", "Description");
-
+        ci.tableHeader("Command", "Options", "Description");
         String prevLetter = null;
-        for (Entry<String, String> e : m.entrySet())
+
+        for (Entry<String, CLICommand> e : commands.entrySet())
         {
             String firstLetter = e.getKey().substring(0, 1);
             if (prevLetter != null && !prevLetter.equals(firstLetter))
-                ci.tableRow("@@-@@", "@@-@@");
+                ci.tableRow("@@-@@", "@@-@@", "@@-@@");
 
-            ci.tableRow(e.getKey(), e.getValue());
+            boolean firstRow = true;
+            for (CLIOption opt : e.getValue().getOptions())
+            {
+                StringBuilder b = new StringBuilder();
+                if (!opt.isRequired()) b.append("[");
+                b.append(opt.getName());
+                if (!opt.isRequired()) b.append("]");
+                b.append(" ");
+                if (opt.needsValue()) b.append("<");
+                else b.append(" - ");
+                b.append(opt.getDescription());
+                if (opt.needsValue()) b.append(">");
+
+                if (firstRow)
+                    ci.tableRow(e.getKey(), b.toString(), e.getValue().getDescription());
+
+                else
+                    ci.tableRow("", b.toString(), "");
+
+                    firstRow = false;
+            }
+
+            if (firstRow)
+                ci.tableRow(e.getKey(), "", e.getValue().getDescription());
+
             prevLetter = firstLetter;
         }
 
@@ -234,13 +259,14 @@ public class ConsoleServerImpl implements ConsoleServer, CommandProvider
 
     // ===========================================================================
     @Override
-    public Map<String, String> getCommandsSyntax()
+    public List<CLICommand> getCommands()
     {
-        Map<String, String> m = new HashMap<String, String>();
+        List<CLICommand> l = new ArrayList<CLICommand>();
 
-        m.put("help | h", "Displays the list of available commands.");
+        l.add(new CLICommand("help", "Displays the list of available commands."));
+        l.add(new CLICommand("h", "Displays the list of available commands."));
 
-        return m;
+        return l;
     }
 
     // ===========================================================================
