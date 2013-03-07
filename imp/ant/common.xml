@@ -12,7 +12,7 @@
         </else>
     </if>
     <if>
-        <equals arg1="${usesgwt}" arg2="true" />
+        <equals arg1="${has_unit_tests}" arg2="true" />
         <then>
             <import file="junit.xml"/>
         </then>
