@@ -12,10 +12,11 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.log4j.Logger;
 import org.gluewine.core.Glue;
 import org.gluewine.core.NoSuchServiceException;
-import org.gluewine.core.RunOnDeactivate;
 import org.gluewine.core.RunOnActivate;
+import org.gluewine.core.RunOnDeactivate;
 import org.gluewine.core.ServiceProvider;
 import org.gluewine.core.utils.ErrorLogger;
 
@@ -28,41 +29,6 @@ import org.gluewine.core.utils.ErrorLogger;
 public class Service
 {
     // ===========================================================================
-    /**
-     * The 'Actual' service.
-     */
-    private Object actual = null;
-
-    /**
-     * Flag indicating that the service is fully resolved.
-     */
-    private boolean resolved = false;
-
-    /**
-     * Flag indicating that the service is fully glued.
-     */
-    private boolean glued = false;
-
-    /**
-     * Flag indicating that the service has been activated.
-     */
-    private boolean active = false;
-
-    /**
-     * The map of references services indexed on the field of the referencing service.
-     */
-    private Map<Field, Object> references = new HashMap<Field, Object>();
-
-    /**
-     * The set of unresolved field names.
-     */
-    private Set<String> unresolvedFields = new HashSet<String>();
-
-    /**
-     * The service id.
-     */
-    private int id = 0;
-
     /**
      * Class used to invoked RunWhenGlued method in a separate thread.
      */
@@ -106,16 +72,188 @@ public class Service
         }
     }
 
+    /**
+     * Flag indicating that the service has been activated.
+     */
+    private boolean active = false;
+
+    /**
+     * The 'Actual' service.
+     */
+    private Object actual = null;
+
+    /**
+     * Flag indicating that the service is fully glued.
+     */
+    private boolean glued = false;
+
+    /**
+     * The service id.
+     */
+    private int id = 0;
+
+    /**
+     * The logger instance.
+     */
+    private Logger logger = null;
+
+    /**
+     * The map of references services indexed on the field of the referencing service.
+     */
+    private Map<Field, Object> references = new HashMap<Field, Object>();
+
+    /**
+     * Flag indicating that the service is fully resolved.
+     */
+    private boolean resolved = false;
+
+    /**
+     * The set of unresolved field names.
+     */
+    private Set<String> unresolvedFields = new HashSet<String>();
+
+    /**
+     * The gluer instance.
+     */
+    private transient Gluer gluer = null;
+
     // ===========================================================================
     /**
-     * Returns true if the embedded service references the given object.
+     * Creates an instance using the embedded service specified.
      *
-     * @param o The object to check.
-     * @return True if referenced.
+     * @param service The actual service.
+     * @param id The id.
+     * @param gluer The gluer.
      */
-    boolean references(Object o)
+    Service(Object service, int id, Gluer gluer)
     {
-        return references.values().contains(o);
+        this.actual = service;
+        this.id = id;
+        this.gluer = gluer;
+        logger = Logger.getLogger(getName());
+    }
+
+    // ===========================================================================
+    /**
+     * Activates the embedded service by invoking all methods that have the
+     * @RunWhenGlued annotation.
+     *
+     * Note that this method will do nothing if isGlued() returns false.
+     */
+    boolean activate()
+    {
+        if (isGlued() && !isActive() && referencesAreAllowedToActivate())
+        {
+            active = true;
+            for (final Method method : actual.getClass().getMethods())
+            {
+                RunOnActivate annot = getRunOnActivate(actual.getClass(), method);
+                if (annot != null && method.getParameterTypes().length == 0)
+                {
+                    boolean methodActive = false;
+                    Runnable r = new ThreadedInvoker(method, actual);
+                    if (annot.runThreaded()) new Thread(r).start();
+                    else r.run();
+                    methodActive = true;
+                    active &= methodActive;
+                }
+            }
+        }
+
+        return active;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns true if all contained references are allowed to be
+     * activated.
+     *
+     * @return True if all references can be activated.
+     */
+    private boolean referencesAreAllowedToActivate()
+    {
+        boolean ok = true;
+        Iterator<Entry<Field, Object>> iter = references.entrySet().iterator();
+        while (iter.hasNext() && ok)
+        {
+            Entry<Field, Object> e = iter.next();
+            ok = gluer.isAllowedToActivate(e.getValue());
+            if (!ok) logger.debug("Cannot be activated as member : " + e.getKey().getName() + " is not allowed to be activated!");
+        }
+
+        return ok;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns true if all contained references are allowed to be
+     * glued.
+     *
+     * @return True if all references can be glued.
+     */
+    private boolean referencesAreAllowedToGlue()
+    {
+        boolean ok = true;
+        Iterator<Entry<Field, Object>> iter = references.entrySet().iterator();
+        while (iter.hasNext() && ok)
+        {
+            Entry<Field, Object> e = iter.next();
+            ok = gluer.isAllowedToGlue(e.getValue());
+            if (!ok) logger.debug("Cannot be glued as member : " + e.getKey().getName() + " is not allowed to be glued!");
+        }
+
+        return ok;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns true if all contained references are allowed to be
+     * resolved.
+     *
+     * @return True if all references can be resolved.
+     */
+    private boolean referencesAreAllowedToResolve()
+    {
+        boolean ok = true;
+        Iterator<Entry<Field, Object>> iter = references.entrySet().iterator();
+        while (iter.hasNext() && ok)
+        {
+            Entry<Field, Object> e = iter.next();
+            ok = gluer.isAllowedToResolve(e.getValue());
+            if (!ok) logger.debug("Cannot be resolved as member : " + e.getKey().getName() + " is not allowed to be resolved!");
+        }
+
+        return ok;
+    }
+
+    // ===========================================================================
+    /**
+     * Deactivates the embedded service by invoking all methods that have the
+     * @RunBeforeUngluing annotation.
+     *
+     * Note that this method will do nothing if isActive() returns false.
+     */
+    void deactivate()
+    {
+        if (isActive())
+        {
+            for (final Method method : actual.getClass().getMethods())
+            {
+                if (getRunOnDeactivate(actual.getClass(), method) != null)
+                {
+                    try
+                    {
+                        method.invoke(actual, new Object[0]);
+                    }
+                    catch (Throwable e)
+                    {
+                        ErrorLogger.log(getClass(), e);
+                    }
+                }
+            }
+
+            active = false;
+        }
     }
 
     // ===========================================================================
@@ -131,15 +269,30 @@ public class Service
 
     // ===========================================================================
     /**
-     * Creates an instance using the embedded service specified.
+     * Returns the list of ALL fields of a class. This is done recursively.
+     * Note that overriden fields are excluded.
      *
-     * @param service The actual service.
-     * @param id The id.
+     * @param clazz The class to process.
+     * @return The list of fields.
      */
-    Service(Object service, int id)
+    private List<Field> getAllFields(Class<?> clazz)
     {
-        this.actual = service;
-        this.id = id;
+        Map<String, Field> fields = new HashMap<String, Field>();
+        Class<?> c = clazz;
+        while (c != null)
+        {
+            for (Field field : c.getDeclaredFields())
+            {
+                if (!fields.containsKey(field.getName()))
+                    fields.put(field.getName(), field);
+            }
+
+            c = c.getSuperclass();
+        }
+
+        List<Field> l = new ArrayList<Field>(fields.size());
+        l.addAll(fields.values());
+        return l;
     }
 
     // ===========================================================================
@@ -155,6 +308,100 @@ public class Service
 
     // ===========================================================================
     /**
+     * Returns the name of the service. This removes the 'enchanced' part of the
+     * name.
+     *
+     * @return The name of the service.
+     */
+    public String getName()
+    {
+        String name = actual.getClass().getName();
+        int cgl_i = name.indexOf("$$Enhancer");
+        int dscl_i = name.indexOf("Enhanced");
+        boolean enhanced = dscl_i > 0;
+        enhanced |= cgl_i > 0;
+
+        if (enhanced)
+        {
+            if (dscl_i > 0) name = name.substring(0, dscl_i);
+            else if (cgl_i > 0) name = name.substring(0, cgl_i);
+        }
+
+        return name;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the RunOnDeactivate annotation if present in the class specified
+     * (either in the class given, or one of its parents).
+     * If the method hasn't got the annotation, null is returned.
+     *
+     * @param cl The class to process.
+     * @param m The method to check.
+     * @return The (possibly bnull) annotation.
+     */
+    private RunOnDeactivate getRunOnDeactivate(Class<?> cl, Method m)
+    {
+        RunOnDeactivate annot = null;
+        Class<?> c = cl;
+        while (annot == null && m != null && c != null)
+        {
+            annot = m.getAnnotation(RunOnDeactivate.class);
+            if (annot == null)
+            {
+                c = c.getSuperclass();
+                try
+                {
+                    if (c != null)
+                        m = c.getMethod(m.getName(), m.getParameterTypes());
+                }
+                catch (NoSuchMethodException e)
+                {
+                    m = null;
+                }
+            }
+        }
+
+        return annot;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the RunOnActivate annotation if present in the class specified
+     * (either in the class given, or one of its parents).
+     * If the method hasn't got the annotation, null is returned.
+     *
+     * @param cl The class to process.
+     * @param m The method to check.
+     * @return The (possibly bnull) annotation.
+     */
+    private RunOnActivate getRunOnActivate(Class<?> cl, Method m)
+    {
+        RunOnActivate annot = null;
+        Class<?> c = cl;
+        while (annot == null && m != null && c != null)
+        {
+            annot = m.getAnnotation(RunOnActivate.class);
+            if (annot == null)
+            {
+                c = c.getSuperclass();
+                try
+                {
+                    if (c != null)
+                        m = c.getMethod(m.getName(), m.getParameterTypes());
+                }
+                catch (NoSuchMethodException e)
+                {
+                    m = null;
+                }
+            }
+        }
+
+        return annot;
+    }
+
+    // ===========================================================================
+    /**
      * Returns the class of the embedded service.
      *
      * @return The class.
@@ -162,6 +409,115 @@ public class Service
     public Class<?> getServiceClass()
     {
         return actual.getClass();
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the set of unresolved field names.
+     *
+     * @return The set of unresolved field names.
+     */
+    public Set<String> getUnresolvedFields()
+    {
+        Set<String> s = new TreeSet<String>();
+        s.addAll(unresolvedFields);
+        return s;
+    }
+
+    // ===========================================================================
+    /**
+     * Glues all the references services, and returns true if everything was
+     * glued. Note that this method will do nothing if isResolved() returns
+     * false.
+     *
+     * @return True if all services have been glued.
+     */
+    boolean glue()
+    {
+        if (isResolved() && !isGlued() && referencesAreAllowedToGlue())
+        {
+            glued = true;
+            for (Entry<Field, Object> e : references.entrySet())
+            {
+                boolean fieldGlued = false;
+                try
+                {
+                    Field field = e.getKey();
+                    boolean accessible = field.isAccessible();
+                    field.setAccessible(true);
+                    field.set(actual, e.getValue());
+                    fieldGlued = true;
+                    field.setAccessible(accessible);
+                }
+                catch (Throwable t)
+                {
+                    ErrorLogger.log(getClass(), t);
+                }
+
+                glued &= fieldGlued;
+            }
+        }
+
+        return glued;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns true if the service is active.
+     *
+     * @return True if active.
+     */
+    public boolean isActive()
+    {
+        return active;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns true if the service has been enhanced.
+     *
+     * @return True if enhanced.
+     */
+    public boolean isEnhanced()
+    {
+        String name = actual.getClass().getName();
+        int cgl_i = name.indexOf("$$Enhancer");
+        int dscl_i = name.indexOf("Enhanced");
+        return dscl_i > 0 || cgl_i > 0;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns true if the service is glued.
+     *
+     * @return True if glued.
+     */
+    public boolean isGlued()
+    {
+        return glued;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns true if the service is resolved.
+     *
+     * @return True if resolved.
+     */
+    public boolean isResolved()
+    {
+        return resolved;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns true if the embedded service references the given object.
+     *
+     * @param o The object to check.
+     * @return True if referenced.
+     */
+    boolean references(Object o)
+    {
+        return references.values().contains(o);
     }
 
     // ===========================================================================
@@ -175,7 +531,7 @@ public class Service
      */
     boolean resolve(List<Object> services, Set<ServiceProvider> providers)
     {
-        if (!isResolved())
+        if (!isResolved() && referencesAreAllowedToResolve())
         {
             resolved = true;
             for (Field field : getAllFields(actual.getClass()))
@@ -235,43 +591,6 @@ public class Service
     // ===========================================================================
     /**
      * Glues all the references services, and returns true if everything was
-     * glued. Note that this method will do nothing if isResolved() returns
-     * false.
-     *
-     * @return True if all services have been glued.
-     */
-    boolean glue()
-    {
-        if (isResolved() && !isGlued())
-        {
-            glued = true;
-            for (Entry<Field, Object> e : references.entrySet())
-            {
-                boolean fieldGlued = false;
-                try
-                {
-                    Field field = e.getKey();
-                    boolean accessible = field.isAccessible();
-                    field.setAccessible(true);
-                    field.set(actual, e.getValue());
-                    fieldGlued = true;
-                    field.setAccessible(accessible);
-                }
-                catch (Throwable t)
-                {
-                    ErrorLogger.log(getClass(), t);
-                }
-
-                glued &= fieldGlued;
-            }
-        }
-
-        return glued;
-    }
-
-    // ===========================================================================
-    /**
-     * Glues all the references services, and returns true if everything was
      * glued. Note that this method will do nothing if isActive() returns true
      * or isGlued() returns false.
      *
@@ -315,247 +634,5 @@ public class Service
             references.clear();
             resolved = false;
         }
-    }
-
-    // ===========================================================================
-    /**
-     * Returns the set of unresolved field names.
-     *
-     * @return The set of unresolved field names.
-     */
-    public Set<String> getUnresolvedFields()
-    {
-        Set<String> s = new TreeSet<String>();
-        s.addAll(unresolvedFields);
-        return s;
-    }
-
-    // ===========================================================================
-    /**
-     * Returns the list of ALL fields of a class. This is done recursively.
-     * Note that overriden fields are excluded.
-     *
-     * @param clazz The class to process.
-     * @return The list of fields.
-     */
-    private List<Field> getAllFields(Class<?> clazz)
-    {
-        Map<String, Field> fields = new HashMap<String, Field>();
-        Class<?> c = clazz;
-        while (c != null)
-        {
-            for (Field field : c.getDeclaredFields())
-            {
-                if (!fields.containsKey(field.getName()))
-                    fields.put(field.getName(), field);
-            }
-
-            c = c.getSuperclass();
-        }
-
-        List<Field> l = new ArrayList<Field>(fields.size());
-        l.addAll(fields.values());
-        return l;
-    }
-
-    // ===========================================================================
-    /**
-     * Activates the embedded service by invoking all methods that have the
-     * @RunWhenGlued annotation.
-     *
-     * Note that this method will do nothing if isGlued() returns false.
-     */
-    boolean activate()
-    {
-        if (isGlued() && !isActive())
-        {
-            active = true;
-            for (final Method method : actual.getClass().getMethods())
-            {
-                RunOnActivate annot = getRunWhenGlued(actual.getClass(), method);
-                if (annot != null && method.getParameterTypes().length == 0)
-                {
-                    boolean methodActive = false;
-                    Runnable r = new ThreadedInvoker(method, actual);
-                    if (annot.runThreaded()) new Thread(r).start();
-                    else r.run();
-                    methodActive = true;
-                    active &= methodActive;
-                }
-            }
-        }
-
-        return active;
-    }
-
-    // ===========================================================================
-    /**
-     * Deactivates the embedded service by invoking all methods that have the
-     * @RunBeforeUngluing annotation.
-     *
-     * Note that this method will do nothing if isActive() returns false.
-     */
-    void deactivate()
-    {
-        if (isActive())
-        {
-            for (final Method method : actual.getClass().getMethods())
-            {
-                if (getRunBeforeUngluing(actual.getClass(), method) != null)
-                {
-                    try
-                    {
-                        method.invoke(actual, new Object[0]);
-                    }
-                    catch (Throwable e)
-                    {
-                        ErrorLogger.log(getClass(), e);
-                    }
-                }
-            }
-
-            active = false;
-        }
-    }
-
-    // ===========================================================================
-    /**
-     * Returns the RunBeforeUngluing annotation if present in the class specified
-     * (either in the class given, or one of its parents).
-     * If the method hasn't got the annotation, null is returned.
-     *
-     * @param cl The class to process.
-     * @param m The method to check.
-     * @return The (possibly bnull) annotation.
-     */
-    private RunOnDeactivate getRunBeforeUngluing(Class<?> cl, Method m)
-    {
-        RunOnDeactivate annot = null;
-        Class<?> c = cl;
-        while (annot == null && m != null && c != null)
-        {
-            annot = m.getAnnotation(RunOnDeactivate.class);
-            if (annot == null)
-            {
-                c = c.getSuperclass();
-                try
-                {
-                    if (c != null)
-                        m = c.getMethod(m.getName(), m.getParameterTypes());
-                }
-                catch (NoSuchMethodException e)
-                {
-                    m = null;
-                }
-            }
-        }
-
-        return annot;
-    }
-
-    // ===========================================================================
-    /**
-     * Returns the RunWhenGlued annotation if present in the class specified
-     * (either in the class given, or one of its parents).
-     * If the method hasn't got the annotation, null is returned.
-     *
-     * @param cl The class to process.
-     * @param m The method to check.
-     * @return The (possibly bnull) annotation.
-     */
-    private RunOnActivate getRunWhenGlued(Class<?> cl, Method m)
-    {
-        RunOnActivate annot = null;
-        Class<?> c = cl;
-        while (annot == null && m != null && c != null)
-        {
-            annot = m.getAnnotation(RunOnActivate.class);
-            if (annot == null)
-            {
-                c = c.getSuperclass();
-                try
-                {
-                    if (c != null)
-                        m = c.getMethod(m.getName(), m.getParameterTypes());
-                }
-                catch (NoSuchMethodException e)
-                {
-                    m = null;
-                }
-            }
-        }
-
-        return annot;
-    }
-
-    // ===========================================================================
-    /**
-     * Returns true if the service is resolved.
-     *
-     * @return True if resolved.
-     */
-    public boolean isResolved()
-    {
-        return resolved;
-    }
-
-    // ===========================================================================
-    /**
-     * Returns true if the service is glued.
-     *
-     * @return True if glued.
-     */
-    public boolean isGlued()
-    {
-        return glued;
-    }
-
-    // ===========================================================================
-    /**
-     * Returns true if the service is active.
-     *
-     * @return True if active.
-     */
-    public boolean isActive()
-    {
-        return active;
-    }
-
-    // ===========================================================================
-    /**
-     * Returns the name of the service. This removes the 'enchanced' part of the
-     * name.
-     *
-     * @return The name of the service.
-     */
-    public String getName()
-    {
-        String name = actual.getClass().getName();
-        int cgl_i = name.indexOf("$$Enhancer");
-        int dscl_i = name.indexOf("Enhanced");
-        boolean enhanced = dscl_i > 0;
-        enhanced |= cgl_i > 0;
-
-        if (enhanced)
-        {
-            if (dscl_i > 0) name = name.substring(0, dscl_i);
-            else if (cgl_i > 0) name = name.substring(0, cgl_i);
-        }
-
-        return name;
-    }
-
-    // ===========================================================================
-    /**
-     * Returns true if the service has been enhanced.
-     *
-     * @return True if enhanced.
-     */
-    public boolean isEnhanced()
-    {
-        String name = actual.getClass().getName();
-        int cgl_i = name.indexOf("$$Enhancer");
-        int dscl_i = name.indexOf("Enhanced");
-        return dscl_i > 0 || cgl_i > 0;
     }
 }

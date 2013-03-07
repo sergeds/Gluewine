@@ -56,9 +56,9 @@ public final class Gluer implements CodeSourceListener
     private Logger logger = Logger.getLogger(getClass());
 
     /**
-     * The list of services.
+     * The map of service ids.
      */
-   // private List<Service> services = new ArrayList<Service>();
+    private HashMap<String, Integer> serviceIds = new HashMap<String, Integer>();
 
     /**
      * The map of services indexed on their id.
@@ -91,19 +91,19 @@ public final class Gluer implements CodeSourceListener
     private RepositoryImpl repository = new RepositoryImpl();
 
     /**
-     * The map containing the id's of manually stopped services.
+     * The Set containing the id's of manually stopped services.
      */
-    private HashMap<Integer, String> stoppedServices = new HashMap<Integer, String>();
+    private HashSet<Integer> stoppedServices = new HashSet<Integer>();
 
     /**
-     * The map containing the id's of manually unglued services.
+     * The Set containing the id's of manually unglued services.
      */
-    private HashMap<Integer, String> ungluedServices = new HashMap<Integer, String>();
+    private HashSet<Integer> ungluedServices = new HashSet<Integer>();
 
     /**
-     * The map containing the id's of manually unresolved services.
+     * The Set containing the id's of manually unresolved services.
      */
-    private HashMap<Integer, String> unresolvedServices = new HashMap<Integer, String>();
+    private HashSet<Integer> unresolvedServices = new HashSet<Integer>();
 
     // ===========================================================================
     /**
@@ -125,30 +125,72 @@ public final class Gluer implements CodeSourceListener
 
         Map<String, Serializable> persistentMap = Launcher.getInstance().getPersistentMap();
         if (persistentMap.containsKey("GLUE::STOPPED"))
-            stoppedServices = (HashMap<Integer, String>) persistentMap.get("GLUE::STOPPED");
+            stoppedServices = (HashSet<Integer>) persistentMap.get("GLUE::STOPPED");
         else persistentMap.put("GLUE::STOPPED", stoppedServices);
 
         if (persistentMap.containsKey("GLUE::UNGLUED"))
-            ungluedServices = (HashMap<Integer, String>) persistentMap.get("GLUE::UNGLUED");
+            ungluedServices = (HashSet<Integer>) persistentMap.get("GLUE::UNGLUED");
         else persistentMap.put("GLUE::UNGLUED", ungluedServices);
 
         if (persistentMap.containsKey("GLUE::UNRESOLVED"))
-            unresolvedServices = (HashMap<Integer, String>) persistentMap.get("GLUE::UNRESOLVED");
+            unresolvedServices = (HashSet<Integer>) persistentMap.get("GLUE::UNRESOLVED");
         else persistentMap.put("GLUE::UNRESOLVED", unresolvedServices);
+
+        if (persistentMap.containsKey("GLUE::SERVICEIDS"))
+            serviceIds = (HashMap<String, Integer>) persistentMap.get("GLUE::SERVICEIDS");
+        else persistentMap.put("GLUE::SERVICEIDS", serviceIds);
+
+        if (persistentMap.containsKey("GLUE::NEXTID"))
+            nextId = ((Integer) persistentMap.get("GLUE::NEXTID")).intValue();
 
         loadEnhancer();
 
         if (enhancer != null) display("Using enhancer: " + enhancer.getClass().getName());
         else display("Running in non-enhanced mode.");
 
-        addService(new Service(Launcher.getInstance(), getNextId()));
-        addService(new Service(repository, getNextId()));
-        addService(new Service(this, getNextId()));
+        addService(new Service(Launcher.getInstance(), getServiceId(Launcher.getInstance()), this));
+        addService(new Service(repository, getServiceId(repository), this));
+        addService(new Service(this, getServiceId(this), this));
 
         processSources(Launcher.getInstance().getSources());
         launch();
 
+        persistentMap.put("GLUE::NEXTID", Integer.valueOf(nextId));
+        Launcher.getInstance().savePersistentMap();
+
         System.out.println("Gluewine Framework started in " + (System.currentTimeMillis() - start) + " milliseconds.");
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the id of the given object.
+     *
+     * @param service The service to process.
+     * @return The id.
+     */
+    private synchronized int getServiceId(Object service)
+    {
+        StringBuilder b = new StringBuilder();
+        Class<?> cl = service.getClass();
+        String name = cl.getName();
+
+        if (name.indexOf("$$EnhancerByCGLIB$$") > 0 || name.indexOf("Enhanced") > 0)
+            cl = service.getClass().getSuperclass();
+
+        b.append(cl.getClassLoader().toString());
+        b.append("::").append(cl.getName());
+
+        String clid = b.toString();
+        int id = 0;
+        if (serviceIds.containsKey(clid)) id = serviceIds.get(clid).intValue();
+        else
+        {
+            id = ++nextId;;
+            serviceIds.put(clid, Integer.valueOf(id));
+
+        }
+
+        return id;
     }
 
     // ===========================================================================
@@ -160,17 +202,6 @@ public final class Gluer implements CodeSourceListener
     private void addService(Service service)
     {
         serviceMap.put(Integer.valueOf(service.getId()), service);
-    }
-
-    // ===========================================================================
-    /**
-     * Returns the next available id.
-     *
-     * @return The next id.
-     */
-    private synchronized int getNextId()
-    {
-        return ++nextId;
     }
 
     // ===========================================================================
@@ -193,7 +224,7 @@ public final class Gluer implements CodeSourceListener
                 deregisterObject(s.getActualService());
                 s.deactivate();
                 stopped.add(s);
-                stoppedServices.put(Integer.valueOf(s.getId()), s.getName());
+                stoppedServices.add(Integer.valueOf(s.getId()));
 
                 for (Service ref : serviceMap.values())
                 {
@@ -230,7 +261,7 @@ public final class Gluer implements CodeSourceListener
             Service s = serviceMap.get(Integer.valueOf(id));
             if (s != null && s.isGlued())
             {
-                ungluedServices.put(Integer.valueOf(s.getId()), s.getName());
+                ungluedServices.add(Integer.valueOf(s.getId()));
                 s.unglue();
                 unglued.add(s);
             }
@@ -270,7 +301,7 @@ public final class Gluer implements CodeSourceListener
             {
                 s.unresolve();
                 unresolved.add(s);
-                unresolvedServices.put(Integer.valueOf(s.getId()), s.getName());
+                unresolvedServices.add(Integer.valueOf(s.getId()));
             }
         }
 
@@ -353,8 +384,13 @@ public final class Gluer implements CodeSourceListener
             {
                 s.activate();
                 registerObject(s.getActualService());
+
+                stoppedServices.remove(Integer.valueOf(id));
             }
         }
+
+        Launcher.getInstance().savePersistentMap();
+        launch();
     }
 
     // ===========================================================================
@@ -369,8 +405,14 @@ public final class Gluer implements CodeSourceListener
         {
             Service s = serviceMap.get(Integer.valueOf(id));
             if (s != null && !s.isGlued())
+            {
                 s.glue();
+                ungluedServices.remove(Integer.valueOf(id));
+            }
         }
+
+        Launcher.getInstance().savePersistentMap();
+        launch();
     }
 
     // ===========================================================================
@@ -390,7 +432,12 @@ public final class Gluer implements CodeSourceListener
             Service s = serviceMap.get(Integer.valueOf(id));
             if (s != null && !s.isResolved())
                 s.resolve(actuals, providers);
+
+            unresolvedServices.remove(Integer.valueOf(id));
         }
+
+        Launcher.getInstance().savePersistentMap();
+        launch();
     }
 
     // ===========================================================================
@@ -413,7 +460,7 @@ public final class Gluer implements CodeSourceListener
      */
     private void launch()
     {
-        if (!resolve()) warn("There are unresolved services!");
+        if (!resolve()) logger.warn("There are unresolved services!");
         glue();
         activate();
         registerAllServices();
@@ -431,16 +478,10 @@ public final class Gluer implements CodeSourceListener
 
         for (Service s : serviceMap.values())
         {
-            if (stoppedServices.containsKey(Integer.valueOf(s.getId())))
+            if (!stoppedServices.contains(Integer.valueOf(s.getId())))
             {
-                String name = stoppedServices.get(Integer.valueOf(s.getId()));
-                if (name.equals(s.getName())) continue;
-            }
-
-            if (s.isGlued() && !s.activate())
-            {
-                warn(s.getActualService().getClass().getName() + " could not be activated !");
-                active = false;
+                if (s.isGlued() && !s.activate())
+                    active = false;
             }
         }
 
@@ -473,10 +514,7 @@ public final class Gluer implements CodeSourceListener
         for (Service s : serviceMap.values())
         {
             if (s.isGlued() && !s.unglue())
-            {
-                warn(s.getActualService().getClass().getName() + " could not be unglued !");
                 unglued = false;
-            }
         }
 
         return unglued;
@@ -507,16 +545,10 @@ public final class Gluer implements CodeSourceListener
 
         for (Service s : serviceMap.values())
         {
-            if (ungluedServices.containsKey(Integer.valueOf(s.getId())))
+            if (!ungluedServices.contains(Integer.valueOf(s.getId())))
             {
-                String name = ungluedServices.get(Integer.valueOf(s.getId()));
-                if (name.equals(s.getName())) continue;
-            }
-
-            if (s.isResolved() && !s.glue())
-            {
-                warn(s.getActualService().getClass().getName() + " could not be glued !");
-                glued = false;
+                if (s.isResolved() && !s.glue())
+                    glued = false;
             }
         }
 
@@ -538,15 +570,10 @@ public final class Gluer implements CodeSourceListener
         boolean resolved = true;
         for (Service s : serviceMap.values())
         {
-            if (unresolvedServices.containsKey(Integer.valueOf(s.getId())))
+            if (!unresolvedServices.contains(Integer.valueOf(s.getId())))
             {
-                String name = unresolvedServices.get(Integer.valueOf(s.getId()));
-                if (name.equals(s.getName())) continue;
-            }
-            if (!s.resolve(actuals, providers))
-            {
-                warn(s.getActualService().getClass().getName() + " could not be fully resolved !");
-                resolved = false;
+                if (!s.resolve(actuals, providers))
+                    resolved = false;
             }
         }
 
@@ -563,18 +590,6 @@ public final class Gluer implements CodeSourceListener
     {
         System.out.println(s);
         logger.info(s);
-    }
-
-    // ===========================================================================
-    /**
-     * Outputs a String to StdOut as in the logger.
-     *
-     * @param s The String to display.
-     */
-    private void warn(String s)
-    {
-        System.out.println(s);
-        logger.warn(s);
     }
 
     // ===========================================================================
@@ -746,7 +761,7 @@ public final class Gluer implements CodeSourceListener
                     if (AspectProvider.class.isAssignableFrom(clazz))
                         interceptor.register((AspectProvider) o);
 
-                    addService(new Service(o, getNextId()));
+                    addService(new Service(o, getServiceId(o), this));
 
                     if (o instanceof ServiceProvider)
                         providers.add((ServiceProvider) o);
@@ -758,6 +773,60 @@ public final class Gluer implements CodeSourceListener
                 }
             }
         }
+    }
+
+    // ===========================================================================
+    /**
+     * Returns true if the given object is allowed to be glued.
+     * An object is allowed to be glued if it is resolved and has not been put in
+     * the ungluedServices set.
+     *
+     * @param o The object to check.
+     * @return True if allowed to be glued.
+     */
+    boolean isAllowedToGlue(Object o)
+    {
+        Service s = serviceMap.get(getServiceId(o));
+        if (s != null)
+            return s.isResolved() && !ungluedServices.contains(Integer.valueOf(s.getId()));
+
+        else return false;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns true if the given object is allowed to be resolved.
+     * An object is allowed to be resolved if it is has not been put in the
+     * unresolvedServices set.
+     *
+     * @param o The object to check.
+     * @return True if allowed to be resolved.
+     */
+    boolean isAllowedToResolve(Object o)
+    {
+        Service s = serviceMap.get(getServiceId(o));
+        if (s != null)
+            return !unresolvedServices.contains(Integer.valueOf(s.getId()));
+
+        else return false;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns true if the given object is allowed to be activated.
+     * An object is allowed to be activated if it is glued has not been put in the
+     * stoppedServices set.
+     *
+     * @param o The object to check.
+     * @return True if allowed to be activated.
+     */
+    boolean isAllowedToActivate(Object o)
+    {
+        Service s = serviceMap.get(getServiceId(o));
+        if (s != null)
+            return s.isGlued() && !stoppedServices.contains(Integer.valueOf(s.getId()));
+
+        else return false;
     }
 
     // ===========================================================================
