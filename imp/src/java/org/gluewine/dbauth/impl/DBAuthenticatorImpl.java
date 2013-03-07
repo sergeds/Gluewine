@@ -29,7 +29,6 @@ import org.gluewine.console.CLICommand;
 import org.gluewine.console.CLIOption;
 import org.gluewine.console.CommandContext;
 import org.gluewine.console.CommandProvider;
-import org.gluewine.console.ConsoleServer;
 import org.gluewine.core.Glue;
 import org.gluewine.core.RunOnActivate;
 import org.gluewine.dbauth.DBAuthenticator;
@@ -58,9 +57,6 @@ public class DBAuthenticatorImpl implements DBAuthenticator, CommandProvider
      */
     @Glue
     private SessionManager sessionManager = null;
-
-    @Glue
-    private ConsoleServer server = null;
 
     // ===========================================================================
     /**
