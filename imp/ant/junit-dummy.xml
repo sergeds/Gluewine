@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<project name="junit" default="junit.allchecks" basedir=".">
+    <target name="junit.allchecks"/>
+    <target name="junit.quickchecks"/>
+</project>

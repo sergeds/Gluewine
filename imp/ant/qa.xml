@@ -4,13 +4,6 @@
     <import file="osgi.xml"/>
 
     <taskdef resource="checkstyletask.properties" classpath="${dir.tools.checkstyle}/checkstyle-5.3-all.jar"/>
-    <taskdef name="testability" classname="com.google.ant.TestabilityTask">
-        <classpath>
-            <fileset dir="${dir.tools.te}">
-                <include name="**/*.jar"/>
-            </fileset>
-        </classpath>
-    </taskdef>
     <taskdef name="findbugs" classname="edu.umd.cs.findbugs.anttask.FindBugsTask" classpath="${dir.tools.findbugs}/lib/findbugs-ant.jar"/>
 
     <!-- Run checkstyle -->
@@ -63,20 +56,5 @@
                 </and>
             </condition>
         </fail>
-    </target>
-
-    <target name="qa.testability">
-        <!-- parameter: reportdir -->
-        <mkdir dir="${reportdir}"/>
-        <testability resultfile="${reportdir}/testability.xml" errorfile="${reportdir}/testability.err.txt" print="xml" failproperty="testability.fail">
-            <classpath>
-                <path refid="classpath.${target}.classes"/>
-            </classpath>
-        </testability>
-        <testability resultfile="${reportdir}/index.html" errorfile="${reportdir}/testability.err.txt" printdepth="2" print="html" failproperty="testability.fail">
-            <classpath>
-                <path refid="classpath.${target}.classes"/>
-            </classpath>
-        </testability>
     </target>
 </project>

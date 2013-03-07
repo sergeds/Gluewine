@@ -13,7 +13,7 @@
     </taskdef>
 
     <!-- Compile unit tests -->
-    <target name="junit.compile" depends="osgi.compile, junit.depend" if="${has_unit_tests}">
+    <target name="junit.compile" depends="osgi.compile, junit.depend">
         <javac srcdir="${dir.src.junit}" destdir="${dir.build.junit}" debug="on" debuglevel="${debuglevel}" source="${source}" target="${target}" includeantruntime="false" encoding="utf8">
             <classpath>
                 <path refid="classpath.osgi.base"/>
@@ -26,12 +26,12 @@
 
     <target name="junit.quickchecks" depends="junit.checkstyle, junit"/>
 
-    <target name="junit.init" depends="init" if="${has_unit_tests}">
+    <target name="junit.init" depends="init">
         <mkdir dir="${dir.build.junit}"/>
     </target>
 
     <!-- Clean up old unit tests class files -->
-    <target name="junit.depend" depends="junit.init" if="${has_unit_tests}">
+    <target name="junit.depend" depends="junit.init">
         <depend srcdir="${dir.src.junit}" destdir="${dir.build.junit}" closure="yes"/>
     </target>
 
@@ -53,7 +53,7 @@
     <!--<property name="templatedb.pgpassfile" value="../templates/testdata/pgpass"/>-->
 
 
-    <target name="junit.initdb" depends="init" if="${has_unit_tests}">
+    <target name="junit.initdb" depends="init">
         <tempfile property="templatedb.pgpassfile" prefix="pgpass." createfile="true" deleteonexit="true" destdir="${dir.build}"/>
         <sql driver="org.postgresql.Driver" url="${templatedb.baseurl}postgres" userid="${templatedb.superuser}" password="${templatedb.superpass}" autocommit="true" classpath="lib/java/runtime/postgresql-9.1-901.jdbc3-fksosgi-9.1.jar">
             CREATE DATABASE "${templatedb}";
@@ -78,14 +78,14 @@
         </exec>
     </target>
 
-    <target name="junit.cleanupdb"  if="${has_unit_tests}">
+    <target name="junit.cleanupdb" >
         <sql driver="org.postgresql.Driver" url="${templatedb.baseurl}postgres" userid="${templatedb.superuser}" password="${templatedb.superpass}" autocommit="true" classpath="lib/java/runtime/postgresql-9.1-901.jdbc3-fksosgi-9.1.jar">
             DROP DATABASE "${templatedb}";
         </sql>
     </target>
 
     <!-- Run unit tests -->
-    <target name="junit.run" if="${has_unit_tests}">
+    <target name="junit.run">
         <delete dir="${dir.reports.junit}"/>
         <mkdir dir="${dir.reports.junit}"/>
 
@@ -120,7 +120,7 @@
     </target>
 
     <!-- Run tests with coverage reporting -->
-    <target name="cobertura" depends="junit.compile" description="Runs JUnit tests with code coverage reporting" if="${has_unit_tests}">
+    <target name="cobertura" depends="junit.compile" description="Runs JUnit tests with code coverage reporting">
         <!-- cobertura always needs to start from scratch, so it makes no sense to separate this into separate targets -->
         <delete dir="${dir.reports.cobertura}"/>
         <delete dir="${dir.build.cobertura}"/>
@@ -150,7 +150,7 @@
     </target>
 
     <!-- Run tests without coverage reporting -->
-    <target name="junit" depends="junit.compile" description="Runs JUnit tests without code coverage reporting" if="${has_unit_tests}">
+    <target name="junit" depends="junit.compile" description="Runs JUnit tests without code coverage reporting">
         <antcall target="junit.run">
             <param name="junitclasspath" value="classpath.junit.full"/>
         </antcall>
@@ -167,7 +167,7 @@
     </target>
 
     <!-- Run checkstyle on unit tests -->
-    <target name="junit.checkstyle" depends="junit.compile" if="${has_unit_tests}">
+    <target name="junit.checkstyle" depends="junit.compile">
         <antcall target="qa.checkstyle">
             <param name="target" value="junit"/>
             <param name="sourcedir" value="${dir.src.junit}"/>
@@ -176,7 +176,7 @@
     </target>
 
     <!-- Run findbugs on unit tests -->
-    <target name="junit.findbugs" depends="junit.compile" if="${has_unit_tests}">
+    <target name="junit.findbugs" depends="junit.compile">
         <antcall target="qa.findbugs">
             <param name="target" value="junit"/>
             <param name="sourcedir" value="${dir.src.junit}"/>

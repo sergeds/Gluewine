@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project name="gwt" default="gwt.default" basedir=".">
+    <target name="gwt.allchecks"/>
+    <target name="gwt.quickchecks"/>
+    <target name="gwt.checkstyle"/>
+    <target name="gwt.findbugs"/>
+    <target name="gwt.dist"/>
+    <target name="gwt.default"/>
+</project>

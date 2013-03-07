@@ -16,7 +16,7 @@
     </target>
 
     <!-- quality checks -->
-    <target name="osgi.allchecks" depends="junit.allchecks, osgi.checkstyle, osgi.findbugs, osgi.testability"/>
+    <target name="osgi.allchecks" depends="junit.allchecks, osgi.checkstyle, osgi.findbugs"/>
     <target name="osgi.quickchecks" depends="osgi.checkstyle, junit.quickchecks"/>
 
     <!-- Clean up old class files -->
@@ -99,15 +99,6 @@
             <param name="sourcedir" value="${dir.src.osgi}"/>
             <param name="classdir" value="${dir.build.osgi}"/>
             <param name="reportdir" value="${dir.reports.findbugs.osgi}"/>
-        </antcall>
-    </target>
-
-    <!-- Produce testability report -->
-    <target name="osgi.testability" depends="osgi.compile">
-        <antcall target="qa.testability">
-            <param name="target" value="osgi"/>
-            <param name="classdir" value="${dir.build.osgi}"/>
-            <param name="reportdir" value="${dir.reports.te.osgi}"/>
         </antcall>
     </target>
 </project>

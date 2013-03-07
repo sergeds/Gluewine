@@ -2,8 +2,25 @@
 <project name="Common" default="default" basedir=".">
     <import file="init.xml"/>
     <import file="bundles.xml"/>
-    <import file="gwt.xml"/>
-    <import file="junit.xml"/>
+    <if>
+        <equals arg1="${usesgwt}" arg2="true" />
+        <then>
+            <import file="gwt.xml"/>
+        </then>
+        <else>
+            <import file="gwt-dummy.xml"/>
+        </else>
+    </if>
+    <if>
+        <equals arg1="${usesgwt}" arg2="true" />
+        <then>
+            <import file="junit.xml"/>
+        </then>
+        <else>
+            <import file="junit-dummy.xml"/>
+        </else>
+    </if>
+
     <import file="osgi.xml"/>
     <import file="index.xml"/>
 
@@ -22,15 +39,13 @@
         <delete dir="${dir.reports}"/>
     </target>
 
-    <target name="allchecks" depends="osgi.allchecks, gwt.allchecks"/>
+    <target name="allchecks" depends="osgi.allchecks, gwt.allchecks" description="Run all checks"/>
 
-    <target name="quickchecks" depends="osgi.quickchecks, gwt.quickchecks"/>
+    <target name="quickchecks" depends="osgi.quickchecks, gwt.quickchecks" description="Run all except time-consuming checks"/>
 
-    <target name="findbugs" depends="osgi.findbugs, gwt.findbugs"/>
+    <target name="findbugs" depends="osgi.findbugs, gwt.findbugs" description="Run findbugs on all code"/>
 
-    <target name="checkstyle" depends="osgi.checkstyle, gwt.checkstyle"/>
-
-    <target name="testability" depends="osgi.testability, gwt.testability"/>
+    <target name="checkstyle" depends="osgi.checkstyle, gwt.checkstyle" description="Run checkstyle on all code"/>
 
     <!-- empty default bundleextra target. Create a similar target in
          your build.xml and it'll be called instead of this one. -->

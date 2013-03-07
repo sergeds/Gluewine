@@ -41,12 +41,9 @@
     <property name="dir.reports.findbugs.junit" value="${dir.reports}/findbugs.junit"/>
     <property name="dir.reports.findbugs.gwt" value="${dir.reports}/findbugs.gwt"/>
     <property name="dir.reports.cobertura" value="${dir.reports}/cobertura"/>
-    <property name="dir.reports.te.osgi" value="${dir.reports}/testability.osgi"/>
-    <property name="dir.reports.te.gwt" value="${dir.reports}/testability.gwt"/>
 
     <property name="dir.tools.checkstyle" value="${dir.lib.tools}/checkstyle"/>
     <property name="dir.tools.findbugs" value="${dir.lib.tools}/findbugs"/>
-    <property name="dir.tools.te" value="${dir.lib.tools}/testability-explorer"/>
     <property name="dir.tools.cobertura" value="${dir.lib.tools}/cobertura"/>
     <property name="dir.build.cobertura" value="${dir.build}/cobertura/build"/>
 
