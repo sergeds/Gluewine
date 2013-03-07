@@ -59,6 +59,7 @@ public interface GluewineClassLoader
      * <br>Note that the call should never be dispatched to the invoker.
      *
      * @param resource The resource to load.
+     * @param dispatch If true and the loader cannot load the resource, the call is dispatched.
      * @param invoker The classloader that dispatched this call.
      * @return The (possibly null) URL.
      */

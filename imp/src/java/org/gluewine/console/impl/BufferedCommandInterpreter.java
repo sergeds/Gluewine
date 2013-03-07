@@ -140,7 +140,7 @@ public class BufferedCommandInterpreter implements CommandContext
      *  </li>
      *  </ul>
      *
-     * @param options The options to parse.
+     * @param opts The options to parse.
      * @param syntax The String representing the correct syntax.
      * @throws Throwable If a required option is missing or when an option has no value when needed.
      */

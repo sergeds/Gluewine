@@ -89,7 +89,7 @@ public final class Launcher
     private Map<CodeSource, CodeSource> childrenParent = new HashMap<CodeSource, CodeSource>();
 
     /**
-     * The map of sources indexed on their shortname
+     * The map of sources indexed on their shortname.
      */
     private Map<String, CodeSource> sources = new TreeMap<String, CodeSource>();
 
@@ -213,6 +213,9 @@ public final class Launcher
     // ===========================================================================
     /**
      * Returns the map of persistent properties. The map will never be null.
+     * <br>Remark: the map returned is the actual map, not a copy!
+     *
+     * @return The persistent map.
      */
     public Map<String, Serializable> getPersistentMap()
     {

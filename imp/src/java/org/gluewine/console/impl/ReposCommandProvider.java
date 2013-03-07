@@ -44,6 +44,9 @@ import org.gluewine.core.glue.RepositoryImpl;
 public class ReposCommandProvider implements CommandProvider
 {
     // ===========================================================================
+    /**
+     * The object repository.
+     */
     @Glue
     private RepositoryImpl repos = null;
 

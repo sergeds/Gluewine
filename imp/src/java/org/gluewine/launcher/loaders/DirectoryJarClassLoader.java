@@ -115,6 +115,7 @@ public class DirectoryJarClassLoader extends ClassLoader implements GluewineClas
      *
      * @param name The name of the class to load.
      * @return The class.
+     * @throws ClassNotFoundException If the class is not found.
      */
     protected Class<?> findClass(String name) throws ClassNotFoundException
     {
@@ -202,7 +203,7 @@ public class DirectoryJarClassLoader extends ClassLoader implements GluewineClas
     /**
      * Adds an additional file to the classloader.
      *
-     * @param file The file to add.
+     * @param loader The loader.
      */
     public void addLoader(SingleJarClassLoader loader)
     {

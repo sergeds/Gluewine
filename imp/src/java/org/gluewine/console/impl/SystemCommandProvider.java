@@ -145,7 +145,7 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
      * @param ci The current context.
      */
     @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "NP_UNWRITTEN_FIELD")
-    public void _services(CommandContext ci) throws Throwable
+    public void _services(CommandContext ci)
     {
         ci.tableHeader("ID", "Service", "Enhanced", "Resolved", "Glued", "Active");
 
@@ -243,7 +243,7 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
      *
      * @param ci The current context.
      */
-    public void _stop(CommandContext ci) throws Throwable
+    public void _stop(CommandContext ci)
     {
         gluer.stop(getIds(ci));
     }
@@ -259,7 +259,7 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
      *
      * @param ci The current context.
      */
-    public void _unglue(CommandContext ci) throws Throwable
+    public void _unglue(CommandContext ci)
     {
         gluer.unglue(getIds(ci));
     }
@@ -275,7 +275,7 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
      *
      * @param ci The current context.
      */
-    public void _unresolve(CommandContext ci) throws Throwable
+    public void _unresolve(CommandContext ci)
     {
         gluer.unresolve(getIds(ci));
     }
@@ -289,7 +289,7 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
      *
      * @param ci The current context.
      */
-    public void _resolve(CommandContext ci) throws Throwable
+    public void _resolve(CommandContext ci)
     {
         gluer.resolve(getIds(ci));
     }
@@ -303,7 +303,7 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
      *
      * @param ci The current context.
      */
-    public void _glue(CommandContext ci) throws Throwable
+    public void _glue(CommandContext ci)
     {
         gluer.glue(getIds(ci));
     }
@@ -317,7 +317,7 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
      *
      * @param ci The current context.
      */
-    public void _start(CommandContext ci) throws Throwable
+    public void _start(CommandContext ci)
     {
         gluer.start(getIds(ci));
     }
@@ -361,16 +361,16 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
         {
             if (!e.getValue().isResolved())
             {
-                int cgl_i = e.getKey().indexOf("$$Enhancer");
-                int dscl_i = e.getKey().indexOf("Enhanced");
-                boolean enhanced = dscl_i > 0;
-                enhanced |= cgl_i > 0;
+                int cgli = e.getKey().indexOf("$$Enhancer");
+                int dscli = e.getKey().indexOf("Enhanced");
+                boolean enhanced = dscli > 0;
+                enhanced |= cgli > 0;
 
                 String name = e.getKey();
                 if (enhanced)
                 {
-                    if (dscl_i > 0) name = name.substring(0, dscl_i);
-                    else if (cgl_i > 0) name = name.substring(0, cgl_i);
+                    if (dscli > 0) name = name.substring(0, dscli);
+                    else if (cgli > 0) name = name.substring(0, cgli);
                 }
 
                 StringBuilder unres = new StringBuilder();

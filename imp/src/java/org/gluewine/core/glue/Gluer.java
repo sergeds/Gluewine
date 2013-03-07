@@ -185,9 +185,8 @@ public final class Gluer implements CodeSourceListener
         if (serviceIds.containsKey(clid)) id = serviceIds.get(clid).intValue();
         else
         {
-            id = ++nextId;;
+            id = ++nextId;
             serviceIds.put(clid, Integer.valueOf(id));
-
         }
 
         return id;
@@ -397,7 +396,7 @@ public final class Gluer implements CodeSourceListener
     /**
      * Resolves, glues and starts all services with the given id.
      *
-     * @param ids[] The service ids.
+     * @param ids The service ids.
      */
     public void glue(int[] ids)
     {
@@ -629,7 +628,7 @@ public final class Gluer implements CodeSourceListener
      * Registers the given object with the Repository. If the object implements
      * RepositoryListener, it is registered as a listener as well.
      *
-     * @param Object The object to register.
+     * @param o The object to register.
      */
     private void registerObject(Object o)
     {

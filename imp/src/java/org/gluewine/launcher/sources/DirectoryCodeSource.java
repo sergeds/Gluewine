@@ -25,7 +25,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,10 +48,9 @@ public class DirectoryCodeSource extends AbstractCodeSource
      * Creates an instance for the directory specified.
      *
      * @param dir The directory.
-     * @throws MalformedURLException If a problem occurs.
      * @throws IOException Thrown if a read error occurs.
      */
-    public DirectoryCodeSource(File dir) throws MalformedURLException, IOException
+    public DirectoryCodeSource(File dir) throws IOException
     {
         super("Directory", new URL[] {dir.toURI().toURL()});
         this.directory = dir;

@@ -87,6 +87,7 @@ public class SingleJarClassLoader extends URLClassLoader implements GluewineClas
      *
      * @param name The name of the class to load.
      * @return The class.
+     * @throws ClassNotFoundException If the class cannot be found.
      */
     protected Class<?> findClass(String name) throws ClassNotFoundException
     {
@@ -117,6 +118,8 @@ public class SingleJarClassLoader extends URLClassLoader implements GluewineClas
     // ===========================================================================
     /**
      * Returns the set of package names this classloader can handle.
+     *
+     * @return The set of packagenames present in this loader.
      */
     Set<String> getPackageNames()
     {
@@ -128,6 +131,8 @@ public class SingleJarClassLoader extends URLClassLoader implements GluewineClas
     // ===========================================================================
     /**
      * Returns the set of path names this classloader can handle.
+     *
+     * @return The set of pathnames present in this loader.
      */
     Set<String> getPathNames()
     {

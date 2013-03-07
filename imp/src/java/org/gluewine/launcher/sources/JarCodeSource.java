@@ -30,6 +30,12 @@ import java.util.jar.Manifest;
 
 import org.gluewine.launcher.utils.SHA1Utils;
 
+/**
+ * Loads code from a jar/zip file.
+ *
+ * @author fks/Serge de Schaetzen
+ *
+ */
 public class JarCodeSource extends AbstractCodeSource
 {
     // ===========================================================================
@@ -43,7 +49,7 @@ public class JarCodeSource extends AbstractCodeSource
      * Creates an instance with the given file.
      *
      * @param file The file.
-     * @throws MalformedURLException
+     * @throws MalformedURLException If the file cannot be translated to a URL.
      */
     public JarCodeSource(File file) throws MalformedURLException
     {

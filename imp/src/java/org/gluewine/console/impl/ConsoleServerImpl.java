@@ -68,6 +68,9 @@ public class ConsoleServerImpl implements ConsoleServer, CommandProvider
      */
     private Map<String, CLICommand> commands = new TreeMap<String, CLICommand>();
 
+    /**
+     * The object repository.
+     */
     @Glue
     private Repository repository = null;
 

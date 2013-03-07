@@ -28,7 +28,7 @@ import jline.ConsoleReader;
 /**
  * Text console client authenticator.
  *
- * @author Serge de Schaetzen
+ * @author fks/Serge de Schaetzen
  *
  */
 public class DBAuthenticatorTxtClient

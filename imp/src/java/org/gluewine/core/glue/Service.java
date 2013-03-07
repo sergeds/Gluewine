@@ -136,9 +136,11 @@ public class Service
     // ===========================================================================
     /**
      * Activates the embedded service by invoking all methods that have the
-     * @RunWhenGlued annotation.
+     * {@link RunOnActivate} annotation.
      *
      * Note that this method will do nothing if isGlued() returns false.
+     *
+     * @return True if activated.
      */
     boolean activate()
     {
@@ -229,7 +231,7 @@ public class Service
     // ===========================================================================
     /**
      * Deactivates the embedded service by invoking all methods that have the
-     * @RunBeforeUngluing annotation.
+     * {@link RunOnDeactivate} annotation.
      *
      * Note that this method will do nothing if isActive() returns false.
      */
@@ -316,15 +318,15 @@ public class Service
     public String getName()
     {
         String name = actual.getClass().getName();
-        int cgl_i = name.indexOf("$$Enhancer");
-        int dscl_i = name.indexOf("Enhanced");
-        boolean enhanced = dscl_i > 0;
-        enhanced |= cgl_i > 0;
+        int cgli = name.indexOf("$$Enhancer");
+        int dscli = name.indexOf("Enhanced");
+        boolean enhanced = dscli > 0;
+        enhanced |= cgli > 0;
 
         if (enhanced)
         {
-            if (dscl_i > 0) name = name.substring(0, dscl_i);
-            else if (cgl_i > 0) name = name.substring(0, cgl_i);
+            if (dscli > 0) name = name.substring(0, dscli);
+            else if (cgli > 0) name = name.substring(0, cgli);
         }
 
         return name;
@@ -481,9 +483,9 @@ public class Service
     public boolean isEnhanced()
     {
         String name = actual.getClass().getName();
-        int cgl_i = name.indexOf("$$Enhancer");
-        int dscl_i = name.indexOf("Enhanced");
-        return dscl_i > 0 || cgl_i > 0;
+        int cgli = name.indexOf("$$Enhancer");
+        int dscli = name.indexOf("Enhanced");
+        return dscli > 0 || cgli > 0;
     }
 
     // ===========================================================================

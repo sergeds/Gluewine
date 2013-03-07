@@ -45,26 +45,34 @@ import java.util.Set;
  * - the target directory where the modified files are copied to. This directory
  *   is suffixed with 'src/'.
  *
- * @author Serge de Schaetzen
+ * @author fks/Serge de Schaetzen
  */
-public class GxoFlatten
+public final class GxoFlatten
 {
     // ===========================================================================
     /**
      * The name of the file containing the shared file names.
      */
-    private static String GXO_FILE = "gxo_shared.lst";
+    private static final String GXO_FILE = "gxo_shared.lst";
 
     /**
      * File containing names of classes that are imported in GWT.
      */
-    private static String GXO_IMP = "gxo_imported.lst";
+    private static final String GXO_IMP = "gxo_imported.lst";
 
 
     /**
      * File containing names of classes that need to be renamed in GWT.
      */
-    private static String GXO_REP = "gxo_replace.lst";
+    private static final String GXO_REP = "gxo_replace.lst";
+
+    // ===========================================================================
+    /**
+     * Access it through the main method.
+     */
+    private GxoFlatten()
+    {
+    }
 
     // ===========================================================================
     /**
@@ -76,11 +84,11 @@ public class GxoFlatten
     {
         try
         {
-            String src_root = args[0];
-            String tgt_root = args[1];
+            String srcRoot = args[0];
+            String tgtRoot = args[1];
 
-            File source = new File(src_root);
-            File target = new File(tgt_root);
+            File source = new File(srcRoot);
+            File target = new File(tgtRoot);
 
             Map<String, String> mappings = new HashMap<String, String>();
 
@@ -109,8 +117,8 @@ public class GxoFlatten
 
             for (String s : files)
             {
-                File f = new File(src_root, s);
-                File t = new File(tgt_root, s);
+                File f = new File(srcRoot, s);
+                File t = new File(tgtRoot, s);
 
                 mappings.put(getClassNameFromFile(t, target), getClassNameFromFile(f, source));
 
@@ -130,7 +138,10 @@ public class GxoFlatten
                                 tc.add(replace.get(ll));
                         }
 
-                        else if (ll.startsWith("@")) {} // Remove annotations.
+                        else if (ll.startsWith("@"))
+                        {
+                            // Remove annotations.
+                        }
 
                         else if (ll.trim().startsWith("public class") || ll.trim().startsWith("public abstract class"))
                         {
@@ -198,13 +209,14 @@ public class GxoFlatten
     /**
      * Writes the content of the list to the file specified, overriding whatever
      * was in the file.
-     * @param f
-     * @param c
-     * @throws Throwable
+     *
+     * @param f The file to process.
+     * @param c The content to write.
+     * @throws Throwable If an error occurs accessing the file.
      */
     private static void writeFile(File f, List<String> c) throws Throwable
     {
-        if (! f.exists())
+        if (!f.exists())
             f.getParentFile().mkdirs();
 
         BufferedWriter out = new BufferedWriter(new FileWriter(f));
@@ -234,7 +246,7 @@ public class GxoFlatten
             while (in.ready())
             {
                 String s = in.readLine();
-                if (! s.trim().startsWith("#") && s.trim().length() > 0)
+                if (!s.trim().startsWith("#") && s.trim().length() > 0)
                     files.add(s);
             }
             in.close();
