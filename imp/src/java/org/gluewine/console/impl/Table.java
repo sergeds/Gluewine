@@ -118,6 +118,26 @@ public class Table
 
     // ===========================================================================
     /**
+     * Prints a separator line using the character specified.
+     *
+     * @param cc The current context.
+     * @param character The separator character.
+     */
+    private void printSeparator(CommandContext cc, String character)
+    {
+        StringBuilder b = new StringBuilder();
+        for (int i = 0; i < columnWidth.length; i++)
+        {
+            for (int j = 0; j <= Math.min(columnWidth[i], maxColumnWidth[i]); j++)
+                b.append(character);
+            if (i < columnWidth.length - 1)
+                b.append(character + "|" + character);
+        }
+        cc.println(" " + b.toString());
+    }
+
+    // ===========================================================================
+    /**
      * Prints out the table to the given context.
      *
      * @param cc The context to use.
@@ -138,56 +158,39 @@ public class Table
             }
             cc.println(" " + b.toString());
             b.delete(0, b.length());
-            for (int i = 0; i < columnWidth.length; i++)
-            {
-                for (int j = 0; j <= Math.min(columnWidth[i], maxColumnWidth[i]); j++)
-                    b.append("-");
-                if (i < columnWidth.length - 1)
-                    b.append("-|-");
-            }
-            cc.println(" " + b.toString());
-            b.delete(0, b.length());
+            printSeparator(cc, "-");
         }
 
         for (String[] row : rows)
         {
-            for (int i = 0; i < row.length; i++)
+            if (row[0].startsWith("@@") && row[0].endsWith("@@") && row[0].length() == 5)
             {
-                boolean separator = false;
-                String s = row[i];
-                if (s == null) s = "";
-
-                if (s.startsWith("@@") && s.endsWith("@@") && s.length() == 5)
-                {
-                    separator = true;
-                    String fill = s.substring(2, 3);
-                    StringBuilder sb = new StringBuilder();
-                    s = "";
-                    for (int f = 0; f < Math.min(columnWidth[i], maxColumnWidth[i]); f++)
-                        sb.append(fill);
-
-                    for (int j = 0; j < i + 2; j++)
-                        sb.append(fill);
-
-                    s = sb.toString();
-                }
-
-                if (!separator && s.length() > Math.min(columnWidth[i], maxColumnWidth[i]))
-                    s = s.substring(0, Math.min(columnWidth[i], maxColumnWidth[i]) - 3) + "...";
-
-                b.append(s);
-                for (int j = Math.min(columnWidth[i], maxColumnWidth[i]) - s.length(); j >= 0; j--)
-                    b.append(" ");
-                if (i < row.length - 1)
-                {
-                    if (!separator)
-                        b.append(" | ");
-                    else
-                        b.append("|");
-                }
+                String fill = row[0].substring(2, 3);
+                printSeparator(cc, fill);
             }
-            cc.println(" " + b.toString());
-            b.delete(0, b.length());
+            else
+            {
+                for (int i = 0; i < row.length; i++)
+                {
+                    String s = row[i];
+                    if (s == null) s = "";
+
+                    else
+                    {
+                        if (s.length() > Math.min(columnWidth[i], maxColumnWidth[i]))
+                            s = s.substring(0, Math.min(columnWidth[i], maxColumnWidth[i]) - 3) + "...";
+
+                        b.append(s);
+                        for (int j = Math.min(columnWidth[i], maxColumnWidth[i]) - s.length(); j >= 0; j--)
+                            b.append(" ");
+
+                        if (i < row.length - 1)
+                                b.append(" | ");
+                    }
+                }
+                cc.println(" " + b.toString());
+                b.delete(0, b.length());
+            }
         }
     }
 }

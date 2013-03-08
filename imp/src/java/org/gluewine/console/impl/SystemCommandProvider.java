@@ -21,7 +21,11 @@
  **************************************************************************/
 package org.gluewine.console.impl;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.Serializable;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -44,6 +48,7 @@ import org.gluewine.core.glue.Service;
 import org.gluewine.launcher.CodeSource;
 import org.gluewine.launcher.GluewineClassLoader;
 import org.gluewine.launcher.Launcher;
+import org.gluewine.launcher.SourceVersion;
 import org.gluewine.launcher.loaders.DirectoryJarClassLoader;
 
 /**
@@ -116,6 +121,11 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
         CLICommand services = new CLICommand("services", "Lists all active services.");
         services.addOption(new CLIOption("-id", "Sorts the id", false, false));
         commands.add(services);
+
+        CLICommand update = new CLICommand("update", "Displays or updates the codesources that changed");
+        update.addOption(new CLIOption("-f", "Does the update", false, false));
+        update.addOption(new CLIOption("-s", "The source URL", false, true));
+        commands.add(update);
 
         commands.add(new CLICommand("shutdown", "Shuts the framework down."));
         commands.add(new CLICommand("unresolved", "Lists all unresolved services."));
@@ -436,6 +446,84 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
         List<CodeSource> added = Launcher.getInstance().add(toAdd);
         for (CodeSourceListener jl : listeners)
             jl.codeSourceAdded(added);
+    }
+
+    // ===========================================================================
+    /**
+     * Executes the update command.
+     *
+     * @param ci The current context.
+     * @throws Throwable If an error occurs.
+     */
+    public void _update(CommandContext ci) throws Throwable
+    {
+        if (ci.hasOption("-s"))
+            Launcher.getInstance().setSourceRepositoryURL(ci.getOption("-s"));
+
+        List<SourceVersion> updates = Launcher.getInstance().getCodeSourceToUpdate();
+        String source = Launcher.getInstance().getSourceRepositoryURL();
+        File root = Launcher.getInstance().getRoot();
+        if (ci.hasOption("-f"))
+        {
+            for (SourceVersion sv : updates)
+            {
+                String name = sv.getSource().getDisplayName().substring(1);
+                String url = source + name;
+                ci.println("Fetching " + url);
+                fetch(url, new File(root, name + ".update"), sv);
+            }
+        }
+        else
+        {
+            ci.tableHeader("CodeSource", "URL");
+            for (SourceVersion sv : updates)
+            {
+                String name = sv.getSource().getDisplayName().substring(1);
+                ci.tableRow(name, source + name);
+            }
+
+            ci.printTable();
+        }
+    }
+
+    // ===========================================================================
+    /**
+     * Fetches the bundle specified.
+     *
+     * @param url The url to fetch.
+     * @param local The local name to save to.
+     * @param source The source version to fetch.
+     * @throws Throwable If an error occurs.
+     */
+    private void fetch(String url, File local, SourceVersion source) throws Throwable
+    {
+        URL conn = new URL(url);
+        InputStream in = null;
+        FileOutputStream out = null;
+        try
+        {
+            in = conn.openStream();
+            out = new FileOutputStream(local);
+            byte[] b = new byte[4096];
+            int read = in.read(b);
+            while (read > 0)
+            {
+                out.write(b, 0, b.length);
+                read = in.read(b);
+            }
+        }
+        finally
+        {
+            try
+            {
+                if (in != null)
+                    in.close();
+            }
+            finally
+            {
+                if (out != null) out.close();
+            }
+        }
     }
 
     // ===========================================================================

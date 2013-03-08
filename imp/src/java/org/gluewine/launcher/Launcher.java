@@ -21,15 +21,18 @@
  **************************************************************************/
 package org.gluewine.launcher;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
@@ -355,6 +358,101 @@ public final class Launcher
         childrenParent.put(jcs, pcs);
 
         return jcs;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the URL that is used to perform updates.
+     *
+     * @return The URL.
+     * @throws IOException If an error occurs.
+     */
+    public String getSourceRepositoryURL() throws IOException
+    {
+        String repos = (String) persistentMap.get("GLUEWINE::REPOSITORY");
+        if (repos == null)
+            repos = root.toURI().toURL().toExternalForm();
+
+        if (!repos.endsWith("/")) repos = repos + "/";
+
+        return repos;
+    }
+
+    // ===========================================================================
+    /**
+     * Sets the url to use for updates.
+     *
+     * @param url The url.
+     */
+    public void setSourceRepositoryURL(String url)
+    {
+        persistentMap.put("GLUEWINE::REPOSITORY", url);
+        savePersistentMap();
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the list of source versions obtained by reading the
+     * packages.idx file, located in the currently defined source repository.
+     * If no packages.idx could be found, an empty list is returned.
+     *
+     * @return The list of version.
+     * @throws IOException If an error occurs.
+     */
+    public List<SourceVersion> getSourceVersions() throws IOException
+    {
+        List<SourceVersion> versions = new ArrayList<SourceVersion>();
+
+        URL url = new URL(getSourceRepositoryURL() + "packages.idx");
+        BufferedReader reader = null;
+        try
+        {
+            reader = new BufferedReader(new InputStreamReader(url.openStream(), "UTF-8"));
+            while (reader.ready())
+            {
+                String s = reader.readLine();
+                if (s != null && s.trim().length() > 0)
+                {
+                    String[] split = s.split(";");
+
+                    CodeSource cs = sources.get("/" + split[0]);
+                    if (cs != null)
+                    {
+                        SourceVersion version = null;
+                        if (split.length == 3) version = new SourceVersion(cs, split[1], split[2]);
+                        else if (split.length == 2) version = new SourceVersion(cs, split[1], split[1]);
+                        versions.add(version);
+                    }
+                }
+            }
+        }
+        finally
+        {
+            if (reader != null) reader.close();
+        }
+
+        return versions;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the list of codesources that can be updated.
+     *
+     * @return The list of sources to update.
+     * @throws IOException If an error occurs.
+     */
+    public List<SourceVersion> getCodeSourceToUpdate() throws IOException
+    {
+        List<SourceVersion> latest = getSourceVersions();
+        List<SourceVersion> updates = new ArrayList<SourceVersion>();
+
+        for (SourceVersion vers : latest)
+        {
+            if (!vers.getSource().getChecksum().equals(vers.getVersion()))
+                updates.add(vers);
+        }
+
+        return updates;
     }
 
     // ===========================================================================
