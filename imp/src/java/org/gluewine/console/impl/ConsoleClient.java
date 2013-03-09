@@ -23,6 +23,7 @@ package org.gluewine.console.impl;
 
 import java.io.File;
 import java.lang.reflect.Method;
+import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.ArrayList;
@@ -113,7 +114,10 @@ public final class ConsoleClient implements Runnable, Completor
                     }
                     catch (Throwable e)
                     {
-                        e.printStackTrace();
+                        if (e instanceof ConnectException)
+                            System.out.println("Connection lost!");
+
+                        else e.printStackTrace();
                     }
                 }
             }

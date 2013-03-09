@@ -23,6 +23,7 @@ package org.gluewine.console.impl;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.net.URL;
@@ -50,6 +51,7 @@ import org.gluewine.launcher.GluewineClassLoader;
 import org.gluewine.launcher.Launcher;
 import org.gluewine.launcher.SourceVersion;
 import org.gluewine.launcher.loaders.DirectoryJarClassLoader;
+import org.gluewine.launcher.utils.SHA1Utils;
 
 /**
  * CommandProvider providing some system commands.
@@ -470,7 +472,7 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
                 String name = sv.getSource().getDisplayName().substring(1);
                 String url = source + name;
                 ci.println("Fetching " + url);
-                fetch(url, new File(root, name + ".update"), sv);
+                fetch(url, new File(root, name), sv);
             }
         }
         else
@@ -500,15 +502,20 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
         URL conn = new URL(url);
         InputStream in = null;
         FileOutputStream out = null;
+        File temp = new File(local.getAbsolutePath() + ".update");
+
+        if (temp.exists())
+            if (!temp.delete()) throw new IOException("Could not delete " + temp.getAbsolutePath());
+
         try
         {
             in = conn.openStream();
-            out = new FileOutputStream(local);
+            out = new FileOutputStream(temp);
             byte[] b = new byte[4096];
             int read = in.read(b);
             while (read > 0)
             {
-                out.write(b, 0, b.length);
+                out.write(b, 0, read);
                 read = in.read(b);
             }
         }
@@ -523,6 +530,16 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
             {
                 if (out != null) out.close();
             }
+        }
+
+        String checksum = SHA1Utils.getSHA1HashCode(local);
+        if (checksum.equals(source.getChecksum()))
+        {
+            File done = new File(local.getAbsolutePath() + ".complete");
+            if (done.exists())
+                if (!done.delete()) throw new IOException("Could not delete " + done.getAbsolutePath());
+
+            if (!temp.renameTo(done)) throw new IOException("Could not rename file to " + done.getAbsolutePath());
         }
     }
 
