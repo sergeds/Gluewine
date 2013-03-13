@@ -43,6 +43,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -598,7 +599,7 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
                                         }
                                         else
                                         {
-                                            Map<String, List<SQLStatement>> m = new HashMap<String, List<SQLStatement>>();
+                                            Map<String, List<SQLStatement>> m = new TreeMap<String, List<SQLStatement>>();
                                             statements.put(source, m);
                                             m.put(name, stmts);
                                         }
