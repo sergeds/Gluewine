@@ -322,4 +322,11 @@ public class BufferedCommandInterpreter implements CommandContext
         if (table == null) table = new Table();
         table.setMaxWidth(w);
     }
+
+    // ===========================================================================
+    @Override
+    public void tableSeparator()
+    {
+        tableRow("@@-@@");
+    }
 }

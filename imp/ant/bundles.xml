@@ -63,6 +63,10 @@
                 </exec>
             </then>
         </if>
+        <condition property="bundle.revision" value="">
+        	<not><isset property="bundle.revision"/></not>
+    	</condition>
+        
 
         <mkdir dir="${dir.bundle.extra}/${pack}"/>
         <union id="contents">

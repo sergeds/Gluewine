@@ -114,6 +114,12 @@ public interface CommandContext
 
     // ===========================================================================
     /**
+     * Creates a separator row.
+     */
+    void tableSeparator();
+
+    // ===========================================================================
+    /**
      * Sets the max widths of the columns. 0 indicates no maximum restriction.
      *
      * @param w The widths.

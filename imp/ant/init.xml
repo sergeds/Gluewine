@@ -138,10 +138,13 @@
             </exec>
         </then>
     </if>
+    <condition property="buildinfo.globalrevision" value="">
+        <not><isset property="buildinfo.globalrevision"/></not>
+    </condition>
     <tstamp>
         <format property="buildinfo.timestamp" pattern="yyyy-MM-dd"/>
     </tstamp>
-    <condition property="buildinfo.jenkins.build" value="Not autobuilt">
+    <condition property="buildinfo.jenkins.build" value="">
         <not><isset property="buildinfo.jenkins.build"/></not>
     </condition>
 

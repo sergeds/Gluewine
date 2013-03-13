@@ -76,32 +76,32 @@ public abstract class AbstractCodeSource implements CodeSource
     /**
      * The build date.
      */
-    private String buildDate = "n/a";
+    private String buildDate = "";
 
     /**
      * The revision.
      */
-    private String revision = "n/a";
+    private String revision = "";
 
     /**
      * The repos revision.
      */
-    private String reposRevision = "n/a";
+    private String reposRevision = "";
 
     /**
      * The buildnumber.
      */
-    private String buildNumber = "n/a";
+    private String buildNumber = "";
 
     /**
      * The checksum.
      */
-    private String checksum = "n/a";
+    private String checksum = "";
 
     /**
      * The version of the source.
      */
-    private String version = "n/a";
+    private String version = "";
 
     // ===========================================================================
     /**

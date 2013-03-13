@@ -152,7 +152,7 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
      */
     public void _ls(CommandContext ci)
     {
-        ci.tableHeader("Name", "Type", "Version", "Revision", "Repos. Revision", "BuildNumber", "Checksum");
+        ci.tableHeader("Name", "Type", "Ver", "Rev", "RepRev", "Build", "Checksum");
         for (CodeSource source : Launcher.getInstance().getSources())
             ci.tableRow(source.getDisplayName(), source.getType(),
                         source.getVersion(), source.getRevision(), source.getReposRevision(),

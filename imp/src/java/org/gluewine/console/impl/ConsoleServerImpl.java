@@ -209,7 +209,7 @@ public class ConsoleServerImpl implements ConsoleServer, CommandProvider
         {
             String firstLetter = e.getKey().substring(0, 1);
             if (prevLetter != null && !prevLetter.equals(firstLetter))
-                ci.tableRow("@@-@@", "@@-@@", "@@-@@");
+                ci.tableSeparator();
 
             boolean firstRow = true;
             for (CLIOption opt : e.getValue().getOptions())
