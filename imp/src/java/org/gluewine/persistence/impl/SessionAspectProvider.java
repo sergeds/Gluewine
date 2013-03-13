@@ -29,17 +29,18 @@ import java.lang.reflect.Method;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeSet;
@@ -67,6 +68,7 @@ import org.gluewine.persistence.Transactional;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.jdbc.Work;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
 
@@ -131,7 +133,7 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
     /**
      * The list of statements.
      */
-    private List<SQLStatement> statements = new ArrayList<SQLStatement>();
+    private Map<CodeSource, Map<String, List<SQLStatement>>> statements = new HashMap<CodeSource, Map<String, List<SQLStatement>>>();
 
     /**
      * Name of the property file for Hibernate.
@@ -176,9 +178,10 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
      * Updates the sql statements with the statements specified in the given list.
      *
      * @param list The list to process.
+     * @param stmts The list to update.
      * @throws NoSuchAlgorithmException If an error occurs computing the id.
      */
-    private void updateSQLStatements(List<String> list) throws NoSuchAlgorithmException
+    private void updateSQLStatements(List<String> list, List<SQLStatement> stmts) throws NoSuchAlgorithmException
     {
         synchronized (this)
         {
@@ -196,7 +199,7 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
                         String id = SHA1Utils.getSHA1HashCode(st);
                         SQLStatement stmt = new SQLStatement(id);
                         stmt.setStatement(st);
-                        statements .add(stmt);
+                        stmts.add(stmt);
                     }
                     else
                         b.append("\n");
@@ -209,55 +212,66 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
     /**
      * Checks whether the statements have already been executed, and if not are executed.
      */
-
     private void checkStatements()
     {
         final Session session = factory.openSession();
-        Iterator<SQLStatement> stiter = statements.iterator();
-        while (stiter.hasNext())
+        session.doWork(new Work()
         {
-            final SQLStatement st = stiter.next();
-            stiter.remove();
-            SQLStatement st2 = (SQLStatement) session.get(SQLStatement.class, st.getId());
-            if (st2 == null)
+            @Override
+            @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE")
+            public void execute(Connection conn) throws SQLException
             {
-                session.doWork(new org.hibernate.jdbc.Work()
+                Iterator<Map<String, List<SQLStatement>>> stiter = statements.values().iterator();
+                while (stiter.hasNext()) // Bundle Level.
                 {
-                    @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE")
-                    @Override
-                    public void execute(Connection conn) throws SQLException
+                    Map<String, List<SQLStatement>> entry = stiter.next();
+                    stiter.remove();
+                    for (List<SQLStatement> stmts : entry.values()) // File level within a bundle, executing in the same transaction.
                     {
                         session.beginTransaction();
-                        Statement sqlst = null;
-                        try
+                        boolean commit = true;
+                        for (SQLStatement st : stmts) // Statement level.
                         {
-                            logger.info("Executing SQL statement " + st.getStatement());
-                            sqlst = conn.createStatement();
-                            sqlst.execute(st.getStatement());
-                            st.setSuccess(true);
-                            session.getTransaction().commit();
+                            SQLStatement st2 = (SQLStatement) session.get(SQLStatement.class, st.getId());
+                            if (st2 == null)
+                            {
+                                try
+                                {
+                                    logger.info("Executing SQL statement " + st.getStatement());
+                                    conn.createStatement().execute(st.getStatement());
+                                    st.setSuccess(true);
+                                }
+                                catch (Throwable e)
+                                {
+                                    st.setMessage(e.getMessage());
+                                    st.setSuccess(false);
+                                    logger.warn(e);
+                                    commit = false;
+                                }
+                                try
+                                {
+                                    st.setExecutionTime(new Date());
+                                    Session session2 = factory.openSession();
+                                    session2.beginTransaction();
+                                    session2.save(st);
+                                    session2.getTransaction().commit();
+                                    session2.close();
+                                }
+                                catch (Throwable e)
+                                {
+                                    commit = false;
+                                }
+                            }
                         }
-                        catch (Throwable e)
-                        {
-                            st.setMessage(e.getMessage());
-                            st.setSuccess(false);
-                            logger.warn(e);
-                            session.getTransaction().rollback();
-                        }
-                        finally
-                        {
-                            if (sqlst != null) sqlst.close();
-                        }
-                        st.setExecutionTime(new Date());
-                    }
-                });
 
-                session.beginTransaction();
-                session.save(st);
-                session.getTransaction().commit();
+                        if (commit) session.getTransaction().commit();
+                        else session.getTransaction().rollback();
+                    }
+                }
             }
-        }
+        });
         session.close();
+
     }
 
     // ===========================================================================
@@ -575,7 +589,21 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
                                         while (reader.ready())
                                             content.add(reader.readLine());
 
-                                        updateSQLStatements(content);
+                                        List<SQLStatement> stmts = new ArrayList<SQLStatement>();
+
+                                        if (statements.containsKey(source))
+                                        {
+                                            Map<String, List<SQLStatement>> m = statements.get(source);
+                                            m.put(name, stmts);
+                                        }
+                                        else
+                                        {
+                                            Map<String, List<SQLStatement>> m = new HashMap<String, List<SQLStatement>>();
+                                            statements.put(source, m);
+                                            m.put(name, stmts);
+                                        }
+
+                                        updateSQLStatements(content, stmts);
                                     }
                                     finally
                                     {
