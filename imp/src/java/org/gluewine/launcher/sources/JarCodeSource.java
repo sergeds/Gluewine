@@ -135,10 +135,10 @@ public class JarCodeSource extends AbstractCodeSource
                     setVersion(fks.trim());
             }
 
-            if (getChecksum().equals("n/a"))
+            if (getChecksum().length() == 0)
                 setChecksum(SHA1Utils.getSHA1HashCode(file));
 
-            if (getVersion().equals("n/a"))
+            if (getVersion().length() == 0)
             {
                 String name = file.getName();
                 int i = name.lastIndexOf('-');
