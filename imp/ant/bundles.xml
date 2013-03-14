@@ -3,6 +3,32 @@
     <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpath="${dir.lib.tools}/ant-contrib-1.0b3.jar"/>
 
     <target name="bundles.package" depends="bundleextra">
+        <!-- Set some properties with useful build information -->
+        <if>
+            <equals arg1="${vcs}" arg2="git" />
+            <then>
+                <exec executable="git" failifexecutionfails="false" outputproperty="buildinfo.globalrevision">
+                    <arg value="show"/>
+                    <arg value="-s"/>
+                    <arg value="--pretty=format:%h"/>
+                </exec>
+            </then>
+        </if>
+        <if>
+            <equals arg1="${vcs}" arg2="svn" />
+            <then>
+                <exec executable="svnversion" failifexecutionfails="false" outputproperty="buildinfo.globalrevision">
+                    <arg value=".."/>
+                </exec>
+            </then>
+        </if>
+        <condition property="buildinfo.globalrevision" value="">
+            <not><isset property="buildinfo.globalrevision"/></not>
+        </condition>
+        <condition property="buildinfo.jenkins.build" value="">
+            <not><isset property="buildinfo.jenkins.build"/></not>
+        </condition>
+
         <mkdir dir="${dir.build.osgi}/manifests"/>
         <mkdir dir="${dir.build.osgi}/sums"/>
         <foreach target="bundles.bundle" param="manifest" parallel="true">

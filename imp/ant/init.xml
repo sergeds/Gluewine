@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="Init" basedir="." default="init">
+
     <property file="${user.home}/.antbuildsettings"/>
     <!-- Directories -->
     <property name="dir.gwt" value="src/gwt"/>
@@ -52,6 +53,7 @@
     <property name="dir.doc.api.osgi" value="${dir.doc}/javadoc.osgi"/>
     <property name="dir.doc.api.gwt" value="${dir.doc}/javadoc.gwt"/>
 
+    <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpath="${dir.lib.tools}/ant-contrib-1.0b3.jar"/>
     <!-- classpaths come in three levels:
              *.base : the path needed to build the component in question, provided in svn or by previously built other components
              *.classes: the classes produced by the build process
@@ -120,40 +122,9 @@
     </path>
 
     <!-- Set some properties with useful build information -->
-    <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpath="${dir.lib.tools}/ant-contrib-1.0b3.jar"/>
-    <if>
-        <equals arg1="${vcs}" arg2="git" />
-        <then>
-            <exec executable="git" failifexecutionfails="false" outputproperty="buildinfo.globalrevision">
-                <arg value="show"/>
-                <arg value="-s"/>
-                <arg value="--pretty=format:%h"/>
-            </exec>
-        </then>
-    </if>
-    <if>
-        <equals arg1="${vcs}" arg2="svn" />
-        <then>
-            <exec executable="svnversion" failifexecutionfails="false" outputproperty="buildinfo.globalrevision">
-                <arg value=".."/>
-            </exec>
-        </then>
-    </if>
-    <condition property="buildinfo.globalrevision" value="">
-        <not><isset property="buildinfo.globalrevision"/></not>
-    </condition>
     <tstamp>
         <format property="buildinfo.timestamp" pattern="yyyy-MM-dd"/>
     </tstamp>
-    <condition property="buildinfo.jenkins.build" value="">
-        <not><isset property="buildinfo.jenkins.build"/></not>
-    </condition>
-
-    <target name="init">
-        <mkdir dir="${dir.build}"/>
-        <mkdir dir="${dir.dist}"/>
-        <mkdir dir="${dir.dist.lib}"/>
-    </target>
 
     <!-- Default values for various options -->
 
@@ -184,4 +155,11 @@
     <condition property="needs_pgsql_for_tests" value="false">
         <not><isset property="needs_pgsql_for_tests"/></not>
     </condition>
+
+    <target name="init">
+        <mkdir dir="${dir.build}"/>
+        <mkdir dir="${dir.dist}"/>
+        <mkdir dir="${dir.dist.lib}"/>
+    </target>
+
 </project>
