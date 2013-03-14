@@ -157,24 +157,23 @@ public final class Launcher
         if (propPersist != null) persistentFile = new File(propPersist);
         else persistentFile = new File(configDirectory, "gluewine.state");
 
-        if (System.getProperty("log4j.configuration") == null)
-        {
-            File log4j = new File(configDirectory, "log4j.properties");
-            if (log4j.exists()) System.setProperty("log4j.configuration", "file:/" + log4j.getAbsolutePath().replace('\\', '/'));
-        }
-
-        loadPersistentMap();
-
         try
         {
+            if (System.getProperty("log4j.configuration") == null)
+            {
+                File log4j = new File(configDirectory, "log4j.properties");
+                if (log4j.exists()) System.setProperty("log4j.configuration", log4j.toURI().toURL().toExternalForm());
+            }
+
+            loadPersistentMap();
+
             if (root.exists()) processDirectory(root);
+            processMapping();
         }
         catch (IOException e)
         {
             e.printStackTrace();
         }
-
-        processMapping();
     }
 
     // ===========================================================================
