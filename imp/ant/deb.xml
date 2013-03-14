@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<project name="OSGi Framework - deb" default="deb" basedir=".">
+
+    <!-- anchors -->
+    <property name="debian" value="${dir.build}/debian"/>
+
+    <target name="deb" depends="dist" description="Build debian package">
+        <mkdir dir="${debian}"/>
+        <mkdir dir="${dir.dist}/apt"/>
+        <copy todir="${debian}">
+            <fileset dir="${dir.templates}/debian" includes="**/*"/>
+            <filterchain>
+                <replacetokens>
+                    <token key="DEBVERSION" value="${buildinfo.jenkins.build}"/>
+                </replacetokens>
+            </filterchain>
+        </copy>
+        <exec executable="dpkg-buildpackage" dir="${dir.build}" failonerror="true">
+            <arg value="-A"/>
+            <arg value="-us"/>
+            <arg value="-uc"/>
+        </exec>
+        <move todir="${dir.dist}/apt">
+            <fileset dir=".." includes="*.deb"/>
+        </move>
+        <copy todir="${dir.dist}/apt">
+            <fileset dir="${dir.templates}/debian/" includes="${product}.list"/>
+        </copy>
+        <delete file="../${product}_${buildinfo.jenkins.build}-1_all.changes" />
+        <exec executable="dpkg-scanpackages" dir="${dir.dist}/apt" failonerror="true" output="${dir.dist}/apt/Packages" logError="true" >
+            <arg value="."/>
+        </exec>
+        <bzip2 src="${dir.dist}/apt/Packages" destfile="${dir.dist}/apt/Packages.bz2"/>
+        <gzip src="${dir.dist}/apt/Packages" destfile="${dir.dist}/apt/Packages.gz"/>
+    </target>
+</project>
+

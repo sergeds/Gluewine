@@ -10,7 +10,7 @@
 
     <!-- Compile the code -->
     <target name="osgi.compile" depends="osgi.depend">
-        <javac srcdir="${dir.src.osgi}" destdir="${dir.build.osgi}" debug="on" debuglevel="${debuglevel}" source="${source}" target="${target}" includeantruntime="false" encoding="utf8">
+        <javac srcdir="${dir.src.osgi}" destdir="${dir.build.osgi}" debug="${debuginfo}" debuglevel="${debuglevel}" source="${source}" target="${target}" includeantruntime="false" encoding="utf8">
             <classpath refid="classpath.osgi.base"/>
         </javac>
     </target>

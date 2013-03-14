@@ -4,9 +4,6 @@
 
     <taskdef name="for" classpath="${dir.lib.tools}/ant-contrib-1.0b3.jar" classname="net.sf.antcontrib.logic.ForTask"/>
 
-    <property name="osgihost" value="localhost"/>
-    <property name="osgiport" value="1234"/>
-
     <target name="gwt.allchecks" description="gwt.allchecks" depends="gwt.checkstyle, gwt.findbugs"/>
 
     <target name="gwt.quickchecks" depends="gwt.checkstyle, gwt.findbugs"/>
@@ -140,7 +137,7 @@
 
     <target name="gwt.run" description="gwt.run" depends="gwt.package">
         <java fork="true" classname="com.google.gwt.dev.DevMode">
-            <jvmarg value="-Xmx512M"/>
+            <jvmarg value="-Xmx1024M"/>
             <classpath refid="classpath.gwt.full"/>
             <!-- arg value="-draftCompile" -->
             <arg value="-startupUrl"/>
@@ -156,7 +153,7 @@
             <jvmarg value="-Xmx1024M"/>
             <classpath refid="classpath.gwt.full"/>
             <arg value="-localWorkers"/>
-            <arg value="2"/>
+            <arg value="${gwt.workers}"/>
             <!-- arg value="-style"/>
                         <arg value="PRETTY"/-->
             <arg value="-war"/>
@@ -172,7 +169,7 @@
         <copy todir="${dir.gwt.warbuild}/WEB-INF/lib">
             <fileset dir="${dir.build.gwt.lib}" includes="${product}.jar"/>
         </copy>
-        <zip destfile="${dir.gwt.dist}/${product}.war" basedir="${dir.gwt.warbuild}"/>
+        <zip destfile="${dir.gwt.dist}/${warfile}" basedir="${dir.gwt.warbuild}"/>
     </target>
 
     <target name="gwt.gxoshared">
@@ -190,7 +187,7 @@
 
     <target name="gwt.clean" depends="gwt.init">
         <!-- Delete the antbin directory tree -->
-        <delete file="${dir.gwt.dist}/${product}.war"/>
+        <delete file="${dir.gwt.dist}/${warfile}"/>
         <delete>
             <fileset dir="${dir.build.gwt.generated.src}"/>
             <fileset dir="${dir.build.gwt.generated.classes}"/>

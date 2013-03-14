@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="Init" basedir="." default="init">
+    <property file="${user.home}/.antbuildsettings"/>
     <!-- Directories -->
     <property name="dir.gwt" value="src/gwt"/>
     <property name="dir.build" value="../build"/>
@@ -153,4 +154,34 @@
         <mkdir dir="${dir.dist}"/>
         <mkdir dir="${dir.dist.lib}"/>
     </target>
+
+    <!-- Default values for various options -->
+
+    <condition property="gwt.workers" value="2">
+        <not><isset property="gwt.workers"/></not>
+    </condition>
+    <condition property="warfile" value="${product}.war">
+        <not><isset property="warfile"/></not>
+    </condition>
+    <condition property="osgihost" value="localhost">
+        <not><isset property="osgihost"/></not>
+    </condition>
+    <condition property="osgiport" value="7777">
+        <not><isset property="osgiport"/></not>
+    </condition>
+    <condition property="debuginfo" value="on">
+        <not><isset property="debuginfo"/></not>
+    </condition>
+    <condition property="debuglevel" value="source,lines,vars">
+        <not><isset property="debuglevel"/></not>
+    </condition>
+    <condition property="usesgwt" value="true">
+        <not><isset property="usesgwt"/></not>
+    </condition>
+    <condition property="has_unit_tests" value="true">
+        <not><isset property="has_unit_tests"/></not>
+    </condition>
+    <condition property="needs_pgsql_for_tests" value="false">
+        <not><isset property="needs_pgsql_for_tests"/></not>
+    </condition>
 </project>

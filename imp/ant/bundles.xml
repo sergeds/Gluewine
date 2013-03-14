@@ -64,9 +64,8 @@
             </then>
         </if>
         <condition property="bundle.revision" value="">
-        	<not><isset property="bundle.revision"/></not>
-    	</condition>
-        
+            <not><isset property="bundle.revision"/></not>
+        </condition>
 
         <mkdir dir="${dir.bundle.extra}/${pack}"/>
         <union id="contents">
@@ -95,6 +94,7 @@
         <mkdir dir="${dir.bundle.extra}/${pack}"/>
         <jar jarfile="${dir.dist.lib}/${bundlename}-${fileversion}.jar" manifest="${dir.src.osgi}/${manfile}">
             <manifest>
+
                 <attribute name="X-Fks-BuildDate" value="${buildinfo.timestamp}"/>
                 <attribute name="X-Fks-Revision" value="${bundle.revision}"/>
                 <attribute name="X-Fks-RepoRevision" value="${buildinfo.globalrevision}"/>

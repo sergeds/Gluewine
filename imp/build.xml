@@ -12,8 +12,6 @@
     <property name="has_unit_tests" value="false"/>
 
     <!-- Java Compiler options -->
-    <property name="debuginfo" value="on"/>
-    <property name="debuglevel" value="source,lines,vars"/>
     <property name="target" value="1.6"/>
     <property name="source" value="1.6"/>
 
