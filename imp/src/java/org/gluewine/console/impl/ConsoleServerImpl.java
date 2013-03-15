@@ -128,12 +128,8 @@ public class ConsoleServerImpl implements ConsoleServer, CommandProvider
         try
         {
             Properties props = launcher.getProperties("console.properties");
-            if (props != null)
-            {
-                welcomeMessage = props.getProperty("welcome.text", "");
-                prompt = props.getProperty("prompt.text", "");
-            }
-
+            welcomeMessage = props.getProperty("welcome.text", "");
+            prompt = props.getProperty("prompt.text", "");
         }
         catch (IOException e)
         {

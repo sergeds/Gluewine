@@ -143,6 +143,9 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
      */
     private XStream stream = null;
 
+    /**
+     * The session manager to use.
+     */
     @Glue
     private SessionManager sessionManager = null;
 
@@ -424,10 +427,9 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
      * @param c The class to check.
      * @param bean The exec bean.
      * @return True if annotated with @Unsecured.
-     * @throws SecurityException If a security exception occurs.
      * @throws NoSuchMethodException  If the method does not exist.
      */
-    private boolean isUnsecured(Class<?> c, ExecBean bean) throws NoSuchMethodException, SecurityException
+    private boolean isUnsecured(Class<?> c, ExecBean bean) throws NoSuchMethodException
     {
         if (c.getName().indexOf("$$Enhance") > -1) c = c.getSuperclass();
         Method m = c.getMethod(bean.getMethod(), bean.getParamTypes());

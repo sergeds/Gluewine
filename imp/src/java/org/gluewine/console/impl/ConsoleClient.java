@@ -63,11 +63,6 @@ public final class ConsoleClient implements Runnable, Completor
      */
     private ConsoleServer server = null;
 
-    /**
-     * The host we're connecting to.
-     */
-    private String host = null;
-
     // ===========================================================================
     /**
      * Creates an instance.
@@ -78,7 +73,6 @@ public final class ConsoleClient implements Runnable, Completor
     private ConsoleClient(String host, int port)
     {
         client = new GxoClient(host, port);
-        this.host = host;
         prompt = host + "> ";
     }
 
