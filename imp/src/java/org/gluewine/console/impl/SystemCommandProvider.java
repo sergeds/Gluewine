@@ -140,6 +140,9 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
         commands.add(new CLICommand("install", "Installs the code source with the given url."));
         commands.add(new CLICommand("resolve", "Resolves the service(s) with the specified id(s)."));
         commands.add(new CLICommand("unresolve", "Unresolves the service(s) with the specified id(s)."));
+        commands.add(new CLICommand("close", "Closes the console client."));
+        commands.add(new CLICommand("exit", "Closes the console client."));
+        commands.add(new CLICommand("logoff", "Logs off the console client."));
 
         return commands;
     }

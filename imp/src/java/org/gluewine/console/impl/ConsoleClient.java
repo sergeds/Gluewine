@@ -63,6 +63,11 @@ public final class ConsoleClient implements Runnable, Completor
      */
     private ConsoleServer server = null;
 
+    /**
+     * The host we're connecting to.
+     */
+    private String host = null;
+
     // ===========================================================================
     /**
      * Creates an instance.
@@ -73,6 +78,7 @@ public final class ConsoleClient implements Runnable, Completor
     private ConsoleClient(String host, int port)
     {
         client = new GxoClient(host, port);
+        this.host = host;
         prompt = host + "> ";
     }
 
@@ -83,12 +89,7 @@ public final class ConsoleClient implements Runnable, Completor
     {
         try
         {
-            server = client.getService(ConsoleServer.class, "-1", getIpAddress());
-
             ConsoleReader reader = new ConsoleReader();
-            if (server.needsAuthentication()) authenticate(reader);
-
-            boolean stopRequested = false;
             reader.setBellEnabled(false);
             String home = System.getProperty("user.home");
             reader.getHistory().clear();
@@ -96,29 +97,71 @@ public final class ConsoleClient implements Runnable, Completor
             reader.getHistory().setMaxSize(50);
             reader.addCompletor(this);
 
+            boolean initial = true;
+            boolean stopRequested = false;
             while (!stopRequested)
             {
-                String line = reader.readLine(prompt);
-                if (line != null && (line.startsWith("exit") || line.startsWith("close"))) stopRequested = true;
-
-                else
+                try
                 {
-                    try
+                    if (server == null && initial)
                     {
-                        String output = server.executeCommand(line);
-                        System.out.println(output);
+                        server = client.getService(ConsoleServer.class, "-1", getIpAddress());
+                        if (server.needsAuthentication())
+                            authenticate(reader);
+                        initial = false;
                     }
-                    catch (SyntaxException e)
-                    {
-                        System.out.println(e.getMessage());
-                    }
-                    catch (Throwable e)
-                    {
-                        if (e instanceof ConnectException)
-                            System.out.println("Connection lost!");
 
-                        else e.printStackTrace();
+                    String line = reader.readLine(prompt);
+                    if (line != null && (line.startsWith("exit") || line.startsWith("close")))
+                        stopRequested = true;
+
+                    else if (line != null && line.startsWith("logoff"))
+                    {
+                        server = null;
+                        initial = true;
                     }
+
+                    else
+                    {
+                        if (server == null)
+                        {
+                            server = client.getService(ConsoleServer.class, "-1", getIpAddress());
+                            if (server.needsAuthentication())
+                                authenticate(reader);
+                        }
+
+                        try
+                        {
+                            String output = server.executeCommand(line);
+                            System.out.println(output);
+                        }
+                        catch (SyntaxException e)
+                        {
+                            System.out.println(e.getMessage());
+                        }
+                        catch (Throwable e)
+                        {
+                            if (e instanceof ConnectException)
+                            {
+                                System.out.println("Connection lost!");
+                                prompt = "local>";
+                                server = null;
+                            }
+                            else if (e.getMessage() != null && e.getMessage().startsWith("org.gluewine.sessions.SessionExpiredException:"))
+                            {
+                                System.out.println("Session Expired!");
+                                initial = true;
+                                server = null;
+                            }
+
+                            else
+                                e.printStackTrace();
+                        }
+                    }
+                }
+                catch (Throwable e)
+                {
+                    System.out.println("Cannot connect to server!");
                 }
             }
         }
@@ -151,6 +194,12 @@ public final class ConsoleClient implements Runnable, Completor
         Object id = m.invoke(o, params);
         if (id instanceof String)
             server = client.getService(ConsoleServer.class, (String) id, getIpAddress());
+
+        String msg = server.getWelcomeMessage();
+        if (msg != null) System.out.println(msg);
+
+        String p = server.getPrompt();
+        if (p != null && p.length() > 0) prompt = p;
     }
 
     // ===========================================================================

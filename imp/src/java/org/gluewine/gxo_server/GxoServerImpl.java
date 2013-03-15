@@ -39,6 +39,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.log4j.Logger;
+import org.gluewine.core.Glue;
 import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.RunOnActivate;
 import org.gluewine.core.RunOnDeactivate;
@@ -49,6 +50,8 @@ import org.gluewine.gxo.ExecBean;
 import org.gluewine.gxo.GxoException;
 import org.gluewine.gxo.InitBean;
 import org.gluewine.launcher.Launcher;
+import org.gluewine.sessions.SessionManager;
+import org.gluewine.sessions.Unsecured;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.converters.basic.DateConverter;
@@ -139,6 +142,9 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
      * The XStream serializer/deserializer.
      */
     private XStream stream = null;
+
+    @Glue
+    private SessionManager sessionManager = null;
 
     // ===========================================================================
     /**
@@ -379,6 +385,11 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
             try
             {
                 Method m = o.getClass().getMethod(bean.getMethod(), bean.getParamTypes());
+                boolean unsecured = isUnsecured(o.getClass(), bean);
+
+                if (!unsecured)
+                    sessionManager.checkSession(bean.getSessionId());
+
                 result = m.invoke(o, bean.getParams());
                 if (logger.isDebugEnabled())
                     logger.debug(bean.getService() + ":" + bean.getMethod() + " finished with result: " + result);
@@ -391,7 +402,6 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
             }
             catch (Throwable e)
             {
-                e.printStackTrace();
                 logger.warn(e);
                 GxoException ge = new GxoException(toRegularException(e));
                 result = ge;
@@ -404,6 +414,24 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
         }
 
         return result;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns true if the method defined in the bean has been annotated with
+     * the @Unsecured annotation.
+     *
+     * @param c The class to check.
+     * @param bean The exec bean.
+     * @return True if annotated with @Unsecured.
+     * @throws SecurityException If a security exception occurs.
+     * @throws NoSuchMethodException  If the method does not exist.
+     */
+    private boolean isUnsecured(Class<?> c, ExecBean bean) throws NoSuchMethodException, SecurityException
+    {
+        if (c.getName().indexOf("$$Enhance") > -1) c = c.getSuperclass();
+        Method m = c.getMethod(bean.getMethod(), bean.getParamTypes());
+        return m.getAnnotation(Unsecured.class) != null;
     }
 
     // ===========================================================================

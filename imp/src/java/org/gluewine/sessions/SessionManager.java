@@ -39,12 +39,23 @@ public interface SessionManager
 
     // ===========================================================================
     /**
-     * Returns true if the session with the given id is still valid.
+     * Checks whether the given session is still valid. If not, a SessionExpiredException
+     * is thrown.
      *
-     * @param session The session id.
-     * @return True if still valid.
+     * @param session The session to check.
      */
-    boolean isSessionValid(String session);
+    void checkSession(String session);
+
+    // ===========================================================================
+    /**
+     * Checks whether the given session is still valid. If not, a SessionExpiredException
+     * is thrown, if the session is still valid, it is ticked.
+     * <br>This is a convenience method and is exactly the same as invoking:
+     * <br>checkSession(session) followed by tickSession(session).
+     *
+     * @param session The session to check.
+     */
+    void checkAndTickSession(String session);
 
     // ===========================================================================
     /**

@@ -29,6 +29,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
+import org.gluewine.sessions.SessionExpiredException;
 import org.gluewine.sessions.SessionManager;
 
 /**
@@ -48,7 +49,7 @@ public class SessionManagerImpl implements SessionManager
     /**
      * Max amount of time in milliseconds that a session can be idle.
      */
-    private static final long MAXIDLE = 120000;
+    private static final long MAXIDLE = 300000;
 
     /**
      * The timer used to check the sessions.
@@ -94,7 +95,7 @@ public class SessionManagerImpl implements SessionManager
 
     // ===========================================================================
     @Override
-    public boolean isSessionValid(String session)
+    public void checkSession(String session)
     {
         synchronized (sessions)
         {
@@ -102,7 +103,7 @@ public class SessionManagerImpl implements SessionManager
             if (sessions.containsKey(session))
                 valid = System.currentTimeMillis() - sessions.get(session).longValue() < MAXIDLE;
 
-            return valid;
+            if (!valid) throw new SessionExpiredException();
         }
     }
 
@@ -125,5 +126,13 @@ public class SessionManagerImpl implements SessionManager
         {
             sessions.remove(session);
         }
+    }
+
+    // ===========================================================================
+    @Override
+    public void checkAndTickSession(String session)
+    {
+        checkSession(session);
+        tickSession(session);
     }
 }

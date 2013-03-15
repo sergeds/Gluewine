@@ -72,20 +72,12 @@ public class CGLIBInterceptor implements MethodInterceptor
         try
         {
             Object result = null;
-            try
-            {
-                result = proxy.invokeSuper(obj, args);
-            }
-            catch (Throwable e)
-            {
-                throw e;
-            }
+            result = proxy.invokeSuper(obj, args);
             interceptor.invokeAfterSuccess(stack, obj, method, args, result);
             return result;
         }
         catch (Throwable e)
         {
-            e.printStackTrace();
             interceptor.invokeAfterFailure(stack, obj, method, args, e);
             throw e;
         }

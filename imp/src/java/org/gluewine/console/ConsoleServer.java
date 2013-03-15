@@ -65,6 +65,22 @@ public interface ConsoleServer extends RepositoryListener<CommandProvider>
 
     // ===========================================================================
     /**
+     * Returns the welcome message.
+     *
+     * @return The welcome message.
+     */
+    String getWelcomeMessage();
+
+    // ===========================================================================
+    /**
+     * Returns the prompt for this server.
+     *
+     * @return The prompt.
+     */
+    String getPrompt();
+
+    // ===========================================================================
+    /**
      * Completes the command specified and returns the list of options.
      *
      * @param command The command to complete.

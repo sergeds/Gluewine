@@ -36,6 +36,7 @@ import org.gluewine.persistence.PersistenceException;
 import org.gluewine.persistence.SessionProvider;
 import org.gluewine.persistence.Transactional;
 import org.gluewine.sessions.SessionManager;
+import org.gluewine.sessions.Unsecured;
 
 /**
  * Default implementation of DBAuthenticator.
@@ -87,6 +88,7 @@ public class DBAuthenticatorImpl implements DBAuthenticator, CommandProvider
     // ===========================================================================
     @Override
     @Transactional
+    @Unsecured
     public String authenticate(String user, String password) throws AuthenticationException
     {
         try

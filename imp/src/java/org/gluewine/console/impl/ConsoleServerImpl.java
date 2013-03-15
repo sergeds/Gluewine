@@ -21,6 +21,7 @@
  **************************************************************************/
 package org.gluewine.console.impl;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -29,6 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -43,6 +45,8 @@ import org.gluewine.core.Glue;
 import org.gluewine.core.Repository;
 import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.RunOnActivate;
+import org.gluewine.launcher.Launcher;
+import org.gluewine.sessions.Unsecured;
 
 /**
  * Default implementation of ConsoleServer.
@@ -74,6 +78,22 @@ public class ConsoleServerImpl implements ConsoleServer, CommandProvider
     @Glue
     private Repository repository = null;
 
+    /**
+     * The launcher instance.
+     */
+    @Glue
+    private Launcher launcher = null;
+
+    /**
+     * The welcome message to use.
+     */
+    private String welcomeMessage = null;
+
+    /**
+     * The prompt to use.
+     */
+    private String prompt = null;
+
     // ===========================================================================
     /**
      * Creates an instance.
@@ -104,6 +124,21 @@ public class ConsoleServerImpl implements ConsoleServer, CommandProvider
                 authenticators.remove(a.getAuthenticatorName());
             }
         });
+
+        try
+        {
+            Properties props = launcher.getProperties("console.properties");
+            if (props != null)
+            {
+                welcomeMessage = props.getProperty("welcome.text", "");
+                prompt = props.getProperty("prompt.text", "");
+            }
+
+        }
+        catch (IOException e)
+        {
+            // Ignore as it could happen if there's no console.properties file.
+        }
     }
 
     // ===========================================================================
@@ -255,6 +290,7 @@ public class ConsoleServerImpl implements ConsoleServer, CommandProvider
 
     // ===========================================================================
     @Override
+    @Unsecured
     public boolean needsAuthentication()
     {
         return !authenticators.isEmpty();
@@ -294,10 +330,25 @@ public class ConsoleServerImpl implements ConsoleServer, CommandProvider
 
     // ===========================================================================
     @Override
+    @Unsecured
     public Map<String, String> getAvailableAuthenticators()
     {
         Map<String, String> m = new HashMap<String, String>(authenticators.size());
         m.putAll(authenticators);
         return m;
+    }
+
+    // ===========================================================================
+    @Override
+    public String getWelcomeMessage()
+    {
+        return welcomeMessage;
+    }
+
+    // ===========================================================================
+    @Override
+    public String getPrompt()
+    {
+        return prompt;
     }
 }
