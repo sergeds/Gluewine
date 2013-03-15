@@ -41,9 +41,8 @@ public interface TransactionalSession
      *
      * @param o The new entity.
      * @return The entity id.
-     * @throws PersistenceException If a problem occurs.
      */
-    Serializable add(Object o) throws PersistenceException;
+    Serializable add(Object o);
 
     // ===========================================================================
     /**
@@ -51,9 +50,8 @@ public interface TransactionalSession
      * database or not.
      *
      * @param o The object to add or update.
-     * @throws PersistenceException If a problem occurs.
      */
-    void addOrUpdate(Object o) throws PersistenceException;
+    void addOrUpdate(Object o);
 
     // ===========================================================================
     /**
@@ -69,9 +67,8 @@ public interface TransactionalSession
      * Deletes the given object.
      *
      * @param o The object to delete.
-     * @throws PersistenceException If a problem occurs.
      */
-    void delete(Object o) throws PersistenceException;
+    void delete(Object o);
 
     // ===========================================================================
     /**
@@ -79,9 +76,8 @@ public interface TransactionalSession
      *
      * @param type The type of object.
      * @param id The id of the object.
-     * @throws PersistenceException If a problem occurs.
      */
-    void delete(String type, Object id) throws PersistenceException;
+    void delete(String type, Object id);
 
     // ===========================================================================
     /**
@@ -98,9 +94,8 @@ public interface TransactionalSession
      * @param cl The class to process.
      * @param id The id.
      * @return The entity or null if no entity matches the id.
-     * @throws PersistenceException If a problem occurs.
      */
-    Object get(Class<?> cl, Serializable id) throws PersistenceException;
+    Object get(Class<?> cl, Serializable id);
 
     // ===========================================================================
     /**
@@ -109,9 +104,8 @@ public interface TransactionalSession
      * @param <E> The generic class to retrieve.
      * @param cl The class to process.
      * @return The list of entities.
-     * @throws PersistenceException If a problem occurs.
      */
-    <E> List<E> getAll(Class<E> cl) throws PersistenceException;
+    <E> List<E> getAll(Class<E> cl);
 
     // ===========================================================================
     /**
@@ -123,16 +117,14 @@ public interface TransactionalSession
      * @param sortField The field to sort on.
      * @param ascending True to sort ascending, false to sort descending.
      * @return The sorted list of entities.
-     * @throws PersistenceException If a problem occurs.
      */
-    <E> List<E> getAllSorted(Class<E> cl, String sortField, boolean ascending) throws PersistenceException;
+    <E> List<E> getAllSorted(Class<E> cl, String sortField, boolean ascending);
 
     // ===========================================================================
     /**
      * Updates an existing entity.
      *
      * @param o The entity to update.
-     * @throws PersistenceException If a problem occurs.
      */
-    void update(Object o) throws PersistenceException;
+    void update(Object o);
 }

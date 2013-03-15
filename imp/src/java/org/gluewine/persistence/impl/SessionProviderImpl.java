@@ -73,7 +73,7 @@ public class SessionProviderImpl implements SessionProvider
 
     // ===========================================================================
     @Override
-    public TransactionalSession getSession() throws PersistenceException
+    public TransactionalSession getSession()
     {
         return getSession(null);
     }
@@ -106,7 +106,7 @@ public class SessionProviderImpl implements SessionProvider
 
     // ===========================================================================
     @Override
-    public TransactionalSession getSession(TransactionCallback callback) throws PersistenceException
+    public TransactionalSession getSession(TransactionCallback callback)
     {
         if (gluer.isEnhancedMode())
         {

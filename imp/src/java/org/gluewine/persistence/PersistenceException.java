@@ -27,7 +27,7 @@ package org.gluewine.persistence;
  * @author fks/Serge de Schaetzen
  *
  */
-public class PersistenceException extends Exception
+public class PersistenceException extends RuntimeException
 {
     // ===========================================================================
     /**

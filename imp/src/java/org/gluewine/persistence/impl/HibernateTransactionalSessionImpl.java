@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 
-import org.gluewine.persistence.PersistenceException;
 import org.gluewine.persistence.QueryPostProcessor;
 import org.gluewine.persistence.QueryPreProcessor;
 import org.gluewine.persistence.TransactionCallback;
@@ -151,7 +150,7 @@ public class HibernateTransactionalSessionImpl implements TransactionalSession
 
     // ===========================================================================
     @Override
-    public Serializable add(Object o) throws PersistenceException
+    public Serializable add(Object o)
     {
         Serializable id = delegate.save(o);
 
@@ -163,7 +162,7 @@ public class HibernateTransactionalSessionImpl implements TransactionalSession
 
     // ===========================================================================
     @Override
-    public void addOrUpdate(Object o) throws PersistenceException
+    public void addOrUpdate(Object o)
     {
         delegate.saveOrUpdate(o);
 
@@ -187,7 +186,7 @@ public class HibernateTransactionalSessionImpl implements TransactionalSession
 
     // ===========================================================================
     @Override
-    public void delete(Object o) throws PersistenceException
+    public void delete(Object o)
     {
         delegate.delete(o);
         for (QueryPostProcessor post : postProcessors)
@@ -196,7 +195,7 @@ public class HibernateTransactionalSessionImpl implements TransactionalSession
 
     // ===========================================================================
     @Override
-    public void delete(String type, Object id) throws PersistenceException
+    public void delete(String type, Object id)
     {
         delegate.delete(type, id);
         for (QueryPostProcessor post : postProcessors)
@@ -212,7 +211,7 @@ public class HibernateTransactionalSessionImpl implements TransactionalSession
 
     // ===========================================================================
     @Override
-    public Object get(Class<?> cl, Serializable id) throws PersistenceException
+    public Object get(Class<?> cl, Serializable id)
     {
         Criteria cr = createCriteria(cl);
         cr.add(Restrictions.idEq(id));
@@ -222,7 +221,7 @@ public class HibernateTransactionalSessionImpl implements TransactionalSession
     // ===========================================================================
     @Override
     @SuppressWarnings("unchecked")
-    public <E> List<E> getAll(Class<E> cl) throws PersistenceException
+    public <E> List<E> getAll(Class<E> cl)
     {
         Criteria cr = createCriteria(cl);
         return cr.list();
@@ -231,7 +230,7 @@ public class HibernateTransactionalSessionImpl implements TransactionalSession
     // ===========================================================================
     @Override
     @SuppressWarnings("unchecked")
-    public <E> List<E> getAllSorted(Class<E> cl, String sortField, boolean ascending) throws PersistenceException
+    public <E> List<E> getAllSorted(Class<E> cl, String sortField, boolean ascending)
     {
         Criteria cr = createCriteria(cl);
 
@@ -243,7 +242,7 @@ public class HibernateTransactionalSessionImpl implements TransactionalSession
 
     // ===========================================================================
     @Override
-    public void update(Object o) throws PersistenceException
+    public void update(Object o)
     {
         delegate.update(o);
 

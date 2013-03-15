@@ -39,9 +39,8 @@ public interface SessionProvider
      * Returns the session to be used.
      *
      * @return The session to use.
-     * @throws PersistenceException Thrown if the session could not be initialized.
      */
-    TransactionalSession getSession() throws PersistenceException;
+    TransactionalSession getSession();
 
     // ===========================================================================
     /**
@@ -50,9 +49,8 @@ public interface SessionProvider
      *
      * @param callback The callback to notify.
      * @return The session to use.
-     * @throws PersistenceException Thrown if the session could not be initialized.
      */
-    TransactionalSession getSession(TransactionCallback callback) throws PersistenceException;
+    TransactionalSession getSession(TransactionCallback callback);
 
     // ===========================================================================
     /**
