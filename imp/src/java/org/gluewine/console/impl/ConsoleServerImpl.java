@@ -233,41 +233,46 @@ public class ConsoleServerImpl implements ConsoleServer, CommandProvider
      */
     public void _help(CommandContext ci)
     {
+        String filter = ci.nextArgument();
+
         ci.tableHeader("Command", "Options", "Description");
         String prevLetter = null;
 
         for (Entry<String, CLICommand> e : commands.entrySet())
         {
-            String firstLetter = e.getKey().substring(0, 1);
-            if (prevLetter != null && !prevLetter.equals(firstLetter))
-                ci.tableSeparator();
-
-            boolean firstRow = true;
-            for (CLIOption opt : e.getValue().getOptions())
+            if (filter == null || e.getKey().startsWith(filter))
             {
-                StringBuilder b = new StringBuilder();
-                if (!opt.isRequired()) b.append("[");
-                b.append(opt.getName());
-                if (!opt.isRequired()) b.append("]");
-                b.append(" ");
-                if (opt.needsValue()) b.append("<");
-                else b.append(" - ");
-                b.append(opt.getDescription());
-                if (opt.needsValue()) b.append(">");
+                String firstLetter = e.getKey().substring(0, 1);
+                if (prevLetter != null && !prevLetter.equals(firstLetter))
+                    ci.tableSeparator();
 
-                if (firstRow)
-                    ci.tableRow(e.getKey(), b.toString(), e.getValue().getDescription());
+                boolean firstRow = true;
+                for (CLIOption opt : e.getValue().getOptions())
+                {
+                    StringBuilder b = new StringBuilder();
+                    if (!opt.isRequired()) b.append("[");
+                    b.append(opt.getName());
+                    if (!opt.isRequired()) b.append("]");
+                    b.append(" ");
+                    if (opt.needsValue()) b.append("<");
+                    else b.append(" - ");
+                    b.append(opt.getDescription());
+                    if (opt.needsValue()) b.append(">");
 
-                else
-                    ci.tableRow("", b.toString(), "");
+                    if (firstRow)
+                        ci.tableRow(e.getKey(), b.toString(), e.getValue().getDescription());
+
+                    else
+                        ci.tableRow("", b.toString(), "");
 
                     firstRow = false;
+                }
+
+                if (firstRow)
+                    ci.tableRow(e.getKey(), "", e.getValue().getDescription());
+
+                prevLetter = firstLetter;
             }
-
-            if (firstRow)
-                ci.tableRow(e.getKey(), "", e.getValue().getDescription());
-
-            prevLetter = firstLetter;
         }
 
         ci.printTable();
