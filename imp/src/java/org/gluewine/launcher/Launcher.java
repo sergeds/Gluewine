@@ -608,55 +608,45 @@ public final class Launcher
 
     // ===========================================================================
     /**
-     * Removes the list of objects specified.
+     * Removes the given list of codesources. This does not do a physical remove,
+     * but only a deregistration of the associated classloaders, and returns the
+     * list of ALL codesources that have been removed.
      *
-     * @param toRemove The objects to remove.
-     * @return The list of removed codesources.
+     * @param toRemove The sources to remove.
      */
-    public List<CodeSource> remove(List<String> toRemove)
+    public List<CodeSource> removeSources(List<CodeSource> toRemove)
     {
         List<CodeSource> removed = new ArrayList<CodeSource>();
-
-        for (String s : toRemove)
+        for (CodeSource source : toRemove)
         {
-            List<String> displayNames = new ArrayList<String>();
-            displayNames.addAll(sources.keySet());
-            for (String disp : displayNames)
+            if (source instanceof JarCodeSource)
             {
-                if (disp.startsWith(s))
+                CodeSource parent = childrenParent.get(source);
+                ((DirectoryJarClassLoader) parent.getSourceClassLoader()).remove((SingleJarClassLoader) source.getSourceClassLoader());
+                source.closeLoader();
+                List<CodeSource> children = parentChildren.get(parent);
+                children.remove(source);
+            }
+            else
+            {
+                DirectoryJarClassLoader dirLoader = (DirectoryJarClassLoader) source.getSourceClassLoader();
+                List<CodeSource> children = parentChildren.remove(source);
+                for (CodeSource child : children)
                 {
-                    CodeSource source = sources.get(disp);
-                    if (source instanceof JarCodeSource)
-                    {
-                        CodeSource parent = childrenParent.get(source);
-                        ((DirectoryJarClassLoader) parent.getSourceClassLoader()).remove((SingleJarClassLoader) source.getSourceClassLoader());
-                        source.closeLoader();
-                        List<CodeSource> children = parentChildren.get(parent);
-                        children.remove(source);
-                    }
-                    else
-                    {
-                        DirectoryJarClassLoader dirLoader = (DirectoryJarClassLoader) source.getSourceClassLoader();
-                        List<CodeSource> children = parentChildren.remove(source);
-                        for (CodeSource child : children)
-                        {
-                            SingleJarClassLoader jarLoader = (SingleJarClassLoader) child.getSourceClassLoader();
-                            dirLoader.remove(jarLoader);
-                            childrenParent.remove(child);
-                            loaders.remove(child);
-                            sources.remove(child.getDisplayName());
-                            removed.add(source);
-                        }
-
-                        sortedDirectories.remove(source);
-                    }
-
-                    loaders.remove(source);
-                    sources.remove(source.getDisplayName());
-
+                    SingleJarClassLoader jarLoader = (SingleJarClassLoader) child.getSourceClassLoader();
+                    dirLoader.remove(jarLoader);
+                    childrenParent.remove(child);
+                    loaders.remove(child);
+                    sources.remove(child.getDisplayName());
                     removed.add(source);
                 }
+
+                sortedDirectories.remove(source);
             }
+
+            loaders.remove(source);
+            sources.remove(source.getDisplayName());
+            removed.add(source);
         }
 
         // Clean up all remaining directory sources with no children:
@@ -675,7 +665,32 @@ public final class Launcher
         }
 
         processMapping();
+
         return removed;
+    }
+
+    // ===========================================================================
+    /**
+     * Removes the list of objects specified.
+     *
+     * @param toRemove The objects to remove.
+     * @return The list of removed codesources.
+     */
+    public List<CodeSource> remove(List<String> toRemove)
+    {
+        List<CodeSource> sourcesToRemove = new ArrayList<CodeSource>();
+
+        for (String s : toRemove)
+        {
+            List<String> displayNames = new ArrayList<String>();
+            displayNames.addAll(sources.keySet());
+            for (String disp : displayNames)
+            {
+                if (disp.startsWith(s))
+                    sourcesToRemove.add(sources.get(disp));
+            }
+        }
+        return removeSources(sourcesToRemove);
     }
 
     // ===========================================================================
