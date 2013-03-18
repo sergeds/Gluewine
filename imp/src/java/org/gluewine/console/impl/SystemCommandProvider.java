@@ -470,13 +470,25 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
         File root = Launcher.getInstance().getRoot();
         if (ci.hasOption("-f"))
         {
+            List<CodeSource> toRemove = new ArrayList<CodeSource>();
+            List<String> toAdd = new ArrayList<String>();
             for (SourceVersion sv : updates)
             {
                 String name = sv.getSource().getDisplayName().substring(1);
+                toRemove.add(sv.getSource());
+                toAdd.add(name);
                 String url = source + name;
                 ci.println("Fetching " + url);
                 fetch(url, new File(root, name), sv);
             }
+
+            List<CodeSource> removed = Launcher.getInstance().removeSources(toRemove);
+            for (CodeSourceListener jl : listeners)
+                jl.codeSourceRemoved(removed);
+
+            List<CodeSource> added = Launcher.getInstance().add(toAdd);
+            for (CodeSourceListener jl : listeners)
+                jl.codeSourceAdded(added);
         }
         else
         {
