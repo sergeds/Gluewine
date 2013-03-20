@@ -39,7 +39,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.log4j.Logger;
-import org.gluewine.core.Glue;
 import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.RunOnActivate;
 import org.gluewine.core.RunOnDeactivate;
@@ -50,20 +49,11 @@ import org.gluewine.gxo.ExecBean;
 import org.gluewine.gxo.GxoException;
 import org.gluewine.gxo.InitBean;
 import org.gluewine.launcher.Launcher;
-import org.gluewine.sessions.SessionManager;
-import org.gluewine.sessions.Unsecured;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.converters.basic.DateConverter;
 import com.thoughtworks.xstream.converters.reflection.ReflectionConverter;
-import com.thoughtworks.xstream.hibernate.converter.HibernatePersistentCollectionConverter;
-import com.thoughtworks.xstream.hibernate.converter.HibernatePersistentMapConverter;
-import com.thoughtworks.xstream.hibernate.converter.HibernatePersistentSortedMapConverter;
-import com.thoughtworks.xstream.hibernate.converter.HibernatePersistentSortedSetConverter;
-import com.thoughtworks.xstream.hibernate.converter.HibernateProxyConverter;
-import com.thoughtworks.xstream.hibernate.mapper.HibernateMapper;
 import com.thoughtworks.xstream.io.xml.StaxDriver;
-import com.thoughtworks.xstream.mapper.MapperWrapper;
 
 /**
  * Default implementation of the GxoServer.
@@ -71,7 +61,7 @@ import com.thoughtworks.xstream.mapper.MapperWrapper;
  * @author fks/Serge de Schaetzen
  *
  */
-public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Object>
+public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Object>, XStreamConverterProvider
 {
     // ===========================================================================
     /**
@@ -101,6 +91,16 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
      * The set of registered instantiatable classes.
      */
     private Map<String, Class<?>> instantiatables = new HashMap<String, Class<?>>();
+
+    /**
+     * The set of registered method invocation checkers.
+     */
+    private Set<MethodInvocationChecker> checkers = new HashSet<MethodInvocationChecker>();
+
+    /**
+     * The set of registered xsteam converter providers.
+     */
+    private Set<XStreamConverterProvider> providers = new HashSet<XStreamConverterProvider>();
 
     /**
      * The logger instance to use.
@@ -143,12 +143,6 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
      */
     private XStream stream = null;
 
-    /**
-     * The session manager to use.
-     */
-    @Glue
-    private SessionManager sessionManager = null;
-
     // ===========================================================================
     /**
      * Creates an instance.
@@ -158,38 +152,7 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
     @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "SIC_INNER_SHOULD_BE_STATIC_ANON")
     public GxoServerImpl() throws Throwable
     {
-        final XStream xstream = new XStream(new StaxDriver())
-        {
-            protected MapperWrapper wrapMapper(final MapperWrapper next)
-            {
-                return new HibernateMapper(next);
-            }
-        };
-
-        xstream.registerConverter(new HibernateProxyConverter());
-        xstream.registerConverter(new HibernatePersistentCollectionConverter(xstream.getMapper()));
-        xstream.registerConverter(new HibernatePersistentMapConverter(xstream.getMapper()));
-        xstream.registerConverter(new HibernatePersistentSortedMapConverter(xstream.getMapper()));
-        xstream.registerConverter(new HibernatePersistentSortedSetConverter(xstream.getMapper()));
-        xstream.registerConverter(new MySqlDateConverter());
-
-        xstream.alias("date", java.sql.Date.class, java.util.Date.class);
-        xstream.alias("date", java.sql.Time.class, java.util.Date.class);
-        xstream.alias("date", java.sql.Timestamp.class, java.util.Date.class);
-
-        final Class<?> emptyListType = Collections.EMPTY_LIST.getClass();
-        xstream.alias(emptyListType.getName(), emptyListType);
-
-        xstream.registerConverter(new ReflectionConverter(xstream.getMapper(), xstream.getReflectionProvider())
-        {
-            @Override
-            @SuppressWarnings("rawtypes")
-            public boolean canConvert(Class type)
-            {
-                return type == emptyListType;
-            }
-        });
-        stream = xstream;
+        stream = new XStream(new StaxDriver());
     }
 
     // ===========================================================================
@@ -388,10 +351,9 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
             try
             {
                 Method m = o.getClass().getMethod(bean.getMethod(), bean.getParamTypes());
-                boolean unsecured = isUnsecured(o.getClass(), bean);
 
-                if (!unsecured)
-                    sessionManager.checkSession(bean.getSessionId());
+                for (MethodInvocationChecker checker : checkers)
+                    checker.checkAllowed(o.getClass(), m, bean);
 
                 result = m.invoke(o, bean.getParams());
                 if (logger.isDebugEnabled())
@@ -417,23 +379,6 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
         }
 
         return result;
-    }
-
-    // ===========================================================================
-    /**
-     * Returns true if the method defined in the bean has been annotated with
-     * the @Unsecured annotation.
-     *
-     * @param c The class to check.
-     * @param bean The exec bean.
-     * @return True if annotated with @Unsecured.
-     * @throws NoSuchMethodException  If the method does not exist.
-     */
-    private boolean isUnsecured(Class<?> c, ExecBean bean) throws NoSuchMethodException
-    {
-        if (c.getName().indexOf("$$Enhance") > -1) c = c.getSuperclass();
-        Method m = c.getMethod(bean.getMethod(), bean.getParamTypes());
-        return m.getAnnotation(Unsecured.class) != null;
     }
 
     // ===========================================================================
@@ -497,12 +442,38 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
     @Override
     public void registered(Object o)
     {
+        if (o instanceof XStreamProvider)
+            initializeStream((XStreamProvider) o);
+
+        if (o instanceof XStreamConverterProvider)
+        {
+            ((XStreamConverterProvider) o).registerConverters(stream);
+            providers.add((XStreamConverterProvider) o);
+        }
+
         Set<Class<?>> interfs = getInterfaces(o.getClass(), null);
         synchronized (services)
         {
             for (Class<?> interf : interfs)
                 services.put(interf.getName(), o);
         }
+
+        if (o instanceof MethodInvocationChecker)
+            checkers.add((MethodInvocationChecker) o);
+    }
+
+    // ===========================================================================
+    /**
+     * Initializes a new XStream using the given provider.
+     *
+     * @param provider The provider to use.
+     */
+    private void initializeStream(XStreamProvider provider)
+    {
+        stream = provider.getXStream();
+        // Reregister all available converters:
+        for (XStreamConverterProvider prov : providers)
+            prov.registerConverters(stream);
     }
 
     // ===========================================================================
@@ -603,12 +574,18 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
     @Override
     public void unregistered(Object o)
     {
+        if (o instanceof XStreamConverterProvider)
+            providers.remove((XStreamConverterProvider) o);
+
         Set<Class<?>> interfs = getInterfaces(o.getClass(), null);
         synchronized (services)
         {
             for (Class<?> interf : interfs)
                 services.remove(interf.getName());
         }
+
+        if (o instanceof MethodInvocationChecker)
+            checkers.remove((MethodInvocationChecker) o);
     }
 
     // ===========================================================================
@@ -618,5 +595,29 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
         Set<Class<?>> interfaces = getInterfaces(cl, null);
         for (Class<?> interf : interfaces)
             instantiatables.remove(interf.getName());
+    }
+
+    // ===========================================================================
+    @Override
+    public void registerConverters(XStream stream)
+    {
+        stream.registerConverter(new MySqlDateConverter());
+
+        stream.alias("date", java.sql.Date.class, java.util.Date.class);
+        stream.alias("date", java.sql.Time.class, java.util.Date.class);
+        stream.alias("date", java.sql.Timestamp.class, java.util.Date.class);
+
+        final Class<?> emptyListType = Collections.EMPTY_LIST.getClass();
+        stream.alias(emptyListType.getName(), emptyListType);
+
+        stream.registerConverter(new ReflectionConverter(stream.getMapper(), stream.getReflectionProvider())
+        {
+            @Override
+            @SuppressWarnings("rawtypes")
+            public boolean canConvert(Class type)
+            {
+                return type == emptyListType;
+            }
+        });
     }
 }

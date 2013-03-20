@@ -613,6 +613,7 @@ public final class Launcher
      * list of ALL codesources that have been removed.
      *
      * @param toRemove The sources to remove.
+     * @return The list of CodeSources that were removed.
      */
     public List<CodeSource> removeSources(List<CodeSource> toRemove)
     {

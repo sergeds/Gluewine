@@ -24,34 +24,19 @@ package org.gluewine.gxo_server;
 import com.thoughtworks.xstream.XStream;
 
 /**
- * Defines a GxoServer.
+ * Defines a class that offers additional XStream converters to the current stream.
  *
  * @author fks/Serge de Schaetzen
  *
  */
-public interface GxoServer
+public interface XStreamConverterProvider
 {
     // ===========================================================================
     /**
-     * Registers a class that can be instantiated and made available through GXO.
+     * Requests the class to register additional converters to the
+     * given stream.
      *
-     * @param cl The class to register.
+     * @param stream The stream to update.
      */
-    void setInstantiatableService(Class<?> cl);
-
-    // ===========================================================================
-    /**
-     * Deregisters a class.
-     *
-     * @param cl The class to register.
-     */
-    void unsetInstantiatableService(Class<?> cl);
-
-    // ===========================================================================
-    /**
-     * Returns the stream used.
-     *
-     * @return The XStream being used.
-     */
-    XStream getXStream();
+    void registerConverters(XStream stream);
 }

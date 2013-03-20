@@ -21,37 +21,28 @@
  **************************************************************************/
 package org.gluewine.gxo_server;
 
-import com.thoughtworks.xstream.XStream;
+import java.lang.reflect.Method;
+
+import org.gluewine.gxo.ExecBean;
 
 /**
- * Defines a GxoServer.
+ * Allows to check whether a method may be invoked.
  *
  * @author fks/Serge de Schaetzen
  *
  */
-public interface GxoServer
+public interface MethodInvocationChecker
 {
     // ===========================================================================
     /**
-     * Registers a class that can be instantiated and made available through GXO.
+     * Checks the method given to see whether it is allowed to be executed.
+     * If the implementation finds that the method is not allowed to be executed
+     * it should throw an exception.
      *
-     * @param cl The class to register.
+     * @param clazz The class impacted.
+     * @param method The method that will be invoked.
+     * @param bean The exec bean.
+     * @throws Throwable If the method is not allowed to be executed.
      */
-    void setInstantiatableService(Class<?> cl);
-
-    // ===========================================================================
-    /**
-     * Deregisters a class.
-     *
-     * @param cl The class to register.
-     */
-    void unsetInstantiatableService(Class<?> cl);
-
-    // ===========================================================================
-    /**
-     * Returns the stream used.
-     *
-     * @return The XStream being used.
-     */
-    XStream getXStream();
+    void checkAllowed(Class<?> clazz, Method method, ExecBean bean) throws Throwable;
 }
