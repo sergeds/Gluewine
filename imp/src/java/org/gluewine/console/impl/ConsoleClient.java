@@ -115,7 +115,7 @@ public final class ConsoleClient implements Runnable, Completor
                         initial = true;
                     }
 
-                    else
+                    else if (line != null && line.trim().length() > 0)
                     {
                         if (server == null)
                         {
