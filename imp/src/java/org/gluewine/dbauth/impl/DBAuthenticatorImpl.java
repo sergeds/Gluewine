@@ -111,6 +111,7 @@ public class DBAuthenticatorImpl implements DBAuthenticator, CommandProvider
 
     // ===========================================================================
     @Override
+    @Transactional
     public void resetPassword(String user, String password) throws AuthenticationException
     {
         try
