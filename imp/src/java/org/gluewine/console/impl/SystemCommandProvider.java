@@ -143,8 +143,24 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
         commands.add(new CLICommand("close", "Closes the console client."));
         commands.add(new CLICommand("exit", "Closes the console client."));
         commands.add(new CLICommand("logoff", "Logs off the console client."));
+        commands.add(new CLICommand("props_list", "Lists the property files in use."));
 
         return commands;
+    }
+
+    // ===========================================================================
+    /**
+     * Executes the props_list command.
+     *
+     * @param cc The current context.
+     */
+    public void _props_list(CommandContext cc)
+    {
+        cc.tableHeader("Property File");
+        for (String s : Launcher.getInstance().getPropertiesUsed())
+            cc.tableRow(s);
+
+        cc.printTable();
     }
 
     // ===========================================================================

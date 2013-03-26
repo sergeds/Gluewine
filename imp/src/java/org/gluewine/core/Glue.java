@@ -36,4 +36,12 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 public @interface Glue
 {
+    // ===========================================================================
+    /**
+     * When used on a Properties object, it indicates the name
+     * of the properties file.
+     *
+     * @return The name
+     */
+    String properties() default "";
 }

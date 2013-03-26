@@ -39,6 +39,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.log4j.Logger;
+import org.gluewine.core.Glue;
 import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.RunOnActivate;
 import org.gluewine.core.RunOnDeactivate;
@@ -48,7 +49,6 @@ import org.gluewine.gxo.CompressedBlockOutputStream;
 import org.gluewine.gxo.ExecBean;
 import org.gluewine.gxo.GxoException;
 import org.gluewine.gxo.InitBean;
-import org.gluewine.launcher.Launcher;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.converters.basic.DateConverter;
@@ -142,6 +142,12 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
      * The XStream serializer/deserializer.
      */
     private XStream stream = null;
+
+    /**
+     * The property file to use.
+     */
+    @Glue(properties = "gxo.properties")
+    private Properties properties = null;
 
     // ===========================================================================
     /**
@@ -244,9 +250,8 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
     @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "NP_UNWRITTEN_FIELD")
     public void initialize() throws IOException
     {
-        Properties props = Launcher.getInstance().getProperties("gxo.properties");
-        port = Integer.parseInt(props.getProperty("port", "8282"));
-        maxIdle = Integer.parseInt(props.getProperty("maxidle", "300")) * 1000;
+        port = Integer.parseInt(properties.getProperty("port", "8282"));
+        maxIdle = Integer.parseInt(properties.getProperty("maxidle", "300")) * 1000;
         Thread th = new Thread(this, "GXO Server Thread");
         th.start();
     }

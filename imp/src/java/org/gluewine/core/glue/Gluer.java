@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -177,7 +178,12 @@ public final class Gluer implements CodeSourceListener
         if (name.indexOf("$$EnhancerByCGLIB$$") >= 0)
             cl = service.getClass().getSuperclass();
 
-        b.append(cl.getClassLoader().toString());
+        ClassLoader loader = cl.getClassLoader();
+        if (loader != null)
+            b.append(cl.getClassLoader().toString());
+        else
+            b.append("system");
+
         b.append("::").append(cl.getName());
 
         String clid = b.toString();
@@ -789,7 +795,11 @@ public final class Gluer implements CodeSourceListener
         if (s != null)
             return s.isResolved() && !ungluedServices.contains(Integer.valueOf(s.getId()));
 
-        else return false;
+        else if (o instanceof Properties)
+            return true;
+
+        else
+            return false;
     }
 
     // ===========================================================================
@@ -807,7 +817,11 @@ public final class Gluer implements CodeSourceListener
         if (s != null)
             return !unresolvedServices.contains(Integer.valueOf(s.getId()));
 
-        else return false;
+        else if (o instanceof Properties)
+            return true;
+
+        else
+            return false;
     }
 
     // ===========================================================================
@@ -825,7 +839,11 @@ public final class Gluer implements CodeSourceListener
         if (s != null)
             return s.isGlued() && !stoppedServices.contains(Integer.valueOf(s.getId()));
 
-        else return false;
+        else if (o instanceof Properties)
+            return true;
+
+        else
+            return false;
     }
 
     // ===========================================================================

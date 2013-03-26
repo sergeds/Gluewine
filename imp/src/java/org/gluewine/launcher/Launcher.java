@@ -38,11 +38,14 @@ import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.gluewine.launcher.loaders.DirectoryJarClassLoader;
 import org.gluewine.launcher.loaders.SingleJarClassLoader;
@@ -125,6 +128,11 @@ public final class Launcher
      * The map of persistence objects indexed on their id.
      */
     private HashMap<String, Serializable> persistentMap = new HashMap<String, Serializable>();
+
+    /**
+     * The set of property file names that have been requested.
+     */
+    private Set<String> propertiesUsed = new HashSet<String>();
 
     // ===========================================================================
     /**
@@ -573,6 +581,7 @@ public final class Launcher
         {
             input = new FileInputStream(new File(configDirectory, name));
             props.load(input);
+            propertiesUsed.add(name);
         }
         finally
         {
@@ -580,6 +589,19 @@ public final class Launcher
         }
 
         return props;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the set of property files in use.
+     *
+     * @return The set of file names.
+     */
+    public Set<String> getPropertiesUsed()
+    {
+        Set<String> sorted = new TreeSet<String>();
+        sorted.addAll(propertiesUsed);
+        return sorted;
     }
 
     // ===========================================================================

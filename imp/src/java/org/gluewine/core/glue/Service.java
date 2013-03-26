@@ -1,5 +1,6 @@
 package org.gluewine.core.glue;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.security.AccessController;
@@ -11,6 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -21,6 +23,7 @@ import org.gluewine.core.RunOnActivate;
 import org.gluewine.core.RunOnDeactivate;
 import org.gluewine.core.ServiceProvider;
 import org.gluewine.core.utils.ErrorLogger;
+import org.gluewine.launcher.Launcher;
 
 /**
  * A bean that wraps a 'glued' service.
@@ -552,46 +555,69 @@ public class Service
                 if (glue != null)
                 {
                     boolean fieldResolved = false;
-                    // First check the local services:
-                    for (Object i : services)
+                    if (Properties.class.isAssignableFrom(field.getType()))
                     {
-                        if (field.getType().isInstance(i))
+                        String name = glue.properties();
+                        if (name != null && name.trim().length() > 0)
                         {
-                            references.put(field, i);
-                            fieldResolved = true;
-                        }
-                    }
-
-                    Iterator<ServiceProvider> provIter = providers.iterator();
-                    while (provIter.hasNext() && !fieldResolved)
-                    {
-                        try
-                        {
-                            ServiceProvider provider = provIter.next();
-                            Object proxy = provider.getService(field.getType());
-                            if (proxy != null)
+                            try
                             {
-                                try
-                                {
-                                    references.put(field, proxy);
-                                    fieldResolved = true;
-                                }
-                                catch (Throwable e)
-                                {
-                                    ErrorLogger.log(getClass(), e);
-                                }
+                                Properties props = Launcher.getInstance().getProperties(name);
+                                references.put(field, props);
+                                fieldResolved = true;
+                            }
+                            catch (IOException e)
+                            {
+                                logger.warn("Field " + field.getName() + " of class " + actual.getClass().getName() + " does not exist!");
+                                ErrorLogger.log(getClass(), e);
+                                unresolvedFields.add(field.getName());
                             }
                         }
-                        catch (NoSuchServiceException e)
-                        {
-                            ErrorLogger.log(getClass(), e);
-                            // Allowed to fail as not all providers are
-                            // required to be able to provide all services.
-                        }
+                        else
+                            unresolvedFields.add(field.getName());
                     }
+                    else
+                    {
+                        // First check the local services:
+                        for (Object i : services)
+                        {
+                            if (field.getType().isInstance(i))
+                            {
+                                references.put(field, i);
+                                fieldResolved = true;
+                            }
+                        }
 
-                    if (!fieldResolved) unresolvedFields.add(field.getName());
+                        Iterator<ServiceProvider> provIter = providers.iterator();
+                        while (provIter.hasNext() && !fieldResolved)
+                        {
+                            try
+                            {
+                                ServiceProvider provider = provIter.next();
+                                Object proxy = provider.getService(field.getType());
+                                if (proxy != null)
+                                {
+                                    try
+                                    {
+                                        references.put(field, proxy);
+                                        fieldResolved = true;
+                                    }
+                                    catch (Throwable e)
+                                    {
+                                        ErrorLogger.log(getClass(), e);
+                                    }
+                                }
+                            }
+                            catch (NoSuchServiceException e)
+                            {
+                                ErrorLogger.log(getClass(), e);
+                                // Allowed to fail as not all providers are
+                                // required to be able to provide all services.
+                            }
+                        }
 
+                        if (!fieldResolved) unresolvedFields.add(field.getName());
+                    }
                     resolved &= fieldResolved;
                 }
             }

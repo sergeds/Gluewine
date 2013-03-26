@@ -41,6 +41,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
@@ -117,6 +118,12 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
     private Repository registry = null;
 
     /**
+     * The property file to use.
+     */
+    @Glue(properties = "hibernate.properties")
+    private Properties properties = null;
+
+    /**
      * The set of registered preprocessors.
      */
     private Set<QueryPreProcessor> preProcessors = new HashSet<QueryPreProcessor>();
@@ -135,11 +142,6 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
      * The list of statements.
      */
     private Map<CodeSource, Map<String, List<SQLStatement>>> statements = new HashMap<CodeSource, Map<String, List<SQLStatement>>>();
-
-    /**
-     * Name of the property file for Hibernate.
-     */
-    private static final String HIBERNATE_FILE = "hibernate.properties";
 
     /**
      * The set of registered entities.
@@ -170,6 +172,11 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
      * @throws NoSuchAlgorithmException If the SHA1 algorithm is not implemented.
      */
     public SessionAspectProvider() throws IOException, ClassNotFoundException, NoSuchAlgorithmException
+    {
+    }
+
+    @RunOnActivate
+    public void register()
     {
         codeSourceAdded(Launcher.getInstance().getSources());
     }
@@ -558,7 +565,7 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
             try
             {
                 Configuration config = new Configuration();
-                config.setProperties(Launcher.getInstance().getProperties(HIBERNATE_FILE));
+                config.setProperties(properties);
                 ServiceRegistry serviceRegistry = new ServiceRegistryBuilder().applySettings(config.getProperties()).buildServiceRegistry();
 
                 for (CodeSource source : sources)
@@ -642,7 +649,7 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
             try
             {
                 Configuration config = new Configuration();
-                config.setProperties(Launcher.getInstance().getProperties(HIBERNATE_FILE));
+                config.setProperties(properties);
                 ServiceRegistry serviceRegistry = new ServiceRegistryBuilder().applySettings(config.getProperties()).buildServiceRegistry();
 
                 for (CodeSource source : sources)
