@@ -118,12 +118,6 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
     private Repository registry = null;
 
     /**
-     * The property file to use.
-     */
-    @Glue(properties = "hibernate.properties")
-    private Properties properties = null;
-
-    /**
      * The set of registered preprocessors.
      */
     private Set<QueryPreProcessor> preProcessors = new HashSet<QueryPreProcessor>();
@@ -158,6 +152,12 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
      */
     private Object factoryLocker = new Object();
 
+    /**
+     * The properties. They cannot be glued as they are required to
+     * be present BEFORE any @RunOnActivate is invoked.
+     */
+    private Properties properties = null;
+
     // ===========================================================================
     /**
      * Creates an instance. This will initialize the Hibernate
@@ -173,11 +173,7 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
      */
     public SessionAspectProvider() throws IOException, ClassNotFoundException, NoSuchAlgorithmException
     {
-    }
-
-    @RunOnActivate
-    public void register()
-    {
+        properties = Launcher.getInstance().getProperties("hibernate.properties");
         codeSourceAdded(Launcher.getInstance().getSources());
     }
 
