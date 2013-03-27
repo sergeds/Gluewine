@@ -43,6 +43,7 @@ import org.gluewine.console.CommandContext;
 import org.gluewine.console.CommandProvider;
 import org.gluewine.core.CodeSourceListener;
 import org.gluewine.core.Glue;
+import org.gluewine.core.GluewineProperties;
 import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.glue.Gluer;
 import org.gluewine.core.glue.Service;
@@ -145,6 +146,10 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
         commands.add(new CLICommand("logoff", "Logs off the console client."));
         commands.add(new CLICommand("props_list", "Lists the property files in use."));
 
+        CLICommand refresh = new CLICommand("props_refresh", "Refreshes the property file specified.");
+        refresh.addOption(new CLIOption("-cfg", "The config file", true, true));
+        commands.add(refresh);
+
         return commands;
     }
 
@@ -156,11 +161,38 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
      */
     public void _props_list(CommandContext cc)
     {
-        cc.tableHeader("Property File");
+        Map<String, GluewineProperties> m = new TreeMap<String, GluewineProperties>();
         for (String s : Launcher.getInstance().getPropertiesUsed())
-            cc.tableRow(s);
+            m.put(s, null);
+
+        m.putAll(GluewineProperties.getActiveProperties());
+
+
+        cc.tableHeader("Property File", "Refreshable");
+        for (Entry<String, GluewineProperties> e : m.entrySet())
+        {
+            String ref = "";
+            if (e.getValue() != null) ref = "*";
+            cc.tableRow(e.getKey(), ref);
+        }
 
         cc.printTable();
+    }
+
+    // ===========================================================================
+    /**
+     * Executes the props_list command.
+     *
+     * @param cc The current context.
+     * @throws Throwable If the load fails.
+     */
+    public void _props_refresh(CommandContext cc) throws Throwable
+    {
+        Map<String, GluewineProperties> m = GluewineProperties.getActiveProperties();
+        GluewineProperties prop = m.get(cc.getOption("-cfg"));
+
+        if (prop != null) prop.load();
+        else cc.println("There is no config " + cc.getOption("-cfg") + " or it is not refreshable.");
     }
 
     // ===========================================================================

@@ -21,7 +21,6 @@
  **************************************************************************/
 package org.gluewine.console.impl;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -42,10 +41,10 @@ import org.gluewine.console.CommandProvider;
 import org.gluewine.console.ConsoleServer;
 import org.gluewine.console.SyntaxException;
 import org.gluewine.core.Glue;
+import org.gluewine.core.PropertyListener;
 import org.gluewine.core.Repository;
 import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.RunOnActivate;
-import org.gluewine.launcher.Launcher;
 import org.gluewine.sessions.Unsecured;
 
 /**
@@ -54,7 +53,7 @@ import org.gluewine.sessions.Unsecured;
  * @author fks/Serge de Schaetzen
  *
  */
-public class ConsoleServerImpl implements ConsoleServer, CommandProvider
+public class ConsoleServerImpl implements ConsoleServer, CommandProvider, PropertyListener
 {
     // ===========================================================================
     /**
@@ -79,12 +78,6 @@ public class ConsoleServerImpl implements ConsoleServer, CommandProvider
     private Repository repository = null;
 
     /**
-     * The launcher instance.
-     */
-    @Glue
-    private Launcher launcher = null;
-
-    /**
      * The welcome message to use.
      */
     private String welcomeMessage = null;
@@ -93,6 +86,12 @@ public class ConsoleServerImpl implements ConsoleServer, CommandProvider
      * The prompt to use.
      */
     private String prompt = null;
+
+    /**
+     * The property file to use.
+     */
+    @Glue(properties = "console.properties")
+    private Properties props = null;
 
     // ===========================================================================
     /**
@@ -125,16 +124,7 @@ public class ConsoleServerImpl implements ConsoleServer, CommandProvider
             }
         });
 
-        try
-        {
-            Properties props = launcher.getProperties("console.properties");
-            welcomeMessage = props.getProperty("welcome.text", "");
-            prompt = props.getProperty("prompt.text", "");
-        }
-        catch (IOException e)
-        {
-            // Ignore as it could happen if there's no console.properties file.
-        }
+        propertiesChanged(props);
     }
 
     // ===========================================================================
@@ -351,5 +341,16 @@ public class ConsoleServerImpl implements ConsoleServer, CommandProvider
     public String getPrompt()
     {
         return prompt;
+    }
+
+    // ===========================================================================
+    @Override
+    public void propertiesChanged(Properties props)
+    {
+        if (this.props == props)
+        {
+            welcomeMessage = props.getProperty("welcome.text", "");
+            prompt = props.getProperty("prompt.text", "");
+        }
     }
 }

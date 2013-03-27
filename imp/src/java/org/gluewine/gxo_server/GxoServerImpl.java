@@ -40,6 +40,7 @@ import java.util.UUID;
 
 import org.apache.log4j.Logger;
 import org.gluewine.core.Glue;
+import org.gluewine.core.PropertyListener;
 import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.RunOnActivate;
 import org.gluewine.core.RunOnDeactivate;
@@ -61,7 +62,7 @@ import com.thoughtworks.xstream.io.xml.StaxDriver;
  * @author fks/Serge de Schaetzen
  *
  */
-public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Object>, XStreamConverterProvider
+public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Object>, XStreamConverterProvider, PropertyListener
 {
     // ===========================================================================
     /**
@@ -250,7 +251,8 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
     @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "NP_UNWRITTEN_FIELD")
     public void initialize() throws IOException
     {
-        port = Integer.parseInt(properties.getProperty("port", "8282"));
+        stopRequested = false;
+        port = Integer.parseInt(properties.getProperty("port", "1966"));
         maxIdle = Integer.parseInt(properties.getProperty("maxidle", "300")) * 1000;
         Thread th = new Thread(this, "GXO Server Thread");
         th.start();
@@ -624,5 +626,23 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
                 return type == emptyListType;
             }
         });
+    }
+
+    // ===========================================================================
+    @Override
+    public void propertiesChanged(Properties props)
+    {
+        if (props == properties)
+        {
+            deactivate();
+            try
+            {
+                initialize();
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
     }
 }

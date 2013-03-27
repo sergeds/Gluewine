@@ -18,12 +18,13 @@ import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 import org.gluewine.core.Glue;
+import org.gluewine.core.GluewineProperties;
 import org.gluewine.core.NoSuchServiceException;
+import org.gluewine.core.PropertyListener;
 import org.gluewine.core.RunOnActivate;
 import org.gluewine.core.RunOnDeactivate;
 import org.gluewine.core.ServiceProvider;
 import org.gluewine.core.utils.ErrorLogger;
-import org.gluewine.launcher.Launcher;
 
 /**
  * A bean that wraps a 'glued' service.
@@ -470,6 +471,9 @@ public class Service
                 }).booleanValue();
 
                 glued &= fieldGlued;
+
+                if (fieldGlued && e.getValue() instanceof GluewineProperties && actual instanceof PropertyListener)
+                    ((GluewineProperties) e.getValue()).addListener((PropertyListener) actual);
             }
         }
 
@@ -562,7 +566,8 @@ public class Service
                         {
                             try
                             {
-                                Properties props = Launcher.getInstance().getProperties(name);
+                                GluewineProperties props = new GluewineProperties(name);
+                                props.load();
                                 references.put(field, props);
                                 fieldResolved = true;
                             }
@@ -660,6 +665,10 @@ public class Service
                         return null;
                     }
                 });
+
+                if (e.getValue() instanceof GluewineProperties && actual instanceof PropertyListener)
+                    ((GluewineProperties) e.getValue()).removeListener((PropertyListener) actual);
+
             }
             glued = false;
         }
