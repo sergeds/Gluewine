@@ -41,7 +41,7 @@ public @interface Glue
      * When used on a Properties object, it indicates the name
      * of the properties file.
      *
-     * @return The name
+     * Return The name
      */
     String properties() default "";
 }

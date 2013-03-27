@@ -795,11 +795,10 @@ public final class Gluer implements CodeSourceListener
         if (s != null)
             return s.isResolved() && !ungluedServices.contains(Integer.valueOf(s.getId()));
 
-        else if (o instanceof Properties)
+        if (o instanceof Properties)
             return true;
 
-        else
-            return false;
+        return false;
     }
 
     // ===========================================================================
@@ -817,11 +816,10 @@ public final class Gluer implements CodeSourceListener
         if (s != null)
             return !unresolvedServices.contains(Integer.valueOf(s.getId()));
 
-        else if (o instanceof Properties)
+        if (o instanceof Properties)
             return true;
 
-        else
-            return false;
+        return false;
     }
 
     // ===========================================================================
@@ -839,11 +837,10 @@ public final class Gluer implements CodeSourceListener
         if (s != null)
             return s.isGlued() && !stoppedServices.contains(Integer.valueOf(s.getId()));
 
-        else if (o instanceof Properties)
+        if (o instanceof Properties)
             return true;
 
-        else
-            return false;
+        return false;
     }
 
     // ===========================================================================
