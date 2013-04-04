@@ -467,8 +467,8 @@ public final class Gluer implements CodeSourceListener
     {
         if (!resolve()) logger.warn("There are unresolved services!");
         glue();
-        activate();
         registerAllServices();
+        activate();
     }
 
     // ===========================================================================
@@ -624,7 +624,7 @@ public final class Gluer implements CodeSourceListener
     {
         for (Service s : serviceMap.values())
         {
-            if (s.isActive())
+            if (s.isGlued())
                 registerObject(s.getActualService());
         }
     }
