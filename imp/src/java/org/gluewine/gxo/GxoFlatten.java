@@ -220,8 +220,9 @@ public final class GxoFlatten
     private static void writeFile(File f, List<String> c) throws Throwable
     {
         if (!f.exists())
-            if (!f.getParentFile().mkdirs())
-                throw new IOException("Could not create directory " + f.getParentFile().getAbsolutePath());
+            if (!f.getParentFile().exists())
+                if (!f.getParentFile().mkdirs())
+                    throw new IOException("Could not create directory " + f.getParentFile().getAbsolutePath());
 
         BufferedWriter out = null;
         try
