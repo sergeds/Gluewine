@@ -685,7 +685,6 @@ public final class Gluer implements CodeSourceListener
             unglue();
             unresolve();
             logger.info("Framework shut down.");
-            System.exit(0);
         }
     }
 

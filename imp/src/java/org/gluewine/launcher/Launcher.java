@@ -784,11 +784,12 @@ public final class Launcher implements Runnable
             try
             {
                 String line = in.readLine();
-                if ("shutdown".equals(line)) System.exit(0);
+                if ("shutdown".equals(line)) break;
             }
             catch (Throwable e)
             {
             }
         }
+        System.exit(0);
     }
 }

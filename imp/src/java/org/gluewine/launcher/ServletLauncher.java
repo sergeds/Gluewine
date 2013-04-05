@@ -97,7 +97,9 @@ public class ServletLauncher implements ServletContextListener, Runnable
             stdin = new BufferedReader(new InputStreamReader(process.getInputStream()));
             stderr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
             stdout = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
-            new Thread(this).start();
+            Thread th = new Thread(this);
+            th.setDaemon(false);
+            th.start();
         }
         catch (IOException e)
         {
@@ -115,8 +117,10 @@ public class ServletLauncher implements ServletContextListener, Runnable
             stdout.write("shutdown");
             stdout.newLine();
             stdout.flush();
+            stdin.close();
+            stdout.close();
         }
-        catch (IOException e)
+        catch (Throwable e)
         {
             e.printStackTrace();
         }
