@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.gluewine.launcher.CodeSource;
+import org.gluewine.launcher.GluewineLoader;
 
 /**
  * Abstract implementation of CodeSource. It keeps track
@@ -41,7 +42,7 @@ public abstract class AbstractCodeSource implements CodeSource
     /**
      * The classloader used.
      */
-    private ClassLoader classLoader = null;
+    private GluewineLoader classLoader = null;
 
     /**
      * The display name.
@@ -179,7 +180,7 @@ public abstract class AbstractCodeSource implements CodeSource
 
     // ===========================================================================
     @Override
-    public ClassLoader getSourceClassLoader()
+    public GluewineLoader getSourceClassLoader()
     {
         return classLoader;
     }
@@ -209,7 +210,7 @@ public abstract class AbstractCodeSource implements CodeSource
 
     // ===========================================================================
     @Override
-    public void setSourceClassLoader(ClassLoader loader)
+    public void setSourceClassLoader(GluewineLoader loader)
     {
         this.classLoader = loader;
     }

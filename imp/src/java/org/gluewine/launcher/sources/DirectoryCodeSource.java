@@ -21,13 +21,12 @@
  **************************************************************************/
 package org.gluewine.launcher.sources;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
+
+import org.gluewine.launcher.DirectoryAnnotations;
+import org.gluewine.launcher.utils.FileUtils;
 
 /**
  * CodeSource for a directory.
@@ -35,7 +34,7 @@ import java.util.List;
  * @author fks/Serge de Schaetzen
  *
  */
-public class DirectoryCodeSource extends AbstractCodeSource
+public class DirectoryCodeSource extends AbstractCodeSource implements DirectoryAnnotations
 {
     // ===========================================================================
     /**
@@ -67,57 +66,25 @@ public class DirectoryCodeSource extends AbstractCodeSource
      */
     private void initialize() throws IOException
     {
-        File services = new File(directory, "services.lst");
+        File services = new File(directory, SERVICES);
         if (services.exists())
         {
-            for (String service : readFile(services))
+            for (String service : FileUtils.readFile(services))
                 addService(service);
         }
 
-        File entities = new File(directory, "entities.lst");
+        File entities = new File(directory, ENTITIES);
         if (entities.exists())
         {
-            for (String entity : readFile(entities))
+            for (String entity : FileUtils.readFile(entities))
                 addEntity(entity);
         }
 
-        File enhancers = new File(directory, "enhancers.lst");
+        File enhancers = new File(directory, ENHANCERS);
         if (enhancers.exists())
         {
-            for (String enhancer : readFile(enhancers))
+            for (String enhancer : FileUtils.readFile(enhancers))
                 addEnhancer(enhancer);
         }
-    }
-
-    // ===========================================================================
-    /**
-     * Reads the file specified and returns its content as a list of Strings.
-     * Empty lines and lines starting with # are removed.
-     *
-     * @param file The file to process.
-     * @return The content.
-     * @throws IOException Thrown if a read error occurs.
-     */
-    @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "DM_DEFAULT_ENCODING")
-    private List<String> readFile(File file) throws IOException
-    {
-        BufferedReader reader = null;
-        List<String> content = new ArrayList<String>();
-        try
-        {
-            reader = new BufferedReader(new FileReader(file));
-            while (reader.ready())
-            {
-                String line = reader.readLine().trim();
-                if (!line.startsWith("#"))
-                    content.add(line);
-            }
-        }
-        finally
-        {
-            if (reader != null) reader.close();
-        }
-
-        return content;
     }
 }

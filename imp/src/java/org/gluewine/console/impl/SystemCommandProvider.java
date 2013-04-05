@@ -48,11 +48,9 @@ import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.glue.Gluer;
 import org.gluewine.core.glue.Service;
 import org.gluewine.launcher.CodeSource;
-import org.gluewine.launcher.GluewineClassLoader;
 import org.gluewine.launcher.Launcher;
 import org.gluewine.launcher.SourceVersion;
-import org.gluewine.launcher.loaders.DirectoryJarClassLoader;
-import org.gluewine.launcher.utils.SHA1Utils;
+import org.gluewine.launcher.utils.FileUtils;
 
 /**
  * CommandProvider providing some system commands.
@@ -259,40 +257,10 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
 
                     cc.println("Service     : " + s.getName());
                     cc.println("Base Loader : " + cl.toString());
-
-                    if (cl instanceof GluewineClassLoader)
-                        displayDispatchers((GluewineClassLoader) cl, "\t", new HashSet<GluewineClassLoader>(), cc);
                 }
             }
         }
         else cc.println("You must specify a service name!");
-    }
-
-    // ===========================================================================
-    /**
-     * Displays the dispatching chaing of the given classloader.
-     *
-     * @param cl The classloader to display.
-     * @param prefix The prefix to use for indentation.
-     * @param loaders The set of loaders already displayed, to avoid infinite looping.
-     * @param cc The current context.
-     */
-    private void displayDispatchers(GluewineClassLoader cl, String prefix, Set<GluewineClassLoader> loaders, CommandContext cc)
-    {
-        GluewineClassLoader gwl = (GluewineClassLoader) cl;
-        loaders.add(gwl);
-
-        cc.println(prefix + "Dispatches to : ");
-        for (GluewineClassLoader disp : gwl.getAllDispatchers())
-        {
-            if (!loaders.contains(disp))
-            {
-                loaders.add(disp);
-                cc.println(prefix + "\t" + disp.toString());
-                if (disp instanceof DirectoryJarClassLoader)
-                    displayDispatchers(disp, prefix + "\t", loaders, cc);
-            }
-        }
     }
 
     // ===========================================================================
@@ -595,7 +563,7 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
             }
         }
 
-        String checksum = SHA1Utils.getSHA1HashCode(local);
+        String checksum = FileUtils.getSHA1HashCode(local);
         if (checksum.equals(source.getChecksum()))
         {
             File done = new File(local.getAbsolutePath() + ".complete");

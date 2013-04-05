@@ -34,7 +34,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -47,7 +46,7 @@ import java.util.Stack;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
+import java.util.jar.JarInputStream;
 
 import org.apache.log4j.Logger;
 import org.gluewine.console.CLICommand;
@@ -62,7 +61,7 @@ import org.gluewine.core.RunOnActivate;
 import org.gluewine.launcher.CodeSource;
 import org.gluewine.launcher.Launcher;
 import org.gluewine.launcher.sources.JarCodeSource;
-import org.gluewine.launcher.utils.SHA1Utils;
+import org.gluewine.launcher.utils.FileUtils;
 import org.gluewine.persistence.QueryPostProcessor;
 import org.gluewine.persistence.QueryPreProcessor;
 import org.gluewine.persistence.TransactionCallback;
@@ -200,7 +199,7 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
                     {
                         String st = b.toString();
                         b.delete(0, b.length());
-                        String id = SHA1Utils.getSHA1HashCode(st);
+                        String id = FileUtils.getSHA1HashCode(st);
                         SQLStatement stmt = new SQLStatement(id);
                         stmt.setStatement(st);
                         stmts.add(stmt);
@@ -574,46 +573,39 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
 
                     if (source instanceof JarCodeSource)
                     {
-                        JarFile jar = null;
+                        JarInputStream jar = null;
                         try
                         {
-                            jar = new JarFile(((JarCodeSource) source).getFile());
-                            Enumeration<JarEntry> entries = jar.entries();
-                            while (entries.hasMoreElements())
+                            jar = new JarInputStream(((JarCodeSource) source).getURLs()[0].openStream());
+                            JarEntry entry = jar.getNextJarEntry();
+                            while (entry != null)
                             {
-                                JarEntry entry = entries.nextElement();
                                 String name = entry.getName().toLowerCase(Locale.getDefault());
                                 if (name.endsWith(".sql"))
                                 {
                                     BufferedReader reader = null;
-                                    try
+                                    List<String> content = new ArrayList<String>();
+                                    reader = new BufferedReader(new InputStreamReader(jar, "UTF-8"));
+                                    while (reader.ready())
+                                        content.add(reader.readLine());
+
+                                    List<SQLStatement> stmts = new ArrayList<SQLStatement>();
+
+                                    if (statements.containsKey(source))
                                     {
-                                        List<String> content = new ArrayList<String>();
-                                        reader = new BufferedReader(new InputStreamReader(jar.getInputStream(entry), "UTF-8"));
-                                        while (reader.ready())
-                                            content.add(reader.readLine());
-
-                                        List<SQLStatement> stmts = new ArrayList<SQLStatement>();
-
-                                        if (statements.containsKey(source))
-                                        {
-                                            Map<String, List<SQLStatement>> m = statements.get(source);
-                                            m.put(name, stmts);
-                                        }
-                                        else
-                                        {
-                                            Map<String, List<SQLStatement>> m = new TreeMap<String, List<SQLStatement>>();
-                                            statements.put(source, m);
-                                            m.put(name, stmts);
-                                        }
-
-                                        updateSQLStatements(content, stmts);
+                                        Map<String, List<SQLStatement>> m = statements.get(source);
+                                        m.put(name, stmts);
                                     }
-                                    finally
+                                    else
                                     {
-                                        if (reader != null) reader.close();
+                                        Map<String, List<SQLStatement>> m = new TreeMap<String, List<SQLStatement>>();
+                                        statements.put(source, m);
+                                        m.put(name, stmts);
                                     }
+
+                                    updateSQLStatements(content, stmts);
                                 }
+                                entry = jar.getNextJarEntry();
                             }
                         }
                         finally

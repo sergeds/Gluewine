@@ -31,7 +31,6 @@ import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -47,10 +46,10 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import org.gluewine.launcher.loaders.DirectoryJarClassLoader;
-import org.gluewine.launcher.loaders.SingleJarClassLoader;
 import org.gluewine.launcher.sources.DirectoryCodeSource;
 import org.gluewine.launcher.sources.JarCodeSource;
+import org.gluewine.launcher.utils.FileUtils;
+
 
 /**
  * Launches the Gluewine framework. It acceps one parameter: The name of the class
@@ -71,38 +70,23 @@ import org.gluewine.launcher.sources.JarCodeSource;
  * @author fks/Serge de Schaetzen
  *
  */
-public final class Launcher implements Runnable
+public final class Launcher implements Runnable, DirectoryAnnotations
 {
     // ===========================================================================
-    /**
-     * The classloader to use per directory.
-     */
-    private Map<CodeSource, DirectoryJarClassLoader> directories = new HashMap<CodeSource, DirectoryJarClassLoader>();
-
     /**
      * The map of all available classloaders indexed on the file they loaded.
      */
     private Map<CodeSource, ClassLoader> loaders = new HashMap<CodeSource, ClassLoader>();
 
     /**
-     * Map of parent/children CodeSources.
+     * The codesouces indexed on the directory.
      */
-    private Map<CodeSource, List<CodeSource>> parentChildren = new HashMap<CodeSource, List<CodeSource>>();
-
-    /**
-     * Map of children/parent CodeSources.
-     */
-    private Map<CodeSource, CodeSource> childrenParent = new HashMap<CodeSource, CodeSource>();
+    private Map<String, List<CodeSource>> codeSources = new HashMap<String, List<CodeSource>>();
 
     /**
      * The map of sources indexed on their shortname.
      */
     private Map<String, CodeSource> sources = new TreeMap<String, CodeSource>();
-
-    /**
-     * The list of directories, sorted using the DirectoryNameComparator.
-     */
-    private List<CodeSource> sortedDirectories = new ArrayList<CodeSource>();
 
     /**
      * The directory containing the configuration file(s).
@@ -165,9 +149,6 @@ public final class Launcher implements Runnable
         if (propPersist != null) persistentFile = new File(propPersist);
         else persistentFile = new File(configDirectory, "gluewine.state");
 
-        System.out.println("Using libdir: " + root.getAbsolutePath());
-        System.out.println("Using cfgdir: " + configDirectory.getAbsolutePath());
-
         try
         {
             if (System.getProperty("log4j.configuration") == null)
@@ -178,8 +159,17 @@ public final class Launcher implements Runnable
 
             loadPersistentMap();
 
-            if (root.exists()) processDirectory(root);
-            processMapping();
+            if (root.exists())
+            {
+                List<CodeSource> srcs = loadDirectories(root);
+                for (CodeSource src : srcs)
+                {
+                    loaders.put(src, src.getSourceClassLoader());
+                    sources.put(src.getDisplayName(), src);
+                }
+
+                mapLoaders();
+            }
         }
         catch (IOException e)
         {
@@ -270,104 +260,176 @@ public final class Launcher implements Runnable
         }
     }
 
-    // ===========================================================================
     /**
-     * Processes the mapping between all the DirectoryJarClassLoaders.
+     * Maps all classloaders.
      */
-    private void processMapping()
+    private void mapLoaders()
     {
-        Map<CodeSource, DirectoryJarClassLoader> temp = new HashMap<CodeSource, DirectoryJarClassLoader>();
-        temp.putAll(directories);
-        Collections.sort(sortedDirectories, new CodeSourceNameComparator());
-        directories.clear();
+        List<String> sorted = new ArrayList<String>(codeSources.size());
+        sorted.addAll(codeSources.keySet());
+        Collections.sort(sorted);
 
-        for (int i = 0; i < sortedDirectories.size(); i++)
+        for (int i = 0; i < sorted.size(); i++)
         {
-            DirectoryJarClassLoader cl = temp.get(sortedDirectories.get(i));
-            cl.clearDispatchers();
-            directories.put(sortedDirectories.get(i), cl);
+            List<CodeSource> list = codeSources.get(sorted.get(i));
 
-            // Add all previous classloaders:
             for (int j = i - 1; j >= 0; j--)
-                cl.addDispatcher(temp.get(sortedDirectories.get(j)));
+            {
+                List<CodeSource> list2 = codeSources.get(sorted.get(j));
+                for (CodeSource g : list)
+                    for (CodeSource g2 : list2)
+                        g.getSourceClassLoader().addDispatcher(g2.getSourceClassLoader());
+            }
 
-            // Add all next classloaders:
-            for (int j = i + 1; j < sortedDirectories.size(); j++)
-                cl.addDispatcher(temp.get(sortedDirectories.get(j)));
+            for (int j = i + 1; j < sorted.size(); j++)
+            {
+                List<CodeSource> list2 = codeSources.get(sorted.get(j));
+                for (CodeSource g : list)
+                    for (CodeSource g2 : list2)
+                        g.getSourceClassLoader().addDispatcher(g2.getSourceClassLoader());
+            }
         }
     }
 
     // ===========================================================================
     /**
-     * Processes the given directory recursively and loads all jars/zips found.
+     * Loads the given directory and all its subdirectories.
      *
-     * @param dir The directory to process.
-     * @return The CodeSource for that directory.
-     * @throws IOException If an exception occurs.
+     * @param dir The directory to load.
+     * @return The code sources.
+     * @throws IOException If a problem occurs reading the directory.
      */
-    private List<CodeSource> processDirectory(File dir) throws IOException
+    private List<CodeSource> loadDirectories(File dir) throws IOException
     {
-        List<CodeSource> newSources = new ArrayList<CodeSource>();
-        CodeSource dcs = createSourceForDirectory(dir);
-        newSources.add(dcs);
+        List<CodeSource> sources = loadDirectory(dir);
+        codeSources.put(dir.getAbsolutePath(), sources);
 
+
+
+        File[] dirs = dir.listFiles();
+        if (dirs != null)
+        {
+            for (File file : dirs)
+                if (file.isDirectory())
+                    sources.addAll(loadDirectories(file));
+        }
+
+        return sources;
+    }
+
+    // ===========================================================================
+    /**
+     * Loads all jar/zip files located in the given directory.
+     *
+     * @param dir The directory to load.
+     * @return The CodeSources for the given directory.
+     * @throws IOException If an error occurs reading the directory.
+     */
+    private List<CodeSource> loadDirectory(File dir) throws IOException
+    {
+        List<CodeSource> sources = new ArrayList<CodeSource>();
+
+        File annotation = new File(dir, SINGLELOADER);
+        boolean single = annotation.exists();
+
+        List<File> jars = new ArrayList<File>();
+        // Index the content.
         File[] files = dir.listFiles();
         if (files != null)
         {
             for (File file : files)
             {
-                if (file.isDirectory())
-                    processDirectory(file);
-
-                else
-                {
-                    String name = file.getName().toLowerCase(Locale.getDefault());
-                    if (name.endsWith(".jar") || name.endsWith(".zip"))
-                    {
-                        try
-                        {
-                            CodeSource jcs = createSourceForFile(file);
-                            newSources.add(jcs);
-                        }
-                        catch (IOException e)
-                        {
-                            e.printStackTrace();
-                        }
-                    }
-                }
+                String name = file.getName().toLowerCase(Locale.getDefault());
+                if (name.endsWith(".jar") || name.endsWith(".zip"))
+                    jars.add(file);
             }
         }
 
-        return newSources;
+        List<GluewineLoader> loaders = new ArrayList<GluewineLoader>();
+
+        DirectoryCodeSource dcs = new DirectoryCodeSource(dir);
+        dcs.setDisplayName(getShortName(dir));
+        GluewineLoader dirLoader = new GluewineLoader(getShortName(dir));
+        dcs.setSourceClassLoader(dirLoader);
+        loaders.add(dirLoader);
+        sources.add(dcs);
+
+        URL[] annotatedURLs = loadUrls(dir);
+
+        // Create the classloader(s) for the files.
+        if (single)
+        {
+            // One loader gets all the files.
+            GluewineLoader loader = new GluewineLoader(getShortName(dir));
+            for (File file : jars)
+            {
+                loader.addURL(file.toURI().toURL());
+                CodeSource src = new JarCodeSource(file);
+                src.setSourceClassLoader(loader);
+                src.setDisplayName(getShortName(file));
+                sources.add(src);
+            }
+            for (URL url : annotatedURLs)
+                loader.addURL(url);
+
+            loaders.add(loader);
+        }
+        else
+        {
+            // One loader per file:
+            for (File file : jars)
+            {
+                GluewineLoader loader = new GluewineLoader(getShortName(file));
+                loader.addURL(file.toURI().toURL());
+                loaders.add(loader);
+                CodeSource src = new JarCodeSource(file);
+                src.setSourceClassLoader(loader);
+                src.setDisplayName(getShortName(file));
+                sources.add(src);
+            }
+
+            for (URL url : annotatedURLs)
+            {
+                GluewineLoader loader = new GluewineLoader(url.toExternalForm());
+                loader.addURL(url);
+                loaders.add(loader);
+                CodeSource src = new JarCodeSource(url);
+                src.setSourceClassLoader(loader);
+                src.setDisplayName(url.toExternalForm());
+                sources.add(src);
+            }
+        }
+        // Map the dispatchers: (only on this level - subdir level will be treated later on)
+        for (GluewineLoader loader : loaders)
+            for (GluewineLoader dispatcher : loaders)
+                loader.addDispatcher(dispatcher);
+
+        return sources;
     }
 
     // ===========================================================================
     /**
-     * Creates a CodeSource for the given file.
+     * Reads the URL annotation file (if present) and returns an array of all
+     * urls defined in that file.
      *
-     * @param file The file to process.
-     * @return The code source.
-     * @throws IOException If a read error occurs.
+     * @param dir The directory to process.
+     * @return The array of defined urls.
+     * @throws IOException If an error occurs reading the file. (or an invalud URL
+     * has been defined).
      */
-    private CodeSource createSourceForFile(File file) throws IOException
+    private URL[] loadUrls(File dir) throws IOException
     {
-        String parent = getShortName(file.getParentFile());
-        CodeSource pcs = sources.get(parent);
-        if (pcs == null) pcs = createSourceForDirectory(file.getParentFile());
+        List<URL> urls = new ArrayList<URL>();
 
-        DirectoryJarClassLoader dcl = (DirectoryJarClassLoader) pcs.getSourceClassLoader();
-        SingleJarClassLoader cl = new SingleJarClassLoader(file, (GluewineClassLoader) pcs.getSourceClassLoader());
-        dcl.addLoader(cl);
-        JarCodeSource jcs = new JarCodeSource(file);
-        jcs.setSourceClassLoader(cl);
-        jcs.setDisplayName(getShortName(file));
+        File annot = new File(dir, URLLOADER);
+        if (annot.exists())
+        {
+            List<String> ss = FileUtils.readFile(annot);
+            for (String s : ss)
+                urls.add(new URL(s));
+        }
 
-        loaders.put(jcs, jcs.getSourceClassLoader());
-        sources.put(jcs.getDisplayName(), jcs);
-        parentChildren.get(pcs).add(jcs);
-        childrenParent.put(jcs, pcs);
-
-        return jcs;
+        return urls.toArray(new URL[urls.size()]);
     }
 
     // ===========================================================================
@@ -467,31 +529,6 @@ public final class Launcher implements Runnable
 
     // ===========================================================================
     /**
-     * Creates a CodeSource for the given directory.
-     *
-     * @param dir The directory to process.
-     * @return The code source.
-     * @throws IOException If a read error occurs.
-     */
-    private CodeSource createSourceForDirectory(File dir) throws IOException
-    {
-        DirectoryJarClassLoader loader = new DirectoryJarClassLoader(dir);
-        DirectoryCodeSource dcs = new DirectoryCodeSource(dir);
-        dcs.setDisplayName(getShortName(dir));
-        dcs.setSourceClassLoader(loader);
-
-        sortedDirectories.add(dcs);
-        directories.put(dcs, loader);
-        loaders.put(dcs, dcs.getSourceClassLoader());
-        sources.put(dcs.getDisplayName(), dcs);
-        List<CodeSource> children = new ArrayList<CodeSource>();
-        parentChildren.put(dcs, children);
-
-        return dcs;
-    }
-
-    // ===========================================================================
-    /**
      * Adds the objects specified and returns a list of codesources.
      *
      * @param toadd The objects to add.
@@ -504,36 +541,14 @@ public final class Launcher implements Runnable
         {
             for (String s : toadd)
             {
-                File file = new File(getRoot(), s);
-
-                DirectoryJarClassLoader pcl = directories.get(sources.get(s));
-                if (pcl == null)
-                    added.addAll(processDirectory(file.getParentFile()));
-
-                else
-                {
-                    String name = file.getName().toLowerCase(Locale.getDefault());
-                    if (name.endsWith(".jar") || name.endsWith(".zip"))
-                    {
-                        try
-                        {
-                            CodeSource source = createSourceForFile(file);
-                            added.add(source);
-                        }
-                        catch (MalformedURLException e)
-                        {
-                            e.printStackTrace();
-                        }
-                    }
-                }
+                // TODO:
             }
         }
-        catch (IOException e)
+        catch (Throwable e)
         {
             e.printStackTrace();
         }
 
-        processMapping();
         return added;
     }
 
@@ -645,52 +660,8 @@ public final class Launcher implements Runnable
         List<CodeSource> removed = new ArrayList<CodeSource>();
         for (CodeSource source : toRemove)
         {
-            if (source instanceof JarCodeSource)
-            {
-                CodeSource parent = childrenParent.get(source);
-                ((DirectoryJarClassLoader) parent.getSourceClassLoader()).remove((SingleJarClassLoader) source.getSourceClassLoader());
-                source.closeLoader();
-                List<CodeSource> children = parentChildren.get(parent);
-                children.remove(source);
-            }
-            else
-            {
-                DirectoryJarClassLoader dirLoader = (DirectoryJarClassLoader) source.getSourceClassLoader();
-                List<CodeSource> children = parentChildren.remove(source);
-                for (CodeSource child : children)
-                {
-                    SingleJarClassLoader jarLoader = (SingleJarClassLoader) child.getSourceClassLoader();
-                    dirLoader.remove(jarLoader);
-                    childrenParent.remove(child);
-                    loaders.remove(child);
-                    sources.remove(child.getDisplayName());
-                    removed.add(source);
-                }
-
-                sortedDirectories.remove(source);
-            }
-
-            loaders.remove(source);
-            sources.remove(source.getDisplayName());
-            removed.add(source);
+            // TODO:
         }
-
-        // Clean up all remaining directory sources with no children:
-        List<CodeSource> dirs = new ArrayList<CodeSource>(sortedDirectories.size());
-        dirs.addAll(sortedDirectories);
-        for (CodeSource cs : dirs)
-        {
-            List<CodeSource> children = parentChildren.get(cs);
-            if (children != null && children.isEmpty())
-            {
-                sortedDirectories.remove(cs);
-                loaders.remove(cs);
-                sources.remove(cs.getDisplayName());
-                removed.add(cs);
-            }
-        }
-
-        processMapping();
 
         return removed;
     }

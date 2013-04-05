@@ -21,11 +21,16 @@
  **************************************************************************/
 package org.gluewine.launcher.utils;
 
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Utility class that offers some SHA1 computations.
@@ -33,13 +38,13 @@ import java.security.NoSuchAlgorithmException;
  * @author fks/Serge de Schaetzen
  *
  */
-public final class SHA1Utils
+public final class FileUtils
 {
     // ===========================================================================
     /**
      * Use the static methods to access the class.
      */
-    private SHA1Utils()
+    private FileUtils()
     {
     }
 
@@ -70,16 +75,29 @@ public final class SHA1Utils
      */
     public static String getSHA1HashCode(File f) throws IOException
     {
-        FileInputStream fis = null;
+        return getSHA1HashCode(f.toURI().toURL());
+    }
+
+    // ===========================================================================
+    /**
+     * Computes the SHA1 hashcode of the file.
+     *
+     * @param url The url to process.
+     * @return The hashcode.
+     * @throws IOException If a problem occurs opening the file.
+     */
+    public static String getSHA1HashCode(URL url) throws IOException
+    {
+        InputStream is = null;
         try
         {
             MessageDigest md = MessageDigest.getInstance("SHA1");
-            fis = new FileInputStream(f);
+            is = url.openStream();
             byte[] dataBytes = new byte[1024];
 
             int nread = 0;
 
-            while ((nread = fis.read(dataBytes)) != -1)
+            while ((nread = is.read(dataBytes)) != -1)
                 md.update(dataBytes, 0, nread);
 
             return hashCodeToString(md.digest());
@@ -94,8 +112,8 @@ public final class SHA1Utils
         }
         finally
         {
-            if (fis != null)
-                fis.close();
+            if (is != null)
+                is.close();
         }
     }
 
@@ -113,5 +131,37 @@ public final class SHA1Utils
             sb.append(Integer.toString((hash[i] & 0xff) + 0x100, 16).substring(1));
 
         return sb.toString();
+    }
+
+    // ===========================================================================
+    /**
+     * Reads the file specified and returns its content as a list of Strings.
+     * Empty lines and lines starting with # are removed.
+     *
+     * @param file The file to process.
+     * @return The content.
+     * @throws IOException Thrown if a read error occurs.
+     */
+    @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "DM_DEFAULT_ENCODING")
+    public static List<String> readFile(File file) throws IOException
+    {
+        BufferedReader reader = null;
+        List<String> content = new ArrayList<String>();
+        try
+        {
+            reader = new BufferedReader(new FileReader(file));
+            while (reader.ready())
+            {
+                String line = reader.readLine().trim();
+                if (!line.startsWith("#"))
+                    content.add(line);
+            }
+        }
+        finally
+        {
+            if (reader != null) reader.close();
+        }
+
+        return content;
     }
 }

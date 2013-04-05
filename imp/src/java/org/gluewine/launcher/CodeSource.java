@@ -23,6 +23,7 @@ package org.gluewine.launcher;
 
 import java.net.URL;
 
+
 /**
  * Defines a source of code.
  *
@@ -88,7 +89,7 @@ public interface CodeSource
      *
      * @return The classloader.
      */
-    ClassLoader getSourceClassLoader();
+    GluewineLoader getSourceClassLoader();
 
     // ===========================================================================
     /**
@@ -96,7 +97,7 @@ public interface CodeSource
      *
      * @param loader The classloader.
      */
-    void setSourceClassLoader(ClassLoader loader);
+    void setSourceClassLoader(GluewineLoader loader);
 
     // ===========================================================================
     /**

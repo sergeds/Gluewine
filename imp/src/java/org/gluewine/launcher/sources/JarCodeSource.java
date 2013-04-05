@@ -25,10 +25,10 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.jar.Attributes;
-import java.util.jar.JarFile;
+import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
-import org.gluewine.launcher.utils.SHA1Utils;
+import org.gluewine.launcher.utils.FileUtils;
 
 /**
  * Loads code from a jar/zip file.
@@ -40,12 +40,6 @@ public class JarCodeSource extends AbstractCodeSource
 {
     // ===========================================================================
     /**
-     * The file embedded.
-     */
-    private File file = null;
-
-    // ===========================================================================
-    /**
      * Creates an instance with the given file.
      *
      * @param file The file.
@@ -53,20 +47,20 @@ public class JarCodeSource extends AbstractCodeSource
      */
     public JarCodeSource(File file) throws MalformedURLException
     {
-        super("Local Jar", new URL[] {file.toURI().toURL()});
-        this.file = file;
-        indexJarFile();
+        this(file.toURI().toURL());
     }
 
     // ===========================================================================
     /**
-     * Returns the associated file.
+     * Creates an instance with the given file.
      *
-     * @return The file.
+     * @param url The url.
+     * @throws MalformedURLException If the file cannot be translated to a URL.
      */
-    public File getFile()
+    public JarCodeSource(URL url) throws MalformedURLException
     {
-        return file;
+        super("Local Jar", new URL[] {url});
+        indexJarFile();
     }
 
     // ===========================================================================
@@ -75,11 +69,13 @@ public class JarCodeSource extends AbstractCodeSource
      */
     private void indexJarFile()
     {
-        JarFile jar = null;
+        //JarFile jar = null;
+        JarInputStream jin  = null;
         try
         {
-            jar = new JarFile(file);
-            Manifest manifest = jar.getManifest();
+            jin = new JarInputStream(getURLs()[0].openStream());
+            //jar = new JarFile(file);
+            Manifest manifest = jin.getManifest();
             if (manifest != null)
             {
                 Attributes attr = manifest.getMainAttributes();
@@ -136,11 +132,11 @@ public class JarCodeSource extends AbstractCodeSource
             }
 
             if (getChecksum().length() == 0)
-                setChecksum(SHA1Utils.getSHA1HashCode(file));
+                setChecksum(FileUtils.getSHA1HashCode(getURLs()[0]));
 
             if (getVersion().length() == 0)
             {
-                String name = file.getName();
+                String name = getURLs()[0].getFile();
                 int i = name.lastIndexOf('-');
                 if (i > 0)
                 {
@@ -156,11 +152,11 @@ public class JarCodeSource extends AbstractCodeSource
         }
         finally
         {
-            if (jar != null)
+            if (jin != null)
             {
                 try
                 {
-                    jar.close();
+                    jin.close();
                 }
                 catch (Throwable e)
                 {
