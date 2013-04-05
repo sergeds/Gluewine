@@ -106,6 +106,11 @@ public final class Gluer implements CodeSourceListener
      */
     private HashSet<Integer> unresolvedServices = new HashSet<Integer>();
 
+    /**
+     * Flag indicating that shutdown has already been initiated.
+     */
+    private boolean shutdownInitiated = false;
+
     // ===========================================================================
     /**
      * Creates an instance.
@@ -160,6 +165,16 @@ public final class Gluer implements CodeSourceListener
         Launcher.getInstance().savePersistentMap();
 
         System.out.println("Gluewine Framework started in " + (System.currentTimeMillis() - start) + " milliseconds.");
+
+        Runtime.getRuntime().addShutdownHook(new Thread()
+        {
+            // ===========================================================================
+            @Override
+            public void run()
+            {
+                shutdown();
+            }
+        });
     }
 
     // ===========================================================================
@@ -659,13 +674,19 @@ public final class Gluer implements CodeSourceListener
      * Shuts down the framework. All registered ShutdownListeners will first be
      * notified of the imminent shut down.
      */
-    public void shutdown()
+    public synchronized void shutdown()
     {
-        deregisterAllObjects();
-        deactivate();
-        unglue();
-        unresolve();
-        System.exit(0);
+        if (!shutdownInitiated)
+        {
+            logger.info("Initiating shutdown...");
+            shutdownInitiated = true;
+            deregisterAllObjects();
+            deactivate();
+            unglue();
+            unresolve();
+            logger.info("Framework shut down.");
+            System.exit(0);
+        }
     }
 
     // ===========================================================================

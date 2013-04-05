@@ -71,7 +71,7 @@ import org.gluewine.launcher.sources.JarCodeSource;
  * @author fks/Serge de Schaetzen
  *
  */
-public final class Launcher
+public final class Launcher implements Runnable
 {
     // ===========================================================================
     /**
@@ -164,6 +164,9 @@ public final class Launcher
         String propPersist = System.getProperty("gluewine.persistfile");
         if (propPersist != null) persistentFile = new File(propPersist);
         else persistentFile = new File(configDirectory, "gluewine.state");
+
+        System.out.println("Using libdir: " + root.getAbsolutePath());
+        System.out.println("Using cfgdir: " + configDirectory.getAbsolutePath());
 
         try
         {
@@ -750,7 +753,10 @@ public final class Launcher
 
             String clazz = args[0];
 
+            boolean initStdIn = false;
+
             if (clazz.equals("console")) clazz = "org.gluewine.console.impl.ConsoleClient";
+            if (args.length > 1 && args[1].equals("gwt")) initStdIn = true;
 
             Launcher fw = getInstance();
             CodeSource rootCs = fw.sources.get(fw.getShortName(fw.root));
@@ -759,10 +765,30 @@ public final class Launcher
             if (args.length > 1) System.arraycopy(args, 1, params, 0, params.length);
 
             cl.getMethod("main", String[].class).invoke(null, new Object[] {params});
+
+            if (initStdIn) new Thread(fw).start();
         }
         catch (Throwable e)
         {
             e.printStackTrace();
+        }
+    }
+
+    // ===========================================================================
+    @Override
+    public void run()
+    {
+        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+        while (true)
+        {
+            try
+            {
+                String line = in.readLine();
+                if ("shutdown".equals(line)) System.exit(0);
+            }
+            catch (Throwable e)
+            {
+            }
         }
     }
 }

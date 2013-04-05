@@ -1,0 +1,4 @@
+<listener>
+    <description>GluewineInitializer</description>
+    <listener-class>org.gluewine.launcher.ServletLauncher</listener-class>
+</listener>

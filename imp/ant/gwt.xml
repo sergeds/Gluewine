@@ -19,6 +19,8 @@
                 <replacetokens>
                     <token key="OSGIHOST" value="${osgihost}"/>
                     <token key="OSGIPORT" value="${osgiport}"/>
+                    <token key="GLUEWINELIBDIR" value="${dir.dist.lib}"/>
+                    <token key="GLUEWINECFGDIR" value="${dir.dist.rtf}/cfg/generic"/>
                 </replacetokens>
             </filterchain>
         </concat>
@@ -173,9 +175,9 @@
     </target>
 
     <target name="gwt.gxoshared">
-        <java classname="be.fks.gxo.GxoFlatten">
+        <java classname="org.gluewine.gxo.GxoFlatten">
             <classpath>
-                <pathelement location="${dir.gwt.runtime}/be.fks.gxo_1.3.jar"/>
+                <pathelement location="${dir.gwt.runtime}/org.gluewine.gxo-0.1.jar"/>
             </classpath>
             <arg value="${dir.src.osgi}"/>
             <arg value="${dir.build.gwt.generated.src}"/>

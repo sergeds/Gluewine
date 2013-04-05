@@ -12,3 +12,12 @@
 		<param-name>osgi-port</param-name>
 		<param-value>@OSGIPORT@</param-value>
 	</context-param>
+	<context-param>
+		<param-name>gluewine.libdir</param-name>
+		<param-value>@GLUEWINELIBDIR@</param-value>
+	</context-param>
+	<context-param>
+		<param-name>gluewine.cfgdir</param-name>
+		<param-value>@GLUEWINECFGDIR@</param-value>
+	</context-param>
+	
