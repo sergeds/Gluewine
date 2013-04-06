@@ -61,4 +61,10 @@ public interface DirectoryAnnotations
      * Annotation that defines a file containing Enhancers to be instantiated.
      */
     String ENHANCERS = "@Enhancers";
+
+    /**
+     * Annotation that defines a file containing a list of URLs (1 per line) of jar/zip files
+     * to retrieve and install in the directory.
+     */
+    String INSTALL = "@Install";
 }

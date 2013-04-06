@@ -319,6 +319,94 @@ public final class Launcher implements Runnable, DirectoryAnnotations
 
     // ===========================================================================
     /**
+     * Checks for the presence of the @Install annotation in the given
+     * directory, and if present processes it.
+     *
+     * @param dir The directory to process.
+     * @throws IOException If an error occurs reading the annotation file, or fetching
+     * the resources.
+     */
+    private void checkInstallAnnotation(File dir) throws IOException
+    {
+        File annot = new File(dir, INSTALL);
+        if (annot.exists())
+        {
+            List<String> content = FileUtils.readFile(annot);
+            List<File> toActivate = new ArrayList<File>();
+            for (String url : content)
+                toActivate.add(fetch(new URL(url), dir));
+        }
+
+        // Delete the annotation as everything was fetched successfully.
+        annot.delete();
+    }
+
+    // ===========================================================================
+    /**
+     * Activates the given file. The activation consists of renaming the
+     * file by removing the '.notactivated' part.
+     *
+     * @param file The file to activate.
+     * @throws IOException If an error occurs renaming the file.
+     */
+    public void activate(File file) throws IOException
+    {
+        String name = file.getAbsolutePath();
+        int i = name.indexOf(".notactivated");
+        if (i > -1)
+        {
+            name = name.substring(0, i);
+            File target = new File(name);
+            if (target.exists())
+                if (!target.delete()) throw new IOException("The file " + target.getAbsolutePath() + " could not be deleted.");
+
+            if (!file.renameTo(target)) throw new IOException("Could no activate the file " + file.getAbsolutePath());
+        }
+        else
+            throw new IOException("The file " + file.getAbsolutePath() + " cannot be activated.");
+    }
+
+    // ===========================================================================
+    /**
+     * Fetches the url given and stores it in the given directory. The file
+     * receives the file name of the url, with '.notactivated' appended at
+     * the end.
+     *
+     * @param url The url to fetch from.
+     * @param dir The directory to save it into.
+     * @throws IOException If an error occurs.
+     */
+    public File fetch(URL url, File dir) throws IOException
+    {
+        File target = new File(dir, url.getFile() + ".notactivated");
+        if (target.exists())
+            if (!target.delete()) throw new IOException("Could not delete " + target.getAbsolutePath());
+
+        FileOutputStream out = null;
+        InputStream in = null;
+        try
+        {
+            in = url.openStream();
+            out = new FileOutputStream(target);
+            byte[] b = new byte[65536];
+            int read = 0;
+            read = in.read(b);
+            while (read > -1)
+            {
+                out.write(b, 0, read);
+                read = in.read(b);
+            }
+            return target;
+        }
+        finally
+        {
+            if (in != null) in.close();
+            if (out != null) out.close();
+        }
+    }
+
+    // ===========================================================================
+    /**
      * Loads all jar/zip files located in the given directory.
      *
      * @param dir The directory to load.
@@ -331,6 +419,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
 
         File annotation = new File(dir, SINGLELOADER);
         boolean single = annotation.exists();
+        checkInstallAnnotation(dir);
 
         List<File> jars = new ArrayList<File>();
         // Index the content.
