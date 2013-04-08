@@ -48,6 +48,7 @@ import java.util.TreeSet;
 
 import org.gluewine.launcher.sources.DirectoryCodeSource;
 import org.gluewine.launcher.sources.JarCodeSource;
+import org.gluewine.launcher.sources.URLCodeSource;
 import org.gluewine.launcher.utils.FileUtils;
 
 
@@ -74,11 +75,6 @@ public final class Launcher implements Runnable, DirectoryAnnotations
 {
     // ===========================================================================
     /**
-     * The map of all available classloaders indexed on the file they loaded.
-     */
-    private Map<CodeSource, ClassLoader> loaders = new HashMap<CodeSource, ClassLoader>();
-
-    /**
      * The codesouces indexed on the directory.
      */
     private Map<String, List<CodeSource>> codeSources = new HashMap<String, List<CodeSource>>();
@@ -86,7 +82,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
     /**
      * The map of sources indexed on their shortname.
      */
-    private Map<String, CodeSource> sources = new TreeMap<String, CodeSource>();
+    private Map<String, CodeSource> sourcesMap = new TreeMap<String, CodeSource>();
 
     /**
      * The directory containing the configuration file(s).
@@ -117,6 +113,16 @@ public final class Launcher implements Runnable, DirectoryAnnotations
      * The set of property file names that have been requested.
      */
     private Set<String> propertiesUsed = new HashSet<String>();
+
+    /**
+     * The set of registered listeners.
+     */
+    private Set<CodeSourceListener> listeners = new HashSet<CodeSourceListener>();
+
+    /**
+     * The set of directories that have a single classloader.
+     */
+    private Set<File> singleLoaderDirectories = new HashSet<File>();
 
     // ===========================================================================
     /**
@@ -163,10 +169,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
             {
                 List<CodeSource> srcs = loadDirectories(root);
                 for (CodeSource src : srcs)
-                {
-                    loaders.put(src, src.getSourceClassLoader());
-                    sources.put(src.getDisplayName(), src);
-                }
+                    sourcesMap.put(src.getDisplayName(), src);
 
                 mapLoaders();
             }
@@ -189,7 +192,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
             ObjectInputStream in = null;
             try
             {
-                in = new GluewineObjectInputStream(new FileInputStream(persistentFile), sources.get(getShortName(root)));
+                in = new GluewineObjectInputStream(new FileInputStream(persistentFile), sourcesMap.get(getShortName(root)));
                 persistentMap = (HashMap<String, Serializable>) in.readObject();
             }
             catch (Throwable e)
@@ -269,10 +272,22 @@ public final class Launcher implements Runnable, DirectoryAnnotations
         sorted.addAll(codeSources.keySet());
         Collections.sort(sorted);
 
+        // Clear all existing mappings:
+        for (List<CodeSource> list : codeSources.values())
+            for (CodeSource cs : list)
+                cs.getSourceClassLoader().clearDispatchers();
+
+        // Remap:
         for (int i = 0; i < sorted.size(); i++)
         {
             List<CodeSource> list = codeSources.get(sorted.get(i));
 
+            // First all CodeSources in the same directory.
+            for (int j = 0; j < list.size(); j++)
+                for (int k = 0; k < list.size(); k++)
+                list.get(j).getSourceClassLoader().addDispatcher(list.get(k).getSourceClassLoader());
+
+            // Then all directories lower.
             for (int j = i - 1; j >= 0; j--)
             {
                 List<CodeSource> list2 = codeSources.get(sorted.get(j));
@@ -281,6 +296,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
                         g.getSourceClassLoader().addDispatcher(g2.getSourceClassLoader());
             }
 
+            // Finally the subdirectories.
             for (int j = i + 1; j < sorted.size(); j++)
             {
                 List<CodeSource> list2 = codeSources.get(sorted.get(j));
@@ -303,8 +319,6 @@ public final class Launcher implements Runnable, DirectoryAnnotations
     {
         List<CodeSource> sources = loadDirectory(dir);
         codeSources.put(dir.getAbsolutePath(), sources);
-
-
 
         File[] dirs = dir.listFiles();
         if (dirs != null)
@@ -332,9 +346,8 @@ public final class Launcher implements Runnable, DirectoryAnnotations
         if (annot.exists())
         {
             List<String> content = FileUtils.readFile(annot);
-            List<File> toActivate = new ArrayList<File>();
             for (String url : content)
-                toActivate.add(fetch(new URL(url), dir));
+                fetch(new URL(url), dir);
         }
 
         // Delete the annotation as everything was fetched successfully.
@@ -348,8 +361,9 @@ public final class Launcher implements Runnable, DirectoryAnnotations
      *
      * @param file The file to activate.
      * @throws IOException If an error occurs renaming the file.
+     * @return The activated file.
      */
-    public void activate(File file) throws IOException
+    public File activate(File file) throws IOException
     {
         String name = file.getAbsolutePath();
         int i = name.indexOf(".notactivated");
@@ -361,6 +375,8 @@ public final class Launcher implements Runnable, DirectoryAnnotations
                 if (!target.delete()) throw new IOException("The file " + target.getAbsolutePath() + " could not be deleted.");
 
             if (!file.renameTo(target)) throw new IOException("Could no activate the file " + file.getAbsolutePath());
+
+            return target;
         }
         else
             throw new IOException("The file " + file.getAbsolutePath() + " cannot be activated.");
@@ -419,6 +435,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
 
         File annotation = new File(dir, SINGLELOADER);
         boolean single = annotation.exists();
+        if (single) singleLoaderDirectories.add(dir);
         checkInstallAnnotation(dir);
 
         List<File> jars = new ArrayList<File>();
@@ -434,13 +451,11 @@ public final class Launcher implements Runnable, DirectoryAnnotations
             }
         }
 
-        List<GluewineLoader> loaders = new ArrayList<GluewineLoader>();
-
         DirectoryCodeSource dcs = new DirectoryCodeSource(dir);
         dcs.setDisplayName(getShortName(dir));
         GluewineLoader dirLoader = new GluewineLoader(getShortName(dir));
         dcs.setSourceClassLoader(dirLoader);
-        loaders.add(dirLoader);
+        sourcesMap.put(dcs.getDisplayName(), dcs);
         sources.add(dcs);
 
         URL[] annotatedURLs = loadUrls(dir);
@@ -451,49 +466,66 @@ public final class Launcher implements Runnable, DirectoryAnnotations
             // One loader gets all the files.
             GluewineLoader loader = new GluewineLoader(getShortName(dir));
             for (File file : jars)
-            {
-                loader.addURL(file.toURI().toURL());
-                CodeSource src = new JarCodeSource(file);
-                src.setSourceClassLoader(loader);
-                src.setDisplayName(getShortName(file));
-                sources.add(src);
-            }
-            for (URL url : annotatedURLs)
-                loader.addURL(url);
+                sources.add(getCodeSource(file, loader));
 
-            loaders.add(loader);
+            for (URL url : annotatedURLs)
+                sources.add(getCodeSource(url, loader));
         }
         else
         {
             // One loader per file:
             for (File file : jars)
-            {
-                GluewineLoader loader = new GluewineLoader(getShortName(file));
-                loader.addURL(file.toURI().toURL());
-                loaders.add(loader);
-                CodeSource src = new JarCodeSource(file);
-                src.setSourceClassLoader(loader);
-                src.setDisplayName(getShortName(file));
-                sources.add(src);
-            }
+                sources.add(getCodeSource(file, null));
 
             for (URL url : annotatedURLs)
-            {
-                GluewineLoader loader = new GluewineLoader(url.toExternalForm());
-                loader.addURL(url);
-                loaders.add(loader);
-                CodeSource src = new JarCodeSource(url);
-                src.setSourceClassLoader(loader);
-                src.setDisplayName(url.toExternalForm());
-                sources.add(src);
-            }
+                sources.add(getCodeSource(url, null));
         }
-        // Map the dispatchers: (only on this level - subdir level will be treated later on)
-        for (GluewineLoader loader : loaders)
-            for (GluewineLoader dispatcher : loaders)
-                loader.addDispatcher(dispatcher);
 
         return sources;
+    }
+
+    // ===========================================================================
+    /**
+     * Creates and returns a CodeSource for the given file. If the loader
+     * is null a new GluewineLoader is created. If it is not null it is
+     * assigned to the CodeSource.
+     *
+     * @param file The file to process.
+     * @param loader The (possibly null) classloader to use.
+     * @return The CodeSource.
+     * @throws IOException Thrown if an error occurs.
+     */
+    private CodeSource getCodeSource(File file, GluewineLoader loader) throws IOException
+    {
+        String name = getShortName(file);
+        if (loader == null) loader = new GluewineLoader(name);
+        loader.addURL(file.toURI().toURL());
+        CodeSource src = new JarCodeSource(file);
+        src.setSourceClassLoader(loader);
+        src.setDisplayName(name);
+        return src;
+    }
+
+    // ===========================================================================
+    /**
+     * Creates and returns a CodeSource for the given url. If the loader
+     * is null a new GluewineLoader is created. If it is not null it is
+     * assigned to the CodeSource.
+     *
+     * @param url The url.
+     * @param loader The (possibly null) classloader to use.
+     * @return The CodeSource.
+     * @throws IOException Thrown if an error occurs.
+     */
+    private CodeSource getCodeSource(URL url, GluewineLoader loader) throws IOException
+    {
+        String name = url.toExternalForm();
+        if (loader == null) loader = new GluewineLoader(name);
+        loader.addURL(url);
+        CodeSource src = new URLCodeSource(url);
+        src.setSourceClassLoader(loader);
+        src.setDisplayName(name);
+        return src;
     }
 
     // ===========================================================================
@@ -506,6 +538,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
      * @throws IOException If an error occurs reading the file. (or an invalud URL
      * has been defined).
      */
+    @SuppressWarnings("unchecked")
     private URL[] loadUrls(File dir) throws IOException
     {
         List<URL> urls = new ArrayList<URL>();
@@ -513,9 +546,12 @@ public final class Launcher implements Runnable, DirectoryAnnotations
         File annot = new File(dir, URLLOADER);
         if (annot.exists())
         {
+            HashSet<String> removedUrls = (HashSet<String>) persistentMap.get("GLUEWINE:REMOVEDURLS");
+            if (removedUrls == null) removedUrls = new HashSet<String>();
             List<String> ss = FileUtils.readFile(annot);
             for (String s : ss)
-                urls.add(new URL(s));
+                if (!removedUrls.contains(s))
+                    urls.add(new URL(s));
         }
 
         return urls.toArray(new URL[urls.size()]);
@@ -576,7 +612,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
                 {
                     String[] split = s.split(";");
 
-                    CodeSource cs = sources.get("/" + split[0]);
+                    CodeSource cs = sourcesMap.get("/" + split[0]);
                     if (cs != null)
                     {
                         SourceVersion version = null;
@@ -628,10 +664,27 @@ public final class Launcher implements Runnable, DirectoryAnnotations
         List<CodeSource> added = new ArrayList<CodeSource>();
         try
         {
+            List<File> toActivate = new ArrayList<File>();
             for (String s : toadd)
             {
-                // TODO:
+                URL url = new URL(s);
+                String jar = url.getFile();
+                File f = new File(root, jar);
+                toActivate.add(fetch(url, f));
             }
+
+            List<File> activated = new ArrayList<File>();
+            for (File f : toActivate)
+                activated.add(activate(f));
+
+            List<CodeSource> sources = new ArrayList<CodeSource>();
+            for (File f : activated)
+                sources.add(getCodeSource(f, null));
+
+            mapLoaders();
+
+            for (CodeSourceListener l : listeners)
+                l.codeSourceAdded(sources);
         }
         catch (Throwable e)
         {
@@ -731,7 +784,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
     public List<CodeSource> getSources()
     {
         List<CodeSource> l = new ArrayList<CodeSource>();
-        l.addAll(sources.values());
+        l.addAll(sourcesMap.values());
         return l;
     }
 
@@ -744,15 +797,50 @@ public final class Launcher implements Runnable, DirectoryAnnotations
      * @param toRemove The sources to remove.
      * @return The list of CodeSources that were removed.
      */
+    @SuppressWarnings("unchecked")
     public List<CodeSource> removeSources(List<CodeSource> toRemove)
     {
-        List<CodeSource> removed = new ArrayList<CodeSource>();
-        for (CodeSource source : toRemove)
+        for (CodeSourceListener l : listeners)
+            l.codeSourceRemoved(toRemove);
+
+        for (CodeSource src : toRemove)
         {
-            // TODO:
+            sourcesMap.remove(src.getDisplayName());
+            if (src instanceof JarCodeSource)
+            {
+                JarCodeSource jcs = (JarCodeSource) src;
+                jcs.closeLoader();
+                if (!jcs.getFile().delete())
+                    System.out.println("Could not delete " + jcs.getFile().getAbsolutePath());
+            }
+
+            else if (src instanceof URLCodeSource)
+            {
+                URLCodeSource ucs = (URLCodeSource) src;
+                // We cannot delete the url, so we'll have to register it
+                // with the set of 'removed' urls:
+                HashSet<String> removedUrls = (HashSet<String>) persistentMap.get("GLUEWINE:REMOVEDURLS");
+                if (removedUrls == null)
+                {
+                    removedUrls = new HashSet<String>();
+                    persistentMap.put("GLUEWINE:REMOVEDURLS", removedUrls);
+                }
+                ucs.closeLoader();
+                removedUrls.add(ucs.getURL().toExternalForm());
+                savePersistentMap();
+            }
+
+            else if (src instanceof DirectoryCodeSource)
+            {
+                DirectoryCodeSource dcs = (DirectoryCodeSource) src;
+                List<CodeSource> children = codeSources.remove(dcs.getDirectory().getAbsolutePath());
+                removeSources(children);
+                dcs.closeLoader();
+                dcs.getDirectory().delete();
+            }
         }
 
-        return removed;
+        return toRemove;
     }
 
     // ===========================================================================
@@ -769,11 +857,11 @@ public final class Launcher implements Runnable, DirectoryAnnotations
         for (String s : toRemove)
         {
             List<String> displayNames = new ArrayList<String>();
-            displayNames.addAll(sources.keySet());
+            displayNames.addAll(sourcesMap.keySet());
             for (String disp : displayNames)
             {
                 if (disp.startsWith(s))
-                    sourcesToRemove.add(sources.get(disp));
+                    sourcesToRemove.add(sourcesMap.get(disp));
             }
         }
         return removeSources(sourcesToRemove);
@@ -819,7 +907,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
             if (args.length > 1 && args[1].equals("gwt")) initStdIn = true;
 
             Launcher fw = getInstance();
-            CodeSource rootCs = fw.sources.get(fw.getShortName(fw.root));
+            CodeSource rootCs = fw.sourcesMap.get(fw.getShortName(fw.root));
             Class<?> cl = rootCs.getSourceClassLoader().loadClass(clazz);
             String[] params = new String[args.length - 1];
             if (args.length > 1) System.arraycopy(args, 1, params, 0, params.length);
@@ -851,5 +939,27 @@ public final class Launcher implements Runnable, DirectoryAnnotations
             }
         }
         System.exit(0);
+    }
+
+    // ===========================================================================
+    /**
+     * Adds a listener.
+     *
+     * @param l The listener to add.
+     */
+    public void addListener(CodeSourceListener l)
+    {
+        listeners.add(l);
+    }
+
+    // ===========================================================================
+    /**
+     * Removes a listener.
+     *
+     * @param l The listener to remove.
+     */
+    public void removeListener(CodeSourceListener l)
+    {
+        listeners.remove(l);
     }
 }

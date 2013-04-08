@@ -35,10 +35,10 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 import org.gluewine.core.AspectProvider;
 import org.gluewine.core.ClassEnhancer;
-import org.gluewine.core.CodeSourceListener;
 import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.ServiceProvider;
 import org.gluewine.launcher.CodeSource;
+import org.gluewine.launcher.CodeSourceListener;
 import org.gluewine.launcher.Launcher;
 
 /**
@@ -48,7 +48,7 @@ import org.gluewine.launcher.Launcher;
  * @author fks/Serge de Schaetzen
  *
  */
-public final class Gluer implements CodeSourceListener
+public final class Gluer implements CodeSourceListener, RepositoryListener<CodeSourceListener>
 {
     // ===========================================================================
     /**
@@ -164,7 +164,7 @@ public final class Gluer implements CodeSourceListener
         persistentMap.put("GLUE::NEXTID", Integer.valueOf(nextId));
         Launcher.getInstance().savePersistentMap();
 
-        System.out.println("Gluewine Framework started in " + (System.currentTimeMillis() - start) + " milliseconds.");
+        display("Gluewine Framework started in " + (System.currentTimeMillis() - start) + " milliseconds.");
 
         Runtime.getRuntime().addShutdownHook(new Thread()
         {
@@ -879,5 +879,19 @@ public final class Gluer implements CodeSourceListener
             removed(source.getSourceClassLoader());
 
         launch();
+    }
+
+    // ===========================================================================
+    @Override
+    public void registered(CodeSourceListener l)
+    {
+        Launcher.getInstance().addListener(l);
+    }
+
+    // ===========================================================================
+    @Override
+    public void unregistered(CodeSourceListener l)
+    {
+        Launcher.getInstance().removeListener(l);
     }
 }

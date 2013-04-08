@@ -30,21 +30,17 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.TreeMap;
 
 import org.gluewine.console.CLICommand;
 import org.gluewine.console.CLIOption;
 import org.gluewine.console.CommandContext;
 import org.gluewine.console.CommandProvider;
-import org.gluewine.core.CodeSourceListener;
 import org.gluewine.core.Glue;
 import org.gluewine.core.GluewineProperties;
-import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.glue.Gluer;
 import org.gluewine.core.glue.Service;
 import org.gluewine.launcher.CodeSource;
@@ -58,7 +54,7 @@ import org.gluewine.launcher.utils.FileUtils;
  * @author fks/Serge de Schaetzen
  *
  */
-public class SystemCommandProvider implements CommandProvider, RepositoryListener<CodeSourceListener>
+public class SystemCommandProvider implements CommandProvider
 {
     // ===========================================================================
     /**
@@ -67,11 +63,6 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
     @Glue
     @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "UWF_NULL_FIELD")
     private Gluer gluer = null;
-
-    /**
-     * The set of registered jar listeners.
-     */
-    private Set<CodeSourceListener> listeners = new HashSet<CodeSourceListener>();
 
     /**
      * Compares services based on the service name.
@@ -442,9 +433,7 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
             jar = ci.nextArgument();
         }
 
-        List<CodeSource> removed = Launcher.getInstance().remove(toRemove);
-        for (CodeSourceListener jl : listeners)
-            jl.codeSourceRemoved(removed);
+        Launcher.getInstance().remove(toRemove);
     }
 
     // ===========================================================================
@@ -464,9 +453,7 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
             jar = ci.nextArgument();
         }
 
-        List<CodeSource> added = Launcher.getInstance().add(toAdd);
-        for (CodeSourceListener jl : listeners)
-            jl.codeSourceAdded(added);
+        Launcher.getInstance().add(toAdd);
     }
 
     // ===========================================================================
@@ -498,13 +485,8 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
                 fetch(url, new File(root, name), sv);
             }
 
-            List<CodeSource> removed = Launcher.getInstance().removeSources(toRemove);
-            for (CodeSourceListener jl : listeners)
-                jl.codeSourceRemoved(removed);
-
-            List<CodeSource> added = Launcher.getInstance().add(toAdd);
-            for (CodeSourceListener jl : listeners)
-                jl.codeSourceAdded(added);
+            Launcher.getInstance().removeSources(toRemove);
+            Launcher.getInstance().add(toAdd);
         }
         else
         {
@@ -572,19 +554,5 @@ public class SystemCommandProvider implements CommandProvider, RepositoryListene
 
             if (!temp.renameTo(done)) throw new IOException("Could not rename file to " + done.getAbsolutePath());
         }
-    }
-
-    // ===========================================================================
-    @Override
-    public void registered(CodeSourceListener t)
-    {
-        listeners.add(t);
-    }
-
-    // ===========================================================================
-    @Override
-    public void unregistered(CodeSourceListener t)
-    {
-        listeners.remove(t);
     }
 }

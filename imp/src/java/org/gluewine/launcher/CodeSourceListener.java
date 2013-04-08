@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Gluewine Core Module
+ * Gluewine Launcher Module
  *
  * Copyright (C) 2013 FKS bvba               http://www.fks.be/
  *
@@ -19,11 +19,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  **************************************************************************/
-package org.gluewine.core;
+package org.gluewine.launcher;
 
 import java.util.List;
 
-import org.gluewine.launcher.CodeSource;
 
 /**
  * Interface to be implemented by classes wanting to be notified

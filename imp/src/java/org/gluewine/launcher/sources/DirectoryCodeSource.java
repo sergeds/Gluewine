@@ -58,6 +58,17 @@ public class DirectoryCodeSource extends AbstractCodeSource implements Directory
 
     // ===========================================================================
     /**
+     * Returns the directory this codesource points at.
+     *
+     * @return The directory.
+     */
+    public File getDirectory()
+    {
+        return directory;
+    }
+
+    // ===========================================================================
+    /**
      * Initializes the directory by checking the presence of a:
      * <br>services.lst file and
      * <br>entities.lst.
