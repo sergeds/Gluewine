@@ -59,6 +59,7 @@ public class URLCodeSource extends AbstractCodeSource
     /**
      * Creates an instance with the given file.
      *
+     * @param name The name of the file.
      * @param url The url.
      * @throws MalformedURLException If the file cannot be translated to a URL.
      */
@@ -83,6 +84,8 @@ public class URLCodeSource extends AbstractCodeSource
     // ===========================================================================
     /**
      * Indexes the jar file.
+     *
+     * @param url The url pointing to the file.
      */
     protected void indexJarFile(URL url)
     {

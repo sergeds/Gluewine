@@ -44,4 +44,13 @@ public @interface Glue
      * Return The name
      */
     String properties() default "";
+
+    // ===========================================================================
+    /**
+     * When used on a Properties object, it indicates the name of the method to
+     * invoke when the properties object has been refreshed.
+     *
+     * Return the name of the method.
+     */
+    String refresh() default "";
 }

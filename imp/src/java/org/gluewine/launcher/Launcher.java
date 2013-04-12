@@ -351,7 +351,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
         }
 
         // Delete the annotation as everything was fetched successfully.
-        annot.delete();
+        if (!annot.delete()) throw new IOException("Could not delete " + annot.getAbsolutePath());
     }
 
     // ===========================================================================
@@ -390,6 +390,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
      *
      * @param url The url to fetch from.
      * @param dir The directory to save it into.
+     * @return The file that was fetched.
      * @throws IOException If an error occurs.
      */
     public File fetch(URL url, File dir) throws IOException
@@ -416,8 +417,14 @@ public final class Launcher implements Runnable, DirectoryAnnotations
         }
         finally
         {
-            if (in != null) in.close();
-            if (out != null) out.close();
+            try
+            {
+                if (in != null) in.close();
+            }
+            finally
+            {
+                if (out != null) out.close();
+            }
         }
     }
 
@@ -836,7 +843,8 @@ public final class Launcher implements Runnable, DirectoryAnnotations
                 List<CodeSource> children = codeSources.remove(dcs.getDirectory().getAbsolutePath());
                 removeSources(children);
                 dcs.closeLoader();
-                dcs.getDirectory().delete();
+                if (!dcs.getDirectory().delete())
+                    System.out.println("Could not delete " + dcs.getDirectory().getAbsolutePath());
             }
         }
 
@@ -926,17 +934,25 @@ public final class Launcher implements Runnable, DirectoryAnnotations
     @Override
     public void run()
     {
-        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-        while (true)
+        try
         {
-            try
+            BufferedReader in = new BufferedReader(new InputStreamReader(System.in, "UTF-8"));
+            while (true)
             {
-                String line = in.readLine();
-                if ("shutdown".equals(line)) break;
+                try
+                {
+                    String line = in.readLine();
+                    if ("shutdown".equals(line)) break;
+                }
+                catch (Throwable e)
+                {
+                    // Allowed to fail.
+                }
             }
-            catch (Throwable e)
-            {
-            }
+        }
+        catch (Throwable e)
+        {
+            e.printStackTrace();
         }
         System.exit(0);
     }

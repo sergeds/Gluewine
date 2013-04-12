@@ -94,9 +94,9 @@ public class ServletLauncher implements ServletContextListener, Runnable
         try
         {
             process = Runtime.getRuntime().exec(cmd, env);
-            stdin = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            stderr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-            stdout = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+            stdin = new BufferedReader(new InputStreamReader(process.getInputStream(), "UTF-8"));
+            stderr = new BufferedReader(new InputStreamReader(process.getErrorStream(), "UTF-8"));
+            stdout = new BufferedWriter(new OutputStreamWriter(process.getOutputStream(), "UTF-8"));
             Thread th = new Thread(this);
             th.setDaemon(false);
             th.start();

@@ -566,7 +566,14 @@ public class Service
                         {
                             try
                             {
-                                GluewineProperties props = new GluewineProperties(name);
+                                GluewineProperties props = null;
+                                String method = glue.refresh();
+
+                                if (method != null)
+                                    props = new GluewineProperties(name, actual, method);
+                                else
+                                    props = new GluewineProperties(name, actual);
+
                                 props.load();
                                 references.put(field, props);
                                 fieldResolved = true;

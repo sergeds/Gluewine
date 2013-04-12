@@ -574,6 +574,7 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
                     if (source instanceof JarCodeSource)
                     {
                         JarInputStream jar = null;
+                        BufferedReader reader = null;
                         try
                         {
                             jar = new JarInputStream(((JarCodeSource) source).getURLs()[0].openStream());
@@ -583,7 +584,6 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
                                 String name = entry.getName().toLowerCase(Locale.getDefault());
                                 if (name.endsWith(".sql"))
                                 {
-                                    BufferedReader reader = null;
                                     List<String> content = new ArrayList<String>();
                                     reader = new BufferedReader(new InputStreamReader(jar, "UTF-8"));
                                     while (reader.ready())
@@ -610,7 +610,14 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
                         }
                         finally
                         {
-                            if (jar != null) jar.close();
+                            try
+                            {
+                                if (jar != null) jar.close();
+                            }
+                            finally
+                            {
+                                if (reader != null) reader.close();
+                            }
                         }
                     }
                 }

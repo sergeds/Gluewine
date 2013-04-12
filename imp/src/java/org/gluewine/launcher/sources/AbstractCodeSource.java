@@ -22,7 +22,6 @@
 package org.gluewine.launcher.sources;
 
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -221,8 +220,7 @@ public abstract class AbstractCodeSource implements CodeSource
     {
         try
         {
-            if (classLoader instanceof URLClassLoader)
-                ((URLClassLoader) classLoader).close();
+            classLoader.close();
         }
         catch (Throwable e)
         {

@@ -150,19 +150,22 @@ public class SystemCommandProvider implements CommandProvider
      */
     public void _props_list(CommandContext cc)
     {
-        Map<String, GluewineProperties> m = new TreeMap<String, GluewineProperties>();
-        for (String s : Launcher.getInstance().getPropertiesUsed())
-            m.put(s, null);
+        Map<String, GluewineProperties> m = GluewineProperties.getActiveProperties();
 
-        m.putAll(GluewineProperties.getActiveProperties());
-
-
-        cc.tableHeader("Property File", "Refreshable");
+        cc.tableHeader("Property File", "In Use By", "Refresh Method");
+        String lastUser = null;
         for (Entry<String, GluewineProperties> e : m.entrySet())
         {
-            String ref = "";
-            if (e.getValue() != null) ref = "*";
-            cc.tableRow(e.getKey(), ref);
+            String ref = e.getValue().getRefreshMethodName();
+            if (ref == null) ref = "";
+
+            String name = e.getKey();
+            if (lastUser != null && name.equals(lastUser))
+                name = "";
+
+            cc.tableRow(name, e.getValue().getOwnerClassName(), ref);
+
+            lastUser = e.getKey();
         }
 
         cc.printTable();
@@ -180,7 +183,7 @@ public class SystemCommandProvider implements CommandProvider
         Map<String, GluewineProperties> m = GluewineProperties.getActiveProperties();
         GluewineProperties prop = m.get(cc.getOption("-cfg"));
 
-        if (prop != null) prop.load();
+        if (prop != null) prop.refresh();
         else cc.println("There is no config " + cc.getOption("-cfg") + " or it is not refreshable.");
     }
 

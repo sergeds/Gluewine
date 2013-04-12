@@ -363,8 +363,8 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
                     checker.checkAllowed(o.getClass(), m, bean);
 
                 result = m.invoke(o, bean.getParams());
-                if (logger.isDebugEnabled())
-                    logger.debug(bean.getService() + ":" + bean.getMethod() + " finished with result: " + result);
+                if (logger.isTraceEnabled())
+                    logger.trace(bean.getService() + ":" + bean.getMethod() + " finished with result: " + result);
             }
             catch (InvocationTargetException e)
             {
