@@ -348,10 +348,10 @@ public final class Launcher implements Runnable, DirectoryAnnotations
             List<String> content = FileUtils.readFile(annot);
             for (String url : content)
                 fetch(new URL(url), dir);
-        }
 
-        // Delete the annotation as everything was fetched successfully.
-        if (!annot.delete()) throw new IOException("Could not delete " + annot.getAbsolutePath());
+            // Delete the annotation as everything was fetched successfully.
+            if (!annot.delete()) throw new IOException("Could not delete " + annot.getAbsolutePath());
+        }
     }
 
     // ===========================================================================
