@@ -40,6 +40,7 @@ import org.gluewine.core.ServiceProvider;
 import org.gluewine.launcher.CodeSource;
 import org.gluewine.launcher.CodeSourceListener;
 import org.gluewine.launcher.Launcher;
+import org.gluewine.launcher.ShutdownListener;
 
 /**
  * Glues the classes defined in the manifest of every jar/zip file
@@ -48,7 +49,7 @@ import org.gluewine.launcher.Launcher;
  * @author fks/Serge de Schaetzen
  *
  */
-public final class Gluer implements CodeSourceListener, RepositoryListener<CodeSourceListener>
+public final class Gluer implements CodeSourceListener, RepositoryListener<CodeSourceListener>, ShutdownListener
 {
     // ===========================================================================
     /**
@@ -157,6 +158,9 @@ public final class Gluer implements CodeSourceListener, RepositoryListener<CodeS
         addService(new Service(Launcher.getInstance(), getServiceId(Launcher.getInstance()), this));
         addService(new Service(repository, getServiceId(repository), this));
         addService(new Service(this, getServiceId(this), this));
+        addService(new Service(interceptor, getServiceId(interceptor), this));
+
+        Launcher.getInstance().addShutdownListener(this);
 
         processSources(Launcher.getInstance().getSources());
         launch();
@@ -782,9 +786,6 @@ public final class Gluer implements CodeSourceListener, RepositoryListener<CodeS
                         o = clazz.newInstance();
 
                     else o = enhancer.getEnhanced(clazz);
-
-                    if (AspectProvider.class.isAssignableFrom(clazz))
-                        interceptor.register((AspectProvider) o);
 
                     addService(new Service(o, getServiceId(o), this));
 

@@ -124,20 +124,24 @@ public final class Launcher implements Runnable, DirectoryAnnotations
      */
     private Set<File> singleLoaderDirectories = new HashSet<File>();
 
+    /**
+     * The set of registered shutdown listeners.
+     */
+    private Set<ShutdownListener> shutdownListeners = new HashSet<ShutdownListener>();
+
     // ===========================================================================
     /**
      * Creates an instance.
      */
     private Launcher()
     {
-        initialize();
     }
 
     // ===========================================================================
     /**
      * Initializes the list of available jar files.
      */
-    private void initialize()
+    public void start()
     {
         String path = getClass().getProtectionDomain().getCodeSource().getLocation().getFile();
         File currDir = new File(path).getParentFile();
@@ -178,6 +182,59 @@ public final class Launcher implements Runnable, DirectoryAnnotations
         {
             e.printStackTrace();
         }
+    }
+
+    // ===========================================================================
+    /**
+     * Adds the given shutdown listener.
+     *
+     * @param l The listener to add.
+     */
+    public void addShutdownListener(ShutdownListener l)
+    {
+        shutdownListeners.add(l);
+    }
+
+    // ===========================================================================
+    /**
+     * Removes the given shutdown listener.
+     *
+     * @param l The listener to remove.
+     */
+    public void removeShutdownListener(ShutdownListener l)
+    {
+        shutdownListeners.remove(l);
+    }
+
+    // ===========================================================================
+    /**
+     * Stops the daemon.
+     */
+    public void stop()
+    {
+        Set<ShutdownListener> ls = new HashSet<ShutdownListener>(shutdownListeners.size());
+        ls.addAll(shutdownListeners);
+        for (ShutdownListener l : ls)
+            l.shutdown();
+    }
+
+    // ===========================================================================
+    /**
+     * Stops the daemon.
+     */
+    public void destroy()
+    {
+    }
+
+    // ===========================================================================
+    /**
+     * Initializes the the daemon.
+     *
+     * @param args The CLI arguments.
+     * @throws Exception If an initialization error occurs.
+     */
+    public void init(String[] args) throws Exception
+    {
     }
 
     // ===========================================================================
@@ -915,6 +972,8 @@ public final class Launcher implements Runnable, DirectoryAnnotations
             if (args.length > 1 && args[1].equals("gwt")) initStdIn = true;
 
             Launcher fw = getInstance();
+            fw.start();
+
             CodeSource rootCs = fw.sourcesMap.get(fw.getShortName(fw.root));
             Class<?> cl = rootCs.getSourceClassLoader().loadClass(clazz);
             String[] params = new String[args.length - 1];
@@ -942,7 +1001,11 @@ public final class Launcher implements Runnable, DirectoryAnnotations
                 try
                 {
                     String line = in.readLine();
-                    if ("shutdown".equals(line)) break;
+                    if ("shutdown".equals(line))
+                    {
+                        stop();
+                        break;
+                    }
                 }
                 catch (Throwable e)
                 {

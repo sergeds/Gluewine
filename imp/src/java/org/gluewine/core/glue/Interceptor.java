@@ -31,6 +31,7 @@ import java.util.Stack;
 import org.apache.log4j.Logger;
 import org.gluewine.core.AspectProvider;
 import org.gluewine.core.InterceptChainStartOnly;
+import org.gluewine.core.RepositoryListener;
 
 /**
  * Default interceptor. Specific enhancers (cfr. CGLIBEnhancer) should subclass this
@@ -48,7 +49,7 @@ import org.gluewine.core.InterceptChainStartOnly;
  * @author fks/Serge de Schaetzen
  *
  */
-public class Interceptor
+public class Interceptor implements RepositoryListener<AspectProvider>
 {
     // ===========================================================================
     /**
@@ -77,21 +78,6 @@ public class Interceptor
      */
     Interceptor()
     {
-    }
-
-    // ===========================================================================
-    /**
-     * Registers an Aspect Provider to be used.
-     *
-     * @param provider The provider to register.
-     */
-    void register(AspectProvider provider)
-    {
-        logger.debug("Registering AspectProvider" + provider.getClass().getName());
-        if (provider.getClass().getAnnotation(InterceptChainStartOnly.class) != null)
-            chainStartProviders.add(provider);
-        else
-            providers.add(provider);
     }
 
     // ===========================================================================
@@ -214,5 +200,27 @@ public class Interceptor
                 logger.error("An error occurred invoking an afterFailure or after method: " + t.getMessage());
             }
         }
+    }
+
+    // ===========================================================================
+    @Override
+    public void registered(AspectProvider provider)
+    {
+        if (!providers.contains(provider))
+        {
+            logger.debug("Registering AspectProvider" + provider.getClass().getName());
+            if (provider.getClass().getAnnotation(InterceptChainStartOnly.class) != null)
+                chainStartProviders.add(provider);
+            else
+                providers.add(provider);
+        }
+    }
+
+    // ===========================================================================
+    @Override
+    public void unregistered(AspectProvider provider)
+    {
+        chainStartProviders.remove(provider);
+        providers.remove(provider);
     }
 }
