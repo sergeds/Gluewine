@@ -40,7 +40,6 @@ import java.util.UUID;
 
 import org.apache.log4j.Logger;
 import org.gluewine.core.Glue;
-import org.gluewine.core.PropertyListener;
 import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.RunOnActivate;
 import org.gluewine.core.RunOnDeactivate;
@@ -62,7 +61,7 @@ import com.thoughtworks.xstream.io.xml.StaxDriver;
  * @author fks/Serge de Schaetzen
  *
  */
-public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Object>, XStreamConverterProvider, PropertyListener
+public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Object>, XStreamConverterProvider
 {
     // ===========================================================================
     /**
@@ -147,8 +146,8 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
     /**
      * The property file to use.
      */
-    @Glue(properties = "gxo.properties")
-    private Properties properties = null;
+    @Glue(properties = "gxo.properties", refresh = "propertiesChanged")
+    private Properties properties;
 
     // ===========================================================================
     /**
@@ -629,20 +628,19 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
     }
 
     // ===========================================================================
-    @Override
-    public void propertiesChanged(Properties props)
+    /**
+     * Invoked when the properties have changed.
+     */
+    public void propertiesChanged()
     {
-        if (props == properties)
+        deactivate();
+        try
         {
-            deactivate();
-            try
-            {
-                initialize();
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
+            initialize();
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
         }
     }
 }

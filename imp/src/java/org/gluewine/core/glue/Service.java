@@ -20,7 +20,6 @@ import org.apache.log4j.Logger;
 import org.gluewine.core.Glue;
 import org.gluewine.core.GluewineProperties;
 import org.gluewine.core.NoSuchServiceException;
-import org.gluewine.core.PropertyListener;
 import org.gluewine.core.RunOnActivate;
 import org.gluewine.core.RunOnDeactivate;
 import org.gluewine.core.ServiceProvider;
@@ -471,9 +470,6 @@ public class Service
                 }).booleanValue();
 
                 glued &= fieldGlued;
-
-                if (fieldGlued && e.getValue() instanceof GluewineProperties && actual instanceof PropertyListener)
-                    ((GluewineProperties) e.getValue()).addListener((PropertyListener) actual);
             }
         }
 
@@ -672,10 +668,6 @@ public class Service
                         return null;
                     }
                 });
-
-                if (e.getValue() instanceof GluewineProperties && actual instanceof PropertyListener)
-                    ((GluewineProperties) e.getValue()).removeListener((PropertyListener) actual);
-
             }
             glued = false;
         }

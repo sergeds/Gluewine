@@ -41,7 +41,6 @@ import org.gluewine.console.CommandProvider;
 import org.gluewine.console.ConsoleServer;
 import org.gluewine.console.SyntaxException;
 import org.gluewine.core.Glue;
-import org.gluewine.core.PropertyListener;
 import org.gluewine.core.Repository;
 import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.RunOnActivate;
@@ -53,7 +52,7 @@ import org.gluewine.sessions.Unsecured;
  * @author fks/Serge de Schaetzen
  *
  */
-public class ConsoleServerImpl implements ConsoleServer, CommandProvider, PropertyListener
+public class ConsoleServerImpl implements ConsoleServer, CommandProvider
 {
     // ===========================================================================
     /**
@@ -90,8 +89,8 @@ public class ConsoleServerImpl implements ConsoleServer, CommandProvider, Proper
     /**
      * The property file to use.
      */
-    @Glue(properties = "console.properties")
-    private Properties props = null;
+    @Glue(properties = "console.properties", refresh = "propertiesChanged")
+    private Properties props;
 
     // ===========================================================================
     /**
@@ -124,7 +123,7 @@ public class ConsoleServerImpl implements ConsoleServer, CommandProvider, Proper
             }
         });
 
-        propertiesChanged(props);
+        propertiesChanged();
     }
 
     // ===========================================================================
@@ -344,13 +343,12 @@ public class ConsoleServerImpl implements ConsoleServer, CommandProvider, Proper
     }
 
     // ===========================================================================
-    @Override
-    public void propertiesChanged(Properties props)
+    /**
+     * Invoked when the property file has changed.
+     */
+    public void propertiesChanged()
     {
-        if (this.props == props)
-        {
-            welcomeMessage = props.getProperty("welcome.text", "");
-            prompt = props.getProperty("prompt.text", "");
-        }
+        welcomeMessage = props.getProperty("welcome.text", "");
+        prompt = props.getProperty("prompt.text", "");
     }
 }

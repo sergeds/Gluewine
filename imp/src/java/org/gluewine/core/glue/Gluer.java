@@ -714,7 +714,8 @@ public final class Gluer implements CodeSourceListener, RepositoryListener<CodeS
     public List<Object> getDefinedServices()
     {
         List<Object> l = new ArrayList<Object>(serviceMap.size());
-        l.addAll(serviceMap.values());
+        for (Service service : serviceMap.values())
+            l.add(service.getActualService());
         return l;
     }
 
