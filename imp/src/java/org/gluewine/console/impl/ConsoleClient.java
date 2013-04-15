@@ -35,6 +35,8 @@ import java.util.TreeMap;
 import jline.Completor;
 import jline.ConsoleReader;
 
+import org.fusesource.jansi.AnsiConsole;
+import org.gluewine.console.AnsiCodes;
 import org.gluewine.console.ConsoleServer;
 import org.gluewine.console.SyntaxException;
 import org.gluewine.gxo_client.GxoClient;
@@ -45,7 +47,7 @@ import org.gluewine.gxo_client.GxoClient;
  * @author fks/Serge de Schaetzen
  *
  */
-public final class ConsoleClient implements Runnable, Completor
+public final class ConsoleClient implements Runnable, Completor, AnsiCodes
 {
     // ===========================================================================
     /**
@@ -62,6 +64,18 @@ public final class ConsoleClient implements Runnable, Completor
      * The server connected to.
      */
     private ConsoleServer server = null;
+
+    /**
+     * The welcome string.
+     */
+    private static final String WELCOME = "\u001b[47m\u001b[30m                                          \n"
+                                          + "            \u001b[31mGluewine Framework\u001b[30m            \n"
+                                          + "                                          \n"
+                                          + "             www.gluewine.org             \n"
+                                          + "      GNU Lesser General Public v 3.0     \n"
+                                          + "                                          \n"
+                                          + "              \u001b[32m(c) FKS bvba\u001b[30m                \n"
+                                          + "                                          \n\u001b[0m";
 
     // ===========================================================================
     /**
@@ -83,7 +97,11 @@ public final class ConsoleClient implements Runnable, Completor
     {
         try
         {
+            //String s = Ansi.Color.RED + "\u001b[31;1mGluewine Framework\u001b[0m";
+            String s = HOME + CLS + WELCOME;
+            System.out.println(s);
             ConsoleReader reader = new ConsoleReader();
+            reader.clearScreen();
             reader.setBellEnabled(false);
             String home = System.getProperty("user.home");
             reader.getHistory().clear();
@@ -106,16 +124,21 @@ public final class ConsoleClient implements Runnable, Completor
                     }
 
                     String line = reader.readLine(prompt);
-                    if (line != null && (line.startsWith("exit") || line.startsWith("close")))
+                    if (line == null) line = "";
+
+                    if (line.startsWith("exit") || line.startsWith("close"))
                         stopRequested = true;
 
-                    else if (line != null && line.startsWith("logoff"))
+                    else if (line.equals("cls") || line.equals("clear"))
+                        System.out.println(HOME + CLS);
+
+                    else if (line.startsWith("logoff"))
                     {
                         server = null;
                         initial = true;
                     }
 
-                    else if (line != null && line.trim().length() > 0)
+                    else if (line.trim().length() > 0)
                     {
                         if (server == null)
                         {
@@ -131,7 +154,7 @@ public final class ConsoleClient implements Runnable, Completor
                         }
                         catch (SyntaxException e)
                         {
-                            System.out.println(e.getMessage());
+                            System.out.println("\u001b[31;1m" + e.getMessage() + "\u001b[0m");
                         }
                         catch (Throwable e)
                         {
@@ -311,6 +334,9 @@ public final class ConsoleClient implements Runnable, Completor
     @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "NP_ALWAYS_NULL")
     public static void main(String[] args)
     {
+        //System.setProperty("file.encoding", "UTF-8");
+        AnsiConsole.systemInstall();
+
         if (args == null || args.length < 2)
         {
             System.out.println("Syntax: ConsoleClient <host> <port>");

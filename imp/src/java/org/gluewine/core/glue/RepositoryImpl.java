@@ -73,10 +73,12 @@ public class RepositoryImpl implements Repository
     @Override
     public synchronized void register(Object o)
     {
-        logger.debug("Registered object: " + o.getClass().getName());
-        objects.add(o);
-        for (RepositoryListener<?> l : listeners)
-            registered(o, l, getGenericListenerType(l));
+        if (objects.add(o))
+        {
+            logger.debug("Registered object: " + o.getClass().getName());
+            for (RepositoryListener<?> l : listeners)
+                registered(o, l, getGenericListenerType(l));
+        }
     }
 
     // ===========================================================================
@@ -155,11 +157,12 @@ public class RepositoryImpl implements Repository
     @Override
     public synchronized void unregister(Object o)
     {
-        logger.debug("Unregistered object: " + o.getClass().getName());
-
-        objects.remove(o);
-        for (RepositoryListener<?> l : listeners)
-            unregistered(o, l, getGenericListenerType(l));
+        if (objects.remove(o))
+        {
+            logger.debug("Unregistered object: " + o.getClass().getName());
+            for (RepositoryListener<?> l : listeners)
+                unregistered(o, l, getGenericListenerType(l));
+        }
     }
 
     // ===========================================================================

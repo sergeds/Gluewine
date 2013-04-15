@@ -131,6 +131,8 @@ public class SystemCommandProvider implements CommandProvider
         commands.add(new CLICommand("resolve", "Resolves the service(s) with the specified id(s)."));
         commands.add(new CLICommand("unresolve", "Unresolves the service(s) with the specified id(s)."));
         commands.add(new CLICommand("close", "Closes the console client."));
+        commands.add(new CLICommand("cls", "Clears the screen."));
+        commands.add(new CLICommand("clear", "Clears the screen."));
         commands.add(new CLICommand("exit", "Closes the console client."));
         commands.add(new CLICommand("logoff", "Logs off the console client."));
         commands.add(new CLICommand("props_list", "Lists the property files in use."));

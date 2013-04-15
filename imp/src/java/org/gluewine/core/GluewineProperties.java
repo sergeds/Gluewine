@@ -31,11 +31,9 @@ import java.lang.reflect.Method;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.Set;
 
 import org.gluewine.core.utils.ErrorLogger;
 import org.gluewine.launcher.Launcher;
@@ -54,11 +52,6 @@ public class GluewineProperties extends Properties
      * The serial uid.
      */
     private static final long serialVersionUID = -3769089923730257060L;
-
-    /**
-     * The set of registered listeners.
-     */
-    private Set<PropertyListener> listeners = new HashSet<PropertyListener>();
 
     /**
      * The properties file name relative to the gluewine.cfgdir.
@@ -147,47 +140,6 @@ public class GluewineProperties extends Properties
 
     // ===========================================================================
     /**
-     * Adds a listener.
-     *
-     * @param listener The listener to add.
-     */
-    public void addListener(PropertyListener listener)
-    {
-        synchronized (listeners)
-        {
-            listeners.add(listener);
-        }
-    }
-
-    // ===========================================================================
-    /**
-     * Removes a listener.
-     *
-     * @param listener The listener to remove.
-     */
-    public void removeListener(PropertyListener listener)
-    {
-        synchronized (listeners)
-        {
-            listeners.remove(listener);
-        }
-    }
-
-    // ===========================================================================
-    /**
-     * Notifies all registered listeners that the object has been refreshed.
-     */
-    public void notifyRefeshed()
-    {
-        synchronized (listeners)
-        {
-            for (PropertyListener l : listeners)
-                l.propertiesChanged(this);
-        }
-    }
-
-    // ===========================================================================
-    /**
      * Request the property file to be loaded.
      *
      * @throws IOException Thrown if an error occurs reading the file.
@@ -213,7 +165,6 @@ public class GluewineProperties extends Properties
     {
         clear();
         super.load(input);
-        notifyRefeshed();
     }
 
     // ===========================================================================
@@ -222,7 +173,6 @@ public class GluewineProperties extends Properties
     {
         clear();
         super.load(reader);
-        notifyRefeshed();
     }
 
     // ===========================================================================
@@ -231,7 +181,6 @@ public class GluewineProperties extends Properties
     {
         clear();
         super.loadFromXML(input);
-        notifyRefeshed();
     }
 
     // ===========================================================================
