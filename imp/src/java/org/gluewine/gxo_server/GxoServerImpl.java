@@ -49,6 +49,7 @@ import org.gluewine.gxo.CompressedBlockOutputStream;
 import org.gluewine.gxo.ExecBean;
 import org.gluewine.gxo.GxoException;
 import org.gluewine.gxo.InitBean;
+import org.gluewine.gxo.LocalAccess;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.converters.basic.DateConverter;
@@ -255,6 +256,42 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
         maxIdle = Integer.parseInt(properties.getProperty("maxidle", "300")) * 1000;
         Thread th = new Thread(this, "GXO Server Thread");
         th.start();
+    }
+
+    // ===========================================================================
+    /**
+     * Processes local requests. Local requests are passed on a named pipe.
+     */
+    @RunOnActivate(runThreaded = true)
+    public void processLocalRequests()
+    {
+        // The map containing the instantiated services.
+        Map<String, Object> instantiated = new HashMap<String, Object>();
+
+        while (!stopRequested)
+        {
+            try
+            {
+                Object ob = stream.fromXML(LocalAccess.readFromServer());
+
+                if (ob instanceof ExecBean)
+                {
+                    ExecBean bean = (ExecBean) ob;
+                    Object result = processExecBean(instantiated, bean);
+                    LocalAccess.writeToClient(stream.toXML(result));
+                }
+                else if (ob instanceof InitBean)
+                {
+                    InitBean bean = (InitBean) ob;
+                    Object result = processInitBean(instantiated, bean);
+                    LocalAccess.writeToClient(stream.toXML(result));
+                }
+            }
+            catch (Throwable e)
+            {
+                e.printStackTrace();
+            }
+        }
     }
 
     // ===========================================================================

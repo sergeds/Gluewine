@@ -35,6 +35,7 @@ import org.gluewine.gxo.CompressedBlockOutputStream;
 import org.gluewine.gxo.ExecBean;
 import org.gluewine.gxo.GxoException;
 import org.gluewine.gxo.InitBean;
+import org.gluewine.gxo.LocalAccess;
 import org.gluewine.gxo.ProxyAlias;
 
 import com.thoughtworks.xstream.XStream;
@@ -109,7 +110,7 @@ public class GxoClient
 
                 exec.setParamTypes(method.getParameterTypes());
                 exec.setParams(args);
-
+                logger.debug("Sending EXEC request for " + service + ":" + method.getName());
                 return write(exec);
             }
         }
@@ -155,6 +156,21 @@ public class GxoClient
      */
     private Logger logger = Logger.getLogger(getClass());
 
+    /**
+     * Flag that defines that the server is local (ie. in the same JVM).
+     */
+    private boolean local = false;
+
+    // ===========================================================================
+    /**
+     * Creates an instance that connects locally.
+     */
+    public GxoClient()
+    {
+        this(null, 0);
+        local = true;
+    }
+
     // ===========================================================================
     /**
      * Creates an instance.
@@ -176,7 +192,7 @@ public class GxoClient
      */
     public synchronized void close()
     {
-        if (connected)
+        if (connected && !local)
         {
             try
             {
@@ -200,23 +216,28 @@ public class GxoClient
      */
     private void connect() throws Throwable
     {
-        synchronized (stream)
+        if (!local)
         {
-            if (socket != null && socket.isInputShutdown())
-                close();
-
-            if (!connected)
+            synchronized (stream)
             {
-                socket = new Socket();
-                socket.connect(new InetSocketAddress(host, port), 10000);
-                socket.setSoTimeout(10000);
-                CompressedBlockInputStream cin = new CompressedBlockInputStream(socket.getInputStream());
-                CompressedBlockOutputStream cout = new CompressedBlockOutputStream(socket.getOutputStream(), 1024);
-                in = new InputStreamReader(cin, "UTF-8");
-                out = new OutputStreamWriter(cout, "UTF-8");
-                connected = true;
+                if (socket != null && socket.isInputShutdown())
+                    close();
+
+                if (!connected)
+                {
+                    socket = new Socket();
+                    socket.connect(new InetSocketAddress(host, port), 10000);
+                    socket.setSoTimeout(10000);
+                    CompressedBlockInputStream cin = new CompressedBlockInputStream(socket.getInputStream());
+                    CompressedBlockOutputStream cout = new CompressedBlockOutputStream(socket.getOutputStream(), 1024);
+                    in = new InputStreamReader(cin, "UTF-8");
+                    out = new OutputStreamWriter(cout, "UTF-8");
+                    connected = true;
+                }
             }
         }
+        else
+            connected = true;
     }
 
     // ===========================================================================
@@ -318,9 +339,22 @@ public class GxoClient
                 {
                     try
                     {
-                        stream.toXML(o, out);
-                        out.flush();
-                        result = stream.fromXML(in);
+                        if (local)
+                        {
+                            String s = stream.toXML(o);
+                            logger.trace("Writing out message: " + s);
+                            LocalAccess.writeToServer(s);
+                            s = LocalAccess.readFromClient();
+                            result = stream.fromXML(s);
+                            logger.trace("Received response message: " + s);
+                        }
+                        else
+                        {
+                            stream.toXML(o, out);
+                            out.flush();
+                            result = stream.fromXML(in);
+                        }
+
                         break;
                     }
                     catch (StreamException e)
@@ -332,16 +366,19 @@ public class GxoClient
                     }
                     catch (Throwable e)
                     {
-                        try
+                        if (!local)
                         {
-                            socket.close();
+                            try
+                            {
+                                socket.close();
+                            }
+                            catch (Throwable t)
+                            {
+                                logger.warn(t);
+                            }
+                            connected = false;
+                            throw e;
                         }
-                        catch (Throwable t)
-                        {
-                            logger.warn(t);
-                        }
-                        connected = false;
-                        throw e;
                     }
                 }
                 else
@@ -358,15 +395,18 @@ public class GxoClient
 
             else if (o instanceof Throwable)
             {
-                try
+                if (!local)
                 {
-                    socket.close();
+                    try
+                    {
+                        socket.close();
+                    }
+                    catch (Throwable e)
+                    {
+                        logger.warn(e);
+                    }
+                    connected = false;
                 }
-                catch (Throwable e)
-                {
-                    logger.warn(e);
-                }
-                connected = false;
                 throw (Throwable) o;
             }
         }
