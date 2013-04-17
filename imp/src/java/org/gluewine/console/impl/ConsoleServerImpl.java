@@ -52,7 +52,7 @@ import org.gluewine.sessions.Unsecured;
  * @author fks/Serge de Schaetzen
  *
  */
-public class ConsoleServerImpl implements ConsoleServer, CommandProvider
+public class ConsoleServerImpl implements ConsoleServer, CommandProvider,  RepositoryListener<CommandProvider>
 {
     // ===========================================================================
     /**

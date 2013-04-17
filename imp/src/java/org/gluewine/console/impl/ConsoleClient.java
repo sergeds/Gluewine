@@ -184,6 +184,7 @@ public final class ConsoleClient implements Runnable, Completor, AnsiCodes
                 }
                 catch (Throwable e)
                 {
+                    e.printStackTrace();
                     System.out.println("Cannot connect to server!");
                 }
             }

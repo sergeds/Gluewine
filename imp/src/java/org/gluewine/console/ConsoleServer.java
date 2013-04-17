@@ -24,15 +24,13 @@ package org.gluewine.console;
 import java.util.List;
 import java.util.Map;
 
-import org.gluewine.core.RepositoryListener;
-
 /**
  * Defines the console server.
  *
  * @author fks/Serge de Schaetzen
  *
  */
-public interface ConsoleServer extends RepositoryListener<CommandProvider>
+public interface ConsoleServer
 {
     // ===========================================================================
     /**

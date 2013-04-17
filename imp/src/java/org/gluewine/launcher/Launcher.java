@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -145,6 +146,11 @@ public final class Launcher implements Runnable, DirectoryAnnotations
      */
     private String[] parameters = null;
 
+    /**
+     * The set of partial jar names to be filtered. If empty all jars are loaded.
+     */
+    private Set<String> jarFilter = new HashSet<String>();
+
     // ===========================================================================
     /**
      * Creates an instance.
@@ -154,6 +160,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
         setInstance(this);
     }
 
+    // ===========================================================================
     /**
      * Sets the instance.
      *
@@ -278,7 +285,19 @@ public final class Launcher implements Runnable, DirectoryAnnotations
 
             initStdIn = false;
 
-            if (clazz.equals("console")) clazz = "org.gluewine.console.impl.ConsoleClient";
+            if (clazz.equals("console"))
+            {
+                clazz = "org.gluewine.console.impl.ConsoleClient";
+                jarFilter.add("org.gluewine.console");
+                jarFilter.add("org.gluewine.gxo.client");
+                jarFilter.add("org.gluewine.gxo");
+                jarFilter.add("org.gluewine.dbauth");
+                jarFilter.add("xpp3_min");
+                jarFilter.add("xstream");
+                jarFilter.add("jline");
+                jarFilter.add("jansi");
+                jarFilter.add("log4j");
+            }
             if (args.length > 1 && args[1].equals("gwt")) initStdIn = true;
 
             classToStart = clazz;
@@ -547,6 +566,26 @@ public final class Launcher implements Runnable, DirectoryAnnotations
 
     // ===========================================================================
     /**
+     * Returns true if the file specified is allowed by the
+     * filter or if there's no filter.
+     *
+     * @param f The file to check.
+     * @return True if allowed by the filter.
+     */
+    private boolean isFileAllowed(File f)
+    {
+        boolean allowed = jarFilter.isEmpty();
+        if (!allowed)
+        {
+            Iterator<String> iter = jarFilter.iterator();
+            while (iter.hasNext() && !allowed)
+                allowed = f.getName().startsWith(iter.next());
+        }
+        return allowed;
+    }
+
+    // ===========================================================================
+    /**
      * Loads all jar/zip files located in the given directory.
      *
      * @param dir The directory to load.
@@ -571,7 +610,8 @@ public final class Launcher implements Runnable, DirectoryAnnotations
             {
                 String name = file.getName().toLowerCase(Locale.getDefault());
                 if (name.endsWith(".jar") || name.endsWith(".zip"))
-                    jars.add(file);
+                    if (isFileAllowed(file))
+                        jars.add(file);
             }
         }
 
@@ -816,16 +856,19 @@ public final class Launcher implements Runnable, DirectoryAnnotations
 
             for (File f : activated)
             {
-                CodeSource cs = getCodeSource(f, null);
-                sourcesMap.put(cs.getDisplayName(), cs);
-                added.add(cs);
-                List<CodeSource> l = codeSources.get(f.getParentFile().getAbsolutePath());
-                if (l == null)
+                if (isFileAllowed(f))
                 {
-                    l = new ArrayList<CodeSource>();
-                    codeSources.put(f.getParentFile().getAbsolutePath(), l);
+                    CodeSource cs = getCodeSource(f, null);
+                    sourcesMap.put(cs.getDisplayName(), cs);
+                    added.add(cs);
+                    List<CodeSource> l = codeSources.get(f.getParentFile().getAbsolutePath());
+                    if (l == null)
+                    {
+                        l = new ArrayList<CodeSource>();
+                        codeSources.put(f.getParentFile().getAbsolutePath(), l);
+                    }
+                    l.add(cs);
                 }
-                l.add(cs);
             }
 
             mapLoaders();
