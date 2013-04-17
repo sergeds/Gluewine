@@ -22,13 +22,11 @@
 package org.gluewine.persistence.impl;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 
-import org.gluewine.persistence.EntityCloneable;
 import org.gluewine.persistence.QueryPostProcessor;
 import org.gluewine.persistence.QueryPreProcessor;
 import org.gluewine.persistence.TransactionCallback;
@@ -226,18 +224,7 @@ public class HibernateTransactionalSessionImpl implements TransactionalSession
     public <E> List<E> getAll(Class<E> cl)
     {
         Criteria cr = createCriteria(cl);
-        List<E> l = cr.list();
-        List<E> nl = new ArrayList<E>(l.size());
-        for (E e : l)
-        {
-            if (e instanceof EntityCloneable)
-                nl.add((E)  ((EntityCloneable) e).cloneEntity());
-
-            else
-                nl.add(e);
-        }
-        //return nl;
-        return l;
+        return cr.list();
     }
 
     // ===========================================================================
