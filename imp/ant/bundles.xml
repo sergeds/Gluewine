@@ -49,10 +49,14 @@
         <loadproperties srcfile="${manifest}" encoding="utf8">
             <filterchain>
                 <LineContainsRegExp>
-                    <regexp pattern="^(Bundle-|Jar-Version)" />
+                    <regexp pattern="^(Bundle-|Jar-Version|Group)" />
                 </LineContainsRegExp>
             </filterchain>
         </loadproperties>
+        <condition property="Group" value="">
+            <not><isset property="Group"/></not>
+        </condition>
+
 
         <if>
             <equals arg1="${framework}" arg2="osgi" />
@@ -118,7 +122,8 @@
         </checksum>
 
         <mkdir dir="${dir.bundle.extra}/${pack}"/>
-        <jar jarfile="${dir.dist.lib}/${bundlename}-${fileversion}.jar" manifest="${dir.src.osgi}/${manfile}">
+        <mkdir dir="${dir.dist.lib}/${Group}"/>
+        <jar jarfile="${dir.dist.lib}/${Group}/${bundlename}-${fileversion}.jar" manifest="${dir.src.osgi}/${manfile}">
             <manifest>
 
                 <attribute name="X-Fks-BuildDate" value="${buildinfo.timestamp}"/>

@@ -4,3 +4,4 @@ Created-By: 1.6.0_01-b06 (Sun Microsystems Inc.)
 Gluewine-Services: org.gluewine.dbauth.impl.DBAuthenticatorImpl
 Gluewine-Entities: org.gluewine.dbauth.impl.DBCredential
 Jar-Version: 0.1
+Group: gluewine

@@ -4,3 +4,4 @@ Created-By: Serge de Schaetzen
 Gluewine-Name: org.gluewine.gxo.sessions
 Gluewine-Services: org.gluewine.gxo_sessions.SessionChecker
 Jar-Version: 0.1
+Group: gluewine

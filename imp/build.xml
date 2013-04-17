@@ -12,8 +12,8 @@
     <property name="has_unit_tests" value="false"/>
 
     <!-- Java Compiler options -->
-    <property name="target" value="1.6"/>
-    <property name="source" value="1.6"/>
+    <property name="target" value="1.7"/>
+    <property name="source" value="1.7"/>
 
     <target name="bundleextra" depends="osgi.compile">
         <copy file="${dir.src.osgi}/org/gluewine/persistence/Persistence.gwt.xml" todir="${dir.bundle.extra}/org/gluewine/persistence/org/gluewine/" />

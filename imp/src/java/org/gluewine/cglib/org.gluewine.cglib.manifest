@@ -4,3 +4,4 @@ Created-By: Serge de Schaetzen
 Gluewine-Name: org.gluewine.cglib
 Gluewine-Enhancer: org.gluewine.cglib.CGLIBEnhancer
 Jar-Version: 0.1
+Group: gluewine

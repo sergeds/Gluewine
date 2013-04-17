@@ -5,3 +5,4 @@ Gluewine-Name: org.gluewine.console
 Main-Class: org.gluewine.console.ConsoleClientLauncher
 Gluewine-Services: org.gluewine.console.impl.ConsoleServerImpl,org.gluewine.console.impl.SystemCommandProvider,org.gluewine.console.impl.ReposCommandProvider
 Jar-Version: 0.1
+Group: gluewine
