@@ -21,6 +21,11 @@ public final class LocalAccess
      */
     private static Stack<String> server = new Stack<String>();
 
+    /**
+     * Flag that stops the access.
+     */
+    private static boolean stopRequested = false;
+
     // ===========================================================================
     /**
      * Creates an instance.
@@ -70,10 +75,11 @@ public final class LocalAccess
     {
         synchronized (server)
         {
-            while (server.isEmpty())
+            while (!stopRequested && server.isEmpty())
                 server.wait();
 
-            return server.pop();
+            if (!stopRequested) return server.pop();
+            else return "";
         }
     }
 
@@ -88,10 +94,30 @@ public final class LocalAccess
     {
         synchronized (client)
         {
-            while (client.isEmpty())
+            while (!stopRequested && client.isEmpty())
                 client.wait();
 
-            return client.pop();
+            if (!stopRequested) return client.pop();
+            else return "";
+        }
+    }
+
+    // ===========================================================================
+    /**
+     * Stops the access.
+     */
+    public static void stop()
+    {
+        synchronized (server)
+        {
+            stopRequested = true;
+            server.notifyAll();
+        }
+
+        synchronized (client)
+        {
+            stopRequested = true;
+            server.notifyAll();
         }
     }
 }

@@ -199,6 +199,8 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
                 }
             }
         }
+
+        LocalAccess.stop();
     }
 
     // ===========================================================================
@@ -289,7 +291,7 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
             }
             catch (Throwable e)
             {
-                e.printStackTrace();
+                if (!stopRequested) e.printStackTrace();
             }
         }
     }
