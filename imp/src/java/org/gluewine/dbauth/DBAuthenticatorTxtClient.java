@@ -21,9 +21,9 @@
  **************************************************************************/
 package org.gluewine.dbauth;
 
-import java.io.IOException;
-
 import jline.ConsoleReader;
+
+import org.gluewine.console.AuthenticationAbortedException;
 
 /**
  * Text console client authenticator.
@@ -40,9 +40,9 @@ public class DBAuthenticatorTxtClient
      * @param authenticator The server to authenticate against.
      * @param reader The reader to use for input.
      * @return The session id, if authentication was successfull.
-     * @throws IOException If an error occurs reading from the input.
+     * @throws Throwable If an error occurs reading from the input.
      */
-    public String authenticate(DBAuthenticator authenticator, ConsoleReader reader) throws IOException
+    public String authenticate(DBAuthenticator authenticator, ConsoleReader reader) throws Throwable
     {
         boolean authenticated = false;
         String id = null;
@@ -50,6 +50,7 @@ public class DBAuthenticatorTxtClient
         {
             String user = reader.readLine("userid: ");
             String pw = reader.readLine("password: ", '\0');
+            if (user.equals("close")) throw new AuthenticationAbortedException();
             try
             {
                 id = authenticator.authenticate(user, pw);

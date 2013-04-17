@@ -48,6 +48,7 @@ import java.util.TreeSet;
 
 import org.gluewine.launcher.sources.DirectoryCodeSource;
 import org.gluewine.launcher.sources.JarCodeSource;
+import org.gluewine.launcher.sources.MissingCodeSource;
 import org.gluewine.launcher.sources.URLCodeSource;
 import org.gluewine.launcher.utils.FileUtils;
 
@@ -129,12 +130,38 @@ public final class Launcher implements Runnable, DirectoryAnnotations
      */
     private Set<ShutdownListener> shutdownListeners = new HashSet<ShutdownListener>();
 
+    /**
+     * The class to start.
+     */
+    private String classToStart = null;
+
+    /**
+     * Boolean flag indicating that stdin should 'routed'.
+     */
+    private boolean initStdIn = false;
+
+    /**
+     * The array of parameters to pass to the initialized class.
+     */
+    private String[] parameters = null;
+
     // ===========================================================================
     /**
      * Creates an instance.
      */
-    private Launcher()
+    public Launcher()
     {
+        setInstance(this);
+    }
+
+    /**
+     * Sets the instance.
+     *
+     * @param l The instance.
+     */
+    protected static void setInstance(Launcher l)
+    {
+        instance = l;
     }
 
     // ===========================================================================
@@ -177,8 +204,15 @@ public final class Launcher implements Runnable, DirectoryAnnotations
 
                 mapLoaders();
             }
+
+            CodeSource rootCs = sourcesMap.get(getShortName(root));
+            Class<?> cl = rootCs.getSourceClassLoader().loadClass(classToStart);
+
+            cl.getMethod("main", String[].class).invoke(null, new Object[] {parameters});
+
+            if (initStdIn) new Thread(this).start();
         }
-        catch (IOException e)
+        catch (Throwable e)
         {
             e.printStackTrace();
         }
@@ -235,6 +269,27 @@ public final class Launcher implements Runnable, DirectoryAnnotations
      */
     public void init(String[] args) throws Exception
     {
+        try
+        {
+            if (args == null || args.length < 1)
+                args = new String[] {"org.gluewine.core.glue.Gluer"};
+
+            String clazz = args[0];
+
+            initStdIn = false;
+
+            if (clazz.equals("console")) clazz = "org.gluewine.console.impl.ConsoleClient";
+            if (args.length > 1 && args[1].equals("gwt")) initStdIn = true;
+
+            classToStart = clazz;
+
+            parameters = new String[args.length - 1];
+            if (args.length > 1) System.arraycopy(args, 1, parameters, 0, parameters.length);
+        }
+        catch (Throwable e)
+        {
+            e.printStackTrace();
+        }
     }
 
     // ===========================================================================
@@ -452,9 +507,14 @@ public final class Launcher implements Runnable, DirectoryAnnotations
      */
     public File fetch(URL url, File dir) throws IOException
     {
-        File target = new File(dir, url.getFile() + ".notactivated");
+        File target = new File(dir + ".notactivated");
+
         if (target.exists())
             if (!target.delete()) throw new IOException("Could not delete " + target.getAbsolutePath());
+
+        if (!target.getParentFile().exists())
+            if (!target.getParentFile().mkdirs())
+                throw new IOException("Could not create " + target.getParentFile().getAbsolutePath());
 
         FileOutputStream out = null;
         InputStream in = null;
@@ -657,10 +717,11 @@ public final class Launcher implements Runnable, DirectoryAnnotations
      * packages.idx file, located in the currently defined source repository.
      * If no packages.idx could be found, an empty list is returned.
      *
+     * @param installMissing If true it also returns missing sources.
      * @return The list of version.
      * @throws IOException If an error occurs.
      */
-    public List<SourceVersion> getSourceVersions() throws IOException
+    public List<SourceVersion> getSourceVersions(boolean installMissing) throws IOException
     {
         List<SourceVersion> versions = new ArrayList<SourceVersion>();
 
@@ -676,12 +737,23 @@ public final class Launcher implements Runnable, DirectoryAnnotations
                 {
                     String[] split = s.split(";");
 
+                    String sourceUrl = getSourceRepositoryURL() + split[0];
+
                     CodeSource cs = sourcesMap.get("/" + split[0]);
                     if (cs != null)
                     {
                         SourceVersion version = null;
-                        if (split.length == 3) version = new SourceVersion(cs, split[1], split[2]);
-                        else if (split.length == 2) version = new SourceVersion(cs, split[1], split[1]);
+                        if (split.length == 3) version = new SourceVersion(cs, split[1], split[2], sourceUrl);
+                        else if (split.length == 2) version = new SourceVersion(cs, split[1], split[1], sourceUrl);
+                        versions.add(version);
+                    }
+                    else if (installMissing)
+                    {
+                        SourceVersion version = null;
+                        MissingCodeSource ms = new MissingCodeSource();
+                        ms.setDisplayName("/" + split[0]);
+                        if (split.length == 3) version = new SourceVersion(ms, split[1], split[2], sourceUrl);
+                        else if (split.length == 2) version = new SourceVersion(ms, split[1], split[1], sourceUrl);
                         versions.add(version);
                     }
                 }
@@ -699,12 +771,13 @@ public final class Launcher implements Runnable, DirectoryAnnotations
     /**
      * Returns the list of codesources that can be updated.
      *
+     * @param installMissing If true also installs the jar missing.
      * @return The list of sources to update.
      * @throws IOException If an error occurs.
      */
-    public List<SourceVersion> getCodeSourceToUpdate() throws IOException
+    public List<SourceVersion> getCodeSourceToUpdate(boolean installMissing) throws IOException
     {
-        List<SourceVersion> latest = getSourceVersions();
+        List<SourceVersion> latest = getSourceVersions(installMissing);
         List<SourceVersion> updates = new ArrayList<SourceVersion>();
 
         for (SourceVersion vers : latest)
@@ -723,16 +796,16 @@ public final class Launcher implements Runnable, DirectoryAnnotations
      * @param toadd The objects to add.
      * @return The list of new CodeSources.
      */
-    public List<CodeSource> add(List<String> toadd)
+    public List<CodeSource> add(List<SourceVersion> toadd)
     {
         List<CodeSource> added = new ArrayList<CodeSource>();
         try
         {
             List<File> toActivate = new ArrayList<File>();
-            for (String s : toadd)
+            for (SourceVersion s : toadd)
             {
-                URL url = new URL(s);
-                String jar = url.getFile();
+                URL url = new URL(s.getUrl());
+                String jar = s.getSource().getDisplayName().substring(1);
                 File f = new File(root, jar);
                 toActivate.add(fetch(url, f));
             }
@@ -741,14 +814,24 @@ public final class Launcher implements Runnable, DirectoryAnnotations
             for (File f : toActivate)
                 activated.add(activate(f));
 
-            List<CodeSource> sources = new ArrayList<CodeSource>();
             for (File f : activated)
-                sources.add(getCodeSource(f, null));
+            {
+                CodeSource cs = getCodeSource(f, null);
+                sourcesMap.put(cs.getDisplayName(), cs);
+                added.add(cs);
+                List<CodeSource> l = codeSources.get(f.getParentFile().getAbsolutePath());
+                if (l == null)
+                {
+                    l = new ArrayList<CodeSource>();
+                    codeSources.put(f.getParentFile().getAbsolutePath(), l);
+                }
+                l.add(cs);
+            }
 
             mapLoaders();
 
             for (CodeSourceListener l : listeners)
-                l.codeSourceAdded(sources);
+                l.codeSourceAdded(added);
         }
         catch (Throwable e)
         {
@@ -961,27 +1044,9 @@ public final class Launcher implements Runnable, DirectoryAnnotations
     {
         try
         {
-            if (args == null || args.length < 1)
-                args = new String[] {"org.gluewine.core.glue.Gluer"};
-
-            String clazz = args[0];
-
-            boolean initStdIn = false;
-
-            if (clazz.equals("console")) clazz = "org.gluewine.console.impl.ConsoleClient";
-            if (args.length > 1 && args[1].equals("gwt")) initStdIn = true;
-
             Launcher fw = getInstance();
+            fw.init(args);
             fw.start();
-
-            CodeSource rootCs = fw.sourcesMap.get(fw.getShortName(fw.root));
-            Class<?> cl = rootCs.getSourceClassLoader().loadClass(clazz);
-            String[] params = new String[args.length - 1];
-            if (args.length > 1) System.arraycopy(args, 1, params, 0, params.length);
-
-            cl.getMethod("main", String[].class).invoke(null, new Object[] {params});
-
-            if (initStdIn) new Thread(fw).start();
         }
         catch (Throwable e)
         {

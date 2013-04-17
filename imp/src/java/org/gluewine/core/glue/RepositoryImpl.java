@@ -43,7 +43,7 @@ import org.gluewine.core.RepositoryListener;
  * @author fks/Serge de Schaetzen
  *
  */
-public class RepositoryImpl implements Repository
+public final class RepositoryImpl implements Repository
 {
     // ===========================================================================
     /**
@@ -61,12 +61,18 @@ public class RepositoryImpl implements Repository
      */
     private Logger logger = Logger.getLogger(getClass());
 
+    /**
+     * The instance.
+     */
+    private static RepositoryImpl instance;
+
     // ===========================================================================
     /**
      * Creates an instance.
      */
-    RepositoryImpl()
+    private RepositoryImpl()
     {
+
     }
 
     // ===========================================================================
@@ -79,6 +85,18 @@ public class RepositoryImpl implements Repository
             for (RepositoryListener<?> l : listeners)
                 registered(o, l, getGenericListenerType(l));
         }
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the instance.
+     *
+     * @return The instance.
+     */
+    public static synchronized RepositoryImpl getInstance()
+    {
+        if (instance == null) instance = new RepositoryImpl();
+        return instance;
     }
 
     // ===========================================================================
@@ -190,9 +208,42 @@ public class RepositoryImpl implements Repository
             Object o = iter.next();
             if (c.isAssignableFrom(o.getClass()))
                 instance = (T) o;
+
+            /*
+            Set<Class<?>> interf = getInterfaces(o.getClass(), null);
+            Iterator<Class<?>> iiter = interf.iterator();
+            while (iiter.hasNext() && instance == null)
+            {
+                Class<?> i = iiter.next();
+                if (c.isAssignableFrom(i))
+                    instance = (T) o;
+            }
+            */
         }
 
         return instance;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the set of interfaces implemented by the class (and all
+     * of its parent classes).
+     *
+     * @param c The class to process.
+     * @param set The set to update. If null a set is created.
+     * @return The set of unique classnames.
+     */
+    private Set<Class<?>> getInterfaces(Class<?> c, Set<Class<?>> set)
+    {
+        if (set == null) set = new HashSet<Class<?>>();
+
+        for (Class<?> interf : c.getInterfaces())
+            set.add(interf);
+
+        if (c.getSuperclass() != null)
+            getInterfaces(c.getSuperclass(), set);
+
+        return set;
     }
 
     // ===========================================================================

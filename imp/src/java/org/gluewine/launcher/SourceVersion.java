@@ -48,6 +48,11 @@ public class SourceVersion
      */
     private CodeSource source = null;
 
+    /**
+     * The url.
+     */
+    private String url = null;
+
     // ===========================================================================
     /**
      * Creates an instance.
@@ -55,12 +60,14 @@ public class SourceVersion
      * @param source The source.
      * @param checksum The checksum of the new file.
      * @param version The new version checksum.
+     * @param url The url.
      */
-    public SourceVersion(CodeSource source, String checksum, String version)
+    public SourceVersion(CodeSource source, String checksum, String version, String url)
     {
         this.source = source;
         this.checksum = checksum;
         this.version = version;
+        this.url = url;
     }
 
     // ===========================================================================
@@ -72,6 +79,17 @@ public class SourceVersion
     public CodeSource getSource()
     {
         return source;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the url.
+     *
+     * @return The url.
+     */
+    public String getUrl()
+    {
+        return url;
     }
 
     // ===========================================================================

@@ -21,12 +21,7 @@
  **************************************************************************/
 package org.gluewine.console.impl;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.Serializable;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -46,7 +41,7 @@ import org.gluewine.core.glue.Service;
 import org.gluewine.launcher.CodeSource;
 import org.gluewine.launcher.Launcher;
 import org.gluewine.launcher.SourceVersion;
-import org.gluewine.launcher.utils.FileUtils;
+import org.gluewine.launcher.sources.MissingCodeSource;
 
 /**
  * CommandProvider providing some system commands.
@@ -117,6 +112,7 @@ public class SystemCommandProvider implements CommandProvider
         CLICommand update = new CLICommand("update", "Displays or updates the codesources that changed");
         update.addOption(new CLIOption("-f", "Does the update", false, false));
         update.addOption(new CLIOption("-s", "The source URL", false, true));
+        update.addOption(new CLIOption("-i", "Install Missing", false, false));
         commands.add(update);
 
         commands.add(new CLICommand("shutdown", "Shuts the framework down."));
@@ -450,11 +446,17 @@ public class SystemCommandProvider implements CommandProvider
     public void _install(CommandContext ci)
     {
         String jar = ci.nextArgument();
-        List<String> toAdd = new ArrayList<String>();
+        List<SourceVersion> toAdd = new ArrayList<SourceVersion>();
 
         while (jar != null)
         {
-            toAdd.add(jar);
+            String dsp = jar;
+            int i = dsp.lastIndexOf('/');
+            if (i > 0 && i < dsp.length() - 1) dsp = dsp.substring(i + 1);
+            MissingCodeSource cs = new MissingCodeSource();
+            cs.setDisplayName(dsp);
+            SourceVersion sv = new SourceVersion(cs, "0", "0", jar);
+            toAdd.add(sv);
             jar = ci.nextArgument();
         }
 
@@ -473,25 +475,20 @@ public class SystemCommandProvider implements CommandProvider
         if (ci.hasOption("-s"))
             Launcher.getInstance().setSourceRepositoryURL(ci.getOption("-s"));
 
-        List<SourceVersion> updates = Launcher.getInstance().getCodeSourceToUpdate();
+        List<SourceVersion> updates = Launcher.getInstance().getCodeSourceToUpdate(ci.hasOption("-i"));
         String source = Launcher.getInstance().getSourceRepositoryURL();
-        File root = Launcher.getInstance().getRoot();
+        //File root = Launcher.getInstance().getRoot();
         if (ci.hasOption("-f"))
         {
             List<CodeSource> toRemove = new ArrayList<CodeSource>();
-            List<String> toAdd = new ArrayList<String>();
             for (SourceVersion sv : updates)
             {
-                String name = sv.getSource().getDisplayName().substring(1);
-                toRemove.add(sv.getSource());
-                toAdd.add(name);
-                String url = source + name;
-                ci.println("Fetching " + url);
-                fetch(url, new File(root, name), sv);
+                if (!(sv.getSource() instanceof MissingCodeSource))
+                    toRemove.add(sv.getSource());
             }
 
             Launcher.getInstance().removeSources(toRemove);
-            Launcher.getInstance().add(toAdd);
+            Launcher.getInstance().add(updates);
         }
         else
         {
@@ -503,61 +500,6 @@ public class SystemCommandProvider implements CommandProvider
             }
 
             ci.printTable();
-        }
-    }
-
-    // ===========================================================================
-    /**
-     * Fetches the bundle specified.
-     *
-     * @param url The url to fetch.
-     * @param local The local name to save to.
-     * @param source The source version to fetch.
-     * @throws Throwable If an error occurs.
-     */
-    private void fetch(String url, File local, SourceVersion source) throws Throwable
-    {
-        URL conn = new URL(url);
-        InputStream in = null;
-        FileOutputStream out = null;
-        File temp = new File(local.getAbsolutePath() + ".update");
-
-        if (temp.exists())
-            if (!temp.delete()) throw new IOException("Could not delete " + temp.getAbsolutePath());
-
-        try
-        {
-            in = conn.openStream();
-            out = new FileOutputStream(temp);
-            byte[] b = new byte[4096];
-            int read = in.read(b);
-            while (read > 0)
-            {
-                out.write(b, 0, read);
-                read = in.read(b);
-            }
-        }
-        finally
-        {
-            try
-            {
-                if (in != null)
-                    in.close();
-            }
-            finally
-            {
-                if (out != null) out.close();
-            }
-        }
-
-        String checksum = FileUtils.getSHA1HashCode(local);
-        if (checksum.equals(source.getChecksum()))
-        {
-            File done = new File(local.getAbsolutePath() + ".complete");
-            if (done.exists())
-                if (!done.delete()) throw new IOException("Could not delete " + done.getAbsolutePath());
-
-            if (!temp.renameTo(done)) throw new IOException("Could not rename file to " + done.getAbsolutePath());
         }
     }
 }

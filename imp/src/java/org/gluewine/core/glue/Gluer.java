@@ -90,7 +90,7 @@ public final class Gluer implements CodeSourceListener, RepositoryListener<CodeS
     /**
      * The repository instance to use.
      */
-    private RepositoryImpl repository = new RepositoryImpl();
+    private RepositoryImpl repository = RepositoryImpl.getInstance();
 
     /**
      * The Set containing the id's of manually stopped services.

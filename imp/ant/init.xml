@@ -61,6 +61,7 @@
              Do not break this convention, various parts of the build system depend on it.
         -->
     <path id="classpath.osgi.base">
+        <fileset dir="${dir.gwt.compile}" includes="**/*.jar"/>
         <fileset dir="${dir.lib.compile}" includes="**/*.jar"/>
         <fileset dir="${dir.lib.runtime}" includes="**/*.jar"/>
     </path>

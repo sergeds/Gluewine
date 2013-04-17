@@ -173,6 +173,7 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
     public SessionAspectProvider() throws IOException, ClassNotFoundException, NoSuchAlgorithmException
     {
         properties = Launcher.getInstance().getProperties("hibernate.properties");
+        logger.debug("Initializing Hibernate SessionAspectProvider");
         codeSourceAdded(Launcher.getInstance().getSources());
     }
 
@@ -565,10 +566,13 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
 
                 for (CodeSource source : sources)
                 {
+                    logger.debug("Processing CodesSource: " + source.getDisplayName());
+
                     for (String entity : source.getEntities())
                     {
                         Class<?> clazz = source.getSourceClassLoader().loadClass(entity);
                         entities.add(clazz);
+                        logger.debug("Adding Hibernate Entity: " + entity);
                     }
 
                     if (source instanceof JarCodeSource)
@@ -584,6 +588,7 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
                                 String name = entry.getName().toLowerCase(Locale.getDefault());
                                 if (name.endsWith(".sql"))
                                 {
+                                    logger.debug("Checking SQL File : " + name);
                                     List<String> content = new ArrayList<String>();
                                     reader = new BufferedReader(new InputStreamReader(jar, "UTF-8"));
                                     while (reader.ready())

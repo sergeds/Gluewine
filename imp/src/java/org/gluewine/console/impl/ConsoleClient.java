@@ -37,6 +37,7 @@ import jline.ConsoleReader;
 
 import org.fusesource.jansi.AnsiConsole;
 import org.gluewine.console.AnsiCodes;
+import org.gluewine.console.AuthenticationAbortedException;
 import org.gluewine.console.ConsoleServer;
 import org.gluewine.console.SyntaxException;
 import org.gluewine.gxo_client.GxoClient;
@@ -175,6 +176,11 @@ public final class ConsoleClient implements Runnable, Completor, AnsiCodes
                                 e.printStackTrace();
                         }
                     }
+                }
+                catch (AuthenticationAbortedException e)
+                {
+                    System.out.println("Authentication Aborted! Closing console.");
+                    stopRequested = true;
                 }
                 catch (Throwable e)
                 {
