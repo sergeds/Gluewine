@@ -62,13 +62,13 @@
     </target>
 
     <target name="gwt.compile" depends="gwt.antTemplates, gwt.gxoshared">
-        <javac destdir="${dir.build.gwt.generated.classes}" includes="**" debug="on" debuglevel="lines,vars,source" source="1.5" target="1.5" includeantruntime="false" encoding="utf8">
+        <javac destdir="${dir.build.gwt.generated.classes}" includes="**" debug="on" debuglevel="lines,vars,source" source="1.7" target="1.7" includeantruntime="false" encoding="utf8">
             <src>
                 <pathelement path="${dir.build.gwt.generated.src}"/>
             </src>
             <classpath refid="classpath.gwt.base"/>
         </javac>
-        <javac destdir="${dir.build.gwt}" includes="**" debug="on" debuglevel="lines,vars,source" source="1.5" target="1.5" includeantruntime="false" encoding="utf8">
+        <javac destdir="${dir.build.gwt}" includes="**" debug="on" debuglevel="lines,vars,source" source="1.7" target="1.7" includeantruntime="false" encoding="utf8">
             <src>
                 <pathelement path="${dir.src.gwt}"/>
             </src>

@@ -234,9 +234,10 @@ public final class Gluer implements CodeSourceListener, RepositoryListener<CodeS
      * All services referencing the service being stopped, will be stopped as well.
      *
      * @param ids The ids of the services to stop.
+     * @param persistState If true, the state of the stopped services is persisted.
      * @return The set of services that have been stopped.
      */
-    public Set<Service> stop(int[] ids)
+    public Set<Service> stop(int[] ids, boolean persistState)
     {
         Set<Service> stopped = new HashSet<Service>();
 
@@ -248,7 +249,8 @@ public final class Gluer implements CodeSourceListener, RepositoryListener<CodeS
                 deregisterObject(s.getActualService());
                 s.deactivate();
                 stopped.add(s);
-                stoppedServices.add(Integer.valueOf(s.getId()));
+
+                if (persistState) stoppedServices.add(Integer.valueOf(s.getId()));
 
                 for (Service ref : serviceMap.values())
                 {
@@ -273,19 +275,20 @@ public final class Gluer implements CodeSourceListener, RepositoryListener<CodeS
      * stopped. Referencing services are unglued as well.
      *
      * @param ids The ids of the service(s) to unglue.
+     * @param persistState If true the state of the unglued services is persisted.
      * @return The set of services that were unglued.
      */
-    public Set<Service> unglue(int[] ids)
+    public Set<Service> unglue(int[] ids, boolean persistState)
     {
         Set<Service> unglued = new HashSet<Service>();
-        Set<Service> stopped = stop(ids);
+        Set<Service> stopped = stop(ids, persistState);
 
         for (int id : ids)
         {
             Service s = serviceMap.get(Integer.valueOf(id));
             if (s != null && s.isGlued())
             {
-                ungluedServices.add(Integer.valueOf(s.getId()));
+                if (persistState) ungluedServices.add(Integer.valueOf(s.getId()));
                 s.unglue();
                 unglued.add(s);
             }
@@ -311,12 +314,13 @@ public final class Gluer implements CodeSourceListener, RepositoryListener<CodeS
      * unglued. Referencing services are unresolved as well.
      *
      * @param ids The ids of the service(s) to unresolve.
+     * @param persistState If true the state of the unresolved services is persisted.
      * @return The set of services that were unresolve.
      */
-    public Set<Service> unresolve(int[] ids)
+    public Set<Service> unresolve(int[] ids, boolean persistState)
     {
         Set<Service> unresolved = new HashSet<Service>();
-        Set<Service> unglued = unglue(ids);
+        Set<Service> unglued = unglue(ids, persistState);
 
         for (int id : ids)
         {
@@ -325,7 +329,7 @@ public final class Gluer implements CodeSourceListener, RepositoryListener<CodeS
             {
                 s.unresolve();
                 unresolved.add(s);
-                unresolvedServices.add(Integer.valueOf(s.getId()));
+                if (persistState) unresolvedServices.add(Integer.valueOf(s.getId()));
             }
         }
 
@@ -361,7 +365,7 @@ public final class Gluer implements CodeSourceListener, RepositoryListener<CodeS
 
             if (getClassLoaderForObject(s.getActualService()) == loader)
             {
-                unresolve(new int[] {s.getId()});
+                unresolve(new int[] {s.getId()}, false);
                 siter.remove();
             }
         }

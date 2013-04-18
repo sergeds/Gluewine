@@ -279,7 +279,7 @@ public class SystemCommandProvider implements CommandProvider
      */
     public void _stop(CommandContext ci)
     {
-        gluer.stop(getIds(ci));
+        gluer.stop(getIds(ci), true);
     }
 
     // ===========================================================================
@@ -295,7 +295,7 @@ public class SystemCommandProvider implements CommandProvider
      */
     public void _unglue(CommandContext ci)
     {
-        gluer.unglue(getIds(ci));
+        gluer.unglue(getIds(ci), true);
     }
 
     // ===========================================================================
@@ -311,7 +311,7 @@ public class SystemCommandProvider implements CommandProvider
      */
     public void _unresolve(CommandContext ci)
     {
-        gluer.unresolve(getIds(ci));
+        gluer.unresolve(getIds(ci), true);
     }
 
     // ===========================================================================

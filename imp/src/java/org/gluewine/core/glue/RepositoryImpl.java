@@ -233,6 +233,7 @@ public final class RepositoryImpl implements Repository
      * @param set The set to update. If null a set is created.
      * @return The set of unique classnames.
      */
+    @SuppressWarnings("unused")
     private Set<Class<?>> getInterfaces(Class<?> c, Set<Class<?>> set)
     {
         if (set == null) set = new HashSet<Class<?>>();
