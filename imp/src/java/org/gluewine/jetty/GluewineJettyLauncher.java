@@ -232,9 +232,9 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
      */
     public void _jetty_undeploy(CommandContext cc) throws Throwable
     {
-        Handler h = handlers.remove(cc.getOption("-context"));
-        if (h != null)
-            contexts.removeHandler(h);
+        String context = cc.getOption("-context");
+        if (context.startsWith("/")) context = context.substring(1);
+        undeploy(context);
     }
 
     // ===========================================================================
@@ -310,13 +310,21 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
      * Undeploys the given context.
      *
      * @param context The context to undeploy.
+     * @throws IOException If the war could not be deployed.
      */
-    private void undeploy(String context)
+    private void undeploy(String context) throws IOException
     {
         logger.info("Undeploying context " + context);
         Handler h = handlers.remove(context);
         if (h != null)
+        {
             contexts.removeHandler(h);
+            if (h instanceof WebAppContext)
+            {
+                File target = new File(warDirectory, context + ".war");
+                if (!target.delete()) throw new IOException("Could not delete " + target.getAbsolutePath());
+            }
+        }
     }
 
     // ===========================================================================
@@ -324,8 +332,9 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
      * Deploys the given war in the context specified.
      *
      * @param war The war to deploy.
+     * @throws IOException If an error occurs.
      */
-    private void deployWar(File war)
+    private void deployWar(File war) throws IOException
     {
         String context = war.getName();
         int i = context.lastIndexOf(".war");
@@ -370,6 +379,13 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
     @Override
     public void unregistered(GluewineServlet t)
     {
-        undeploy(t.getContextPath());
+        try
+        {
+            undeploy(t.getContextPath());
+        }
+        catch (IOException e)
+        {
+            logger.warn(e);
+        }
     }
 }
