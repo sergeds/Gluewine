@@ -487,7 +487,7 @@ public class SystemCommandProvider implements CommandProvider
                     toRemove.add(sv.getSource());
             }
 
-            Launcher.getInstance().removeSources(toRemove);
+            Launcher.getInstance().removeSources(toRemove, false);
             Launcher.getInstance().add(updates);
         }
         else

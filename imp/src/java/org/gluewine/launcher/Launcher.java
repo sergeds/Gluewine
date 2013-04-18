@@ -77,7 +77,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
 {
     // ===========================================================================
     /**
-     * The codesouces indexed on the directory.
+     * The codesources indexed on the directory.
      */
     private Map<String, List<CodeSource>> codeSources = new HashMap<String, List<CodeSource>>();
 
@@ -203,14 +203,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
 
             loadPersistentMap();
 
-            if (root.exists())
-            {
-                List<CodeSource> srcs = loadDirectories(root);
-                for (CodeSource src : srcs)
-                    sourcesMap.put(src.getDisplayName(), src);
-
-                mapLoaders();
-            }
+            if (root.exists()) processRoot();
 
             CodeSource rootCs = sourcesMap.get(getShortName(root));
             Class<?> cl = rootCs.getSourceClassLoader().loadClass(classToStart);
@@ -223,6 +216,25 @@ public final class Launcher implements Runnable, DirectoryAnnotations
         {
             e.printStackTrace();
         }
+    }
+
+    // ===========================================================================
+    /**
+     * Processes the root directory, and returns all CodeSources that were loaded.
+     * (note that CodeSources that were already loaded will not be added again. So
+     * it is safe to call this method multiple times.)
+     *
+     * @throws IOException Thrown if an IOException occurs reading files.
+     */
+    public List<CodeSource> processRoot() throws IOException
+    {
+        List<CodeSource> srcs = loadDirectories(root);
+        for (CodeSource src : srcs)
+            sourcesMap.put(src.getDisplayName(), src);
+
+        mapLoaders();
+
+        return srcs;
     }
 
     // ===========================================================================
@@ -449,7 +461,6 @@ public final class Launcher implements Runnable, DirectoryAnnotations
     private List<CodeSource> loadDirectories(File dir) throws IOException
     {
         List<CodeSource> sources = loadDirectory(dir);
-        codeSources.put(dir.getAbsolutePath(), sources);
 
         File[] dirs = dir.listFiles();
         if (dirs != null)
@@ -586,6 +597,25 @@ public final class Launcher implements Runnable, DirectoryAnnotations
 
     // ===========================================================================
     /**
+     * Links the given codesource to the directory specified.
+     *
+     * @param dir The directory to link to.
+     * @param sources The codesources to link.
+     */
+    private void linkCodeSourceToDir(File dir, List<CodeSource> sources)
+    {
+        String key = dir.getAbsolutePath();
+        List<CodeSource> l = codeSources.get(key);
+        if (l == null)
+        {
+            l = new ArrayList<CodeSource>();
+            codeSources.put(key, l);
+        }
+        l.addAll(sources);
+    }
+
+    // ===========================================================================
+    /**
      * Loads all jar/zip files located in the given directory.
      *
      * @param dir The directory to load.
@@ -615,36 +645,60 @@ public final class Launcher implements Runnable, DirectoryAnnotations
             }
         }
 
-        DirectoryCodeSource dcs = new DirectoryCodeSource(dir);
-        dcs.setDisplayName(getShortName(dir));
-        GluewineLoader dirLoader = new GluewineLoader(getShortName(dir));
-        dcs.setSourceClassLoader(dirLoader);
-        sourcesMap.put(dcs.getDisplayName(), dcs);
-        sources.add(dcs);
-
         URL[] annotatedURLs = loadUrls(dir);
+
+        String key = getShortName(dir);
+        if (!sourcesMap.containsKey(key))
+        {
+            DirectoryCodeSource dcs = new DirectoryCodeSource(dir);
+            dcs.setDisplayName(getShortName(dir));
+            GluewineLoader dirLoader = new GluewineLoader(key);
+            dcs.setSourceClassLoader(dirLoader);
+            sourcesMap.put(dcs.getDisplayName(), dcs);
+            sources.add(dcs);
+        }
 
         // Create the classloader(s) for the files.
         if (single)
         {
             // One loader gets all the files.
-            GluewineLoader loader = new GluewineLoader(getShortName(dir));
-            for (File file : jars)
-                sources.add(getCodeSource(file, loader));
+            if (!sourcesMap.containsKey(key))
+            {
+                GluewineLoader loader = new GluewineLoader(getShortName(dir));
+                for (File file : jars)
+                {
+                    key = getShortName(file);
+                    if (!sourcesMap.containsKey(key))
+                        sources.add(getCodeSource(file, loader));
+                }
 
-            for (URL url : annotatedURLs)
-                sources.add(getCodeSource(url, loader));
+                for (URL url : annotatedURLs)
+                {
+                    key = url.toExternalForm();
+                    if (!sourcesMap.containsKey(key))
+                        sources.add(getCodeSource(url, loader));
+                }
+            }
         }
         else
         {
             // One loader per file:
             for (File file : jars)
-                sources.add(getCodeSource(file, null));
+            {
+                key = getShortName(file);
+                if (!sourcesMap.containsKey(key))
+                    sources.add(getCodeSource(file, null));
+            }
 
             for (URL url : annotatedURLs)
-                sources.add(getCodeSource(url, null));
+            {
+                key = url.toExternalForm();
+                if (!sourcesMap.containsKey(key))
+                    sources.add(getCodeSource(url, null));
+            }
         }
 
+        linkCodeSourceToDir(dir, sources);
         return sources;
     }
 
@@ -854,6 +908,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
             for (File f : toActivate)
                 activated.add(activate(f));
 
+            /*
             for (File f : activated)
             {
                 if (isFileAllowed(f))
@@ -872,9 +927,10 @@ public final class Launcher implements Runnable, DirectoryAnnotations
             }
 
             mapLoaders();
-
+            */
+            List<CodeSource> newSources = processRoot();
             for (CodeSourceListener l : listeners)
-                l.codeSourceAdded(added);
+                l.codeSourceAdded(newSources);
         }
         catch (Throwable e)
         {
@@ -980,16 +1036,53 @@ public final class Launcher implements Runnable, DirectoryAnnotations
 
     // ===========================================================================
     /**
+     * Updates the list of codesources to be removed, with all codesources
+     * that references one of the sources in the list.
+     *
+     * This method recalls itself as long as true is returned.
+     *
+     * @param toRemove The list to update.
+     * @return boolean If an entry was added to the list.
+     */
+    private boolean updateToRemove(List<CodeSource> toRemove)
+    {
+        boolean updated = false;
+
+        List<CodeSource> l = new ArrayList<CodeSource>(toRemove.size());
+        l.addAll(toRemove);
+        for (CodeSource s : l)
+        {
+            for (CodeSource r : sourcesMap.values())
+            {
+                // If r loaded classes from s, it must be added to the list of loaders to be removed.
+                if (r.getSourceClassLoader().references(s.getSourceClassLoader()) && !toRemove.contains(r))
+                {
+                    toRemove.add(r);
+                    updated = true;
+                }
+            }
+        }
+
+        if (updated) updateToRemove(toRemove);
+
+        return updated;
+    }
+
+    // ===========================================================================
+    /**
      * Removes the given list of codesources. This does not do a physical remove,
      * but only a deregistration of the associated classloaders, and returns the
      * list of ALL codesources that have been removed.
      *
      * @param toRemove The sources to remove.
+     * @param deleteFile If true deletes the file associated with the codesources.
      * @return The list of CodeSources that were removed.
      */
     @SuppressWarnings("unchecked")
-    public List<CodeSource> removeSources(List<CodeSource> toRemove)
+    public List<CodeSource> removeSources(List<CodeSource> toRemove, boolean deleteFile)
     {
+        updateToRemove(toRemove);
+
         for (CodeSourceListener l : listeners)
             l.codeSourceRemoved(toRemove);
 
@@ -1024,7 +1117,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
             {
                 DirectoryCodeSource dcs = (DirectoryCodeSource) src;
                 List<CodeSource> children = codeSources.remove(dcs.getDirectory().getAbsolutePath());
-                removeSources(children);
+                removeSources(children, deleteFile);
                 dcs.closeLoader();
                 if (!dcs.getDirectory().delete())
                     System.out.println("Could not delete " + dcs.getDirectory().getAbsolutePath());
@@ -1055,7 +1148,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
                     sourcesToRemove.add(sourcesMap.get(disp));
             }
         }
-        return removeSources(sourcesToRemove);
+        return removeSources(sourcesToRemove, true);
     }
 
     // ===========================================================================

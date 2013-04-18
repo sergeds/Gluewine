@@ -21,10 +21,13 @@
  **************************************************************************/
 package org.gluewine.launcher;
 
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Gluewine Classloader.
@@ -44,6 +47,11 @@ public class GluewineLoader extends URLClassLoader
      * The name of the loader. (This can be a file name, directory or a url)
      */
     private String name = null;
+
+    /**
+     * The set of references. (ie. the loaders that this loader used to resolve classes)
+     */
+    private Set<GluewineLoader> references = new HashSet<GluewineLoader>();
 
     // ===========================================================================
     /**
@@ -130,9 +138,33 @@ public class GluewineLoader extends URLClassLoader
         if (url == null && dispatch)
         {
             for (int i = 0; i < dispatchers.size() && url == null; i++)
+            {
                 url = dispatchers.get(i).loadOrDispatchResource(resource, false);
+                if (url != null) references.add(dispatchers.get(i));
+            }
         }
         return url;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns true if this loader loaded a class or resource from the loader
+     * specified as parameter.
+     *
+     * @param loader The loader to check.
+     * @return True if referenced.
+     */
+    public boolean references(GluewineLoader loader)
+    {
+        return references.contains(loader);
+    }
+
+    // ===========================================================================
+    @Override
+    public void close() throws IOException
+    {
+        super.close();
+        references.clear();
     }
 
     // ===========================================================================
@@ -161,7 +193,10 @@ public class GluewineLoader extends URLClassLoader
                 if (dispatch)
                 {
                     for (int i = 0; i < dispatchers.size() && cl == null; i++)
+                    {
                         cl = dispatchers.get(i).loadOrDispatchClass(name, false);
+                        if (cl != null) references.add(dispatchers.get(i));
+                    }
                 }
             }
         }
