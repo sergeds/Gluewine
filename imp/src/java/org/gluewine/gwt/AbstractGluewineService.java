@@ -40,10 +40,8 @@ public abstract class AbstractGluewineService extends RemoteServiceServlet
     private Logger logger = Logger.getLogger(getClass());
 
     // ===========================================================================
-    /**
-     * Creates an instance.
-     */
-    protected AbstractGluewineService()
+    @Override
+    public void init()
     {
         boolean local = System.getProperty("gluewine.gxolocal") != null;
         if (local)
