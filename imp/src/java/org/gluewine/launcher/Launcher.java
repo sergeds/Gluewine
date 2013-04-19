@@ -224,6 +224,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
      * (note that CodeSources that were already loaded will not be added again. So
      * it is safe to call this method multiple times.)
      *
+     * @return The list of CodeSources that have been added.
      * @throws IOException Thrown if an IOException occurs reading files.
      */
     public List<CodeSource> processRoot() throws IOException

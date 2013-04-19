@@ -86,7 +86,7 @@ public class GluewineHandler extends ContextHandlerCollection
      */
     public Map<String, Handler> getContexts()
     {
-        Map<String, Handler> m = new HashMap<>(handlers.size());
+        Map<String, Handler> m = new HashMap<String, Handler>(handlers.size());
         m.putAll(handlers);
         return m;
     }
