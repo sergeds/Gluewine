@@ -648,36 +648,34 @@ public final class Launcher implements Runnable, DirectoryAnnotations
         URL[] annotatedURLs = loadUrls(dir);
 
         String key = getShortName(dir);
+        GluewineLoader dirLoader = null;
         if (!sourcesMap.containsKey(key))
         {
             DirectoryCodeSource dcs = new DirectoryCodeSource(dir);
             dcs.setDisplayName(getShortName(dir));
-            GluewineLoader dirLoader = new GluewineLoader(key);
+            dirLoader = new GluewineLoader(key);
             dcs.setSourceClassLoader(dirLoader);
             sourcesMap.put(dcs.getDisplayName(), dcs);
             sources.add(dcs);
         }
+        else
+            dirLoader = sourcesMap.get(key).getSourceClassLoader();
 
         // Create the classloader(s) for the files.
         if (single)
         {
-            // One loader gets all the files.
-            if (!sourcesMap.containsKey(key))
+            for (File file : jars)
             {
-                GluewineLoader loader = new GluewineLoader(getShortName(dir));
-                for (File file : jars)
-                {
-                    key = getShortName(file);
-                    if (!sourcesMap.containsKey(key))
-                        sources.add(getCodeSource(file, loader));
-                }
+                key = getShortName(file);
+                if (!sourcesMap.containsKey(key))
+                    sources.add(getCodeSource(file, dirLoader));
+            }
 
-                for (URL url : annotatedURLs)
-                {
-                    key = url.toExternalForm();
-                    if (!sourcesMap.containsKey(key))
-                        sources.add(getCodeSource(url, loader));
-                }
+            for (URL url : annotatedURLs)
+            {
+                key = url.toExternalForm();
+                if (!sourcesMap.containsKey(key))
+                    sources.add(getCodeSource(url, dirLoader));
             }
         }
         else

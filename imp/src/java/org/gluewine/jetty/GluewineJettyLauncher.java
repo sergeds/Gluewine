@@ -28,22 +28,15 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.Set;
 
 import javax.servlet.ServletContextListener;
 
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.ContextHandlerCollection;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.webapp.WebAppClassLoader;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.gluewine.console.CLICommand;
@@ -83,16 +76,6 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
     private Server server = null;
 
     /**
-     * The handler that handles all registered contexts.
-     */
-    private ContextHandlerCollection contexts = new ContextHandlerCollection();
-
-    /**
-     * The map of active handlers registered on their context path.
-     */
-    private Map<String, Handler> handlers = new HashMap<String, Handler>();
-
-    /**
      * The logger instance to use.
      */
     private Logger logger = Logger.getLogger(getClass());
@@ -101,6 +84,11 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
      * The directory where to put the war files.
      */
     private File warDirectory = null;
+
+    /**
+     * The base handler to use.
+     */
+    private GluewineHandler baseHandler = new GluewineHandler();
 
     // ===========================================================================
     /**
@@ -120,7 +108,6 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
                 {
                     Thread.currentThread().setContextClassLoader(GluewineJettyLauncher.class.getClassLoader());
 
-                    contexts = new ContextHandlerCollection();
                     logger.info("Loading class " + ServletContextListener.class.getName());
 
                     int port = Integer.parseInt(properties.getProperty("jetty.port", "8080"));
@@ -140,7 +127,7 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
                     }
 
                     server = new Server(port);
-                    server.setHandler(contexts);
+                    server.setHandler(baseHandler);
                     server.start();
                     server.join();
                 }
@@ -160,14 +147,8 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
      */
     public void configRefreshed() throws Exception
     {
-        Map<String, Handler> toRegister = new HashMap<String, Handler>(handlers.size());
-        toRegister.putAll(handlers);
-
         stop();
         launch();
-
-        for (Handler h : toRegister.values())
-            contexts.addHandler(h);
     }
 
     // ===========================================================================
@@ -179,11 +160,6 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
     @RunOnDeactivate
     public void stop() throws Exception
     {
-        Set<String> contexts = new HashSet<String>(handlers.size());
-        contexts.addAll(handlers.keySet());
-        for (String c : contexts)
-            undeploy(c);
-
         server.stop();
     }
 
@@ -217,7 +193,7 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
     public void _jetty_contexts(CommandContext cc) throws Throwable
     {
         cc.tableHeader("Context", "Handler");
-        for (Entry<String, Handler> e : handlers.entrySet())
+        for (Entry<String, Handler> e : baseHandler.getContexts().entrySet())
             cc.tableRow(e.getKey(), e.getValue().getClass().getName());
 
         cc.printTable();
@@ -258,6 +234,8 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
         InputStream in = null;
         OutputStream out = null;
 
+        logger.debug("Fetching war " + urlString + " to " + target.getAbsolutePath());
+
         try
         {
             in = url.openStream();
@@ -268,6 +246,7 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
                 out.write(buffer, 0, read);
                 read = in.read(buffer);
             }
+            out.flush();
         }
         finally
         {
@@ -280,7 +259,7 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
                 if (out != null) out.close();
             }
         }
-
+        logger.trace("Target war " + target.getAbsolutePath() + " size: " + target.length());
         return target;
     }
 
@@ -315,16 +294,9 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
     private void undeploy(String context) throws IOException
     {
         logger.info("Undeploying context " + context);
-        Handler h = handlers.remove(context);
-        if (h != null)
-        {
-            contexts.removeHandler(h);
-            if (h instanceof WebAppContext)
-            {
-                File target = new File(warDirectory, context + ".war");
-                if (!target.delete()) throw new IOException("Could not delete " + target.getAbsolutePath());
-            }
-        }
+        baseHandler.removeContext(context);
+        File target = new File(warDirectory, context + ".war");
+        if (!target.delete()) throw new IOException("Could not delete " + target.getAbsolutePath());
     }
 
     // ===========================================================================
@@ -336,13 +308,12 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
      */
     private void deployWar(File war) throws IOException
     {
+        if (!war.exists()) throw new IOException("The war file " + war.getAbsolutePath() + " does not exist.");
         String context = war.getName();
         int i = context.lastIndexOf(".war");
         if (i > -1) context = context.substring(0, i);
 
         context = "/" + context;
-
-        undeploy(context);
 
         try
         {
@@ -354,8 +325,7 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
 
             logger.info("Deploying war " + war.getAbsolutePath() + " in context " + context);
 
-            handlers.put(context, webapp);
-            contexts.addHandler(webapp);
+            baseHandler.addHandler(context, webapp);
         }
         catch (IOException e)
         {
@@ -367,12 +337,10 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
     @Override
     public void registered(GluewineServlet t)
     {
-        ServletContextHandler servletContext = new ServletContextHandler(ServletContextHandler.SESSIONS);
-        servletContext.setContextPath(t.getContextPath());
-        servletContext.setClassLoader(t.getClass().getClassLoader());
-        servletContext.addServlet(new ServletHolder(t), t.getContextPath());
-        handlers.put(t.getContextPath(), servletContext);
-        contexts.addHandler(servletContext);
+        String context = t.getContextPath();
+        if (!context.startsWith("/")) context = "/" + context;
+        logger.info("Deploying servlet " + t.getClass().getName() + " in context " + context);
+        baseHandler.addHandler(context, new GluewineServletHandler(t));
     }
 
     // ===========================================================================

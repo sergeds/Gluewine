@@ -117,7 +117,7 @@ public final class LocalAccess
         synchronized (client)
         {
             stopRequested = true;
-            server.notifyAll();
+            client.notifyAll();
         }
     }
 }

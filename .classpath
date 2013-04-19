@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="imp/src/java"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
 	<classpathentry kind="lib" path="imp/lib/java/compile/junit-4.8.2.jar"/>
 	<classpathentry kind="lib" path="imp/lib/java/compile/findbugs_annotations.jar"/>
 	<classpathentry kind="lib" path="imp/lib/gwt/compile/gwt-dev.jar"/>
@@ -26,11 +26,11 @@
 	<classpathentry kind="lib" path="imp/lib/java/runtime/support/log4j-1.2.15.jar"/>
 	<classpathentry kind="lib" path="imp/lib/java/runtime/support/postgresql-9.1-901.jdbc4.jar"/>
 	<classpathentry kind="lib" path="imp/lib/java/runtime/camel/camel-core-2.10.4.jar"/>
-	<classpathentry kind="lib" path="imp/lib/java/runtime/jetty/jetty-server-9.0.1.v20130408.jar"/>
+	<classpathentry kind="lib" path="imp/lib/java/runtime/jetty/jetty-server-9.0.1.v20130408.jar" sourcepath="C:/java/jetty-9.0.1.v20130408/jetty-9.0.1.v20130408/jetty-server/src/main/java"/>
 	<classpathentry kind="lib" path="imp/lib/java/runtime/jetty/jetty-servlets-9.0.1.v20130408.jar"/>
-	<classpathentry kind="lib" path="imp/lib/java/runtime/jetty/jetty-webapp-9.0.1.v20130408.jar"/>
+	<classpathentry kind="lib" path="imp/lib/java/runtime/jetty/jetty-webapp-9.0.1.v20130408.jar" sourcepath="C:/java/jetty-9.0.1.v20130408/jetty-9.0.1.v20130408/jetty-webapp/src/main/java"/>
 	<classpathentry kind="lib" path="imp/lib/java/runtime/jetty/servlet-api-3.0.jar"/>
-	<classpathentry kind="lib" path="imp/lib/java/runtime/jetty/jetty-servlet-9.0.1.v20130408.jar"/>
+	<classpathentry kind="lib" path="imp/lib/java/runtime/jetty/jetty-servlet-9.0.1.v20130408.jar" sourcepath="C:/java/jetty-9.0.1.v20130408/jetty-9.0.1.v20130408/jetty-servlet"/>
 	<classpathentry kind="lib" path="imp/lib/java/runtime/jetty/jetty-util-9.0.1.v20130408.jar"/>
 	<classpathentry kind="lib" path="imp/lib/java/runtime/xstream/xpp3_min-1.1.4c.jar"/>
 	<classpathentry kind="lib" path="imp/lib/java/runtime/xstream/xstream-1.4.4.jar"/>

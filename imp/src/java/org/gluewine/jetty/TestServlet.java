@@ -21,28 +21,43 @@
  **************************************************************************/
 package org.gluewine.jetty;
 
-import javax.servlet.http.HttpServlet;
+import java.io.IOException;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
- * Extends a javax.servlet.Servlet by allowing the servlet to specify a
- * context path.
+ * TestServet voor Jetty.
  *
  * @author fks/Serge de Schaetzen
  *
  */
-public abstract class GluewineServlet extends HttpServlet
+public class TestServlet extends GluewineServlet
 {
     // ===========================================================================
     /**
      * The serial uid.
      */
-    private static final long serialVersionUID = 6457889733711226018L;
+    private static final long serialVersionUID = 1066361063768379586L;
 
     // ===========================================================================
-    /**
-     * Returns the context path of this servlet.
-     *
-     * @return The context path.
-     */
-    public abstract String getContextPath();
+    @Override
+    public String getContextPath()
+    {
+        return "/test";
+    }
+
+    // ===========================================================================
+    @Override
+    public void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws IOException
+    {
+        try
+        {
+            resp.getWriter().println("Welcome to the Gluewine Test Servlet.");
+        }
+        catch (IOException e)
+        {
+            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+    }
 }

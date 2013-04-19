@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Gluewine Camel Integration Module
+ * Gluewine Jetty Integration Module
  *
  * Copyright (C) 2013 FKS bvba               http://www.fks.be/
  *
@@ -21,28 +21,47 @@
  **************************************************************************/
 package org.gluewine.jetty;
 
+import java.io.IOException;
+
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.handler.AbstractHandler;
 
 /**
- * Extends a javax.servlet.Servlet by allowing the servlet to specify a
- * context path.
+ * Handler that simply services a servlet. The context of the servlet is handled
+ * in the GluewineHandler.
  *
  * @author fks/Serge de Schaetzen
  *
  */
-public abstract class GluewineServlet extends HttpServlet
+public class GluewineServletHandler extends AbstractHandler
 {
     // ===========================================================================
     /**
-     * The serial uid.
+     * The servlet being handled.
      */
-    private static final long serialVersionUID = 6457889733711226018L;
+    private HttpServlet servlet = null;
 
     // ===========================================================================
     /**
-     * Returns the context path of this servlet.
+     * The servlet to service.
      *
-     * @return The context path.
+     * @param servlet The servlet.
      */
-    public abstract String getContextPath();
+    public GluewineServletHandler(HttpServlet servlet)
+    {
+        this.servlet = servlet;
+    }
+
+    // ===========================================================================
+    @Override
+    public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
+    {
+        servlet.service(request, response);
+        baseRequest.setHandled(true);
+    }
 }
