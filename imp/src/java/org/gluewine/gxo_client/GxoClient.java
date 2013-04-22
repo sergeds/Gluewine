@@ -237,7 +237,13 @@ public class GxoClient
             }
         }
         else
+        {
+            LocalAccess la = LocalAccess.getInstance();
+            out = new OutputStreamWriter(la.getServerOutputStream(), "UTF-8");
+            in = new InputStreamReader(la.getServerInputStream(), "UTF-8");
+
             connected = true;
+        }
     }
 
     // ===========================================================================
@@ -339,21 +345,9 @@ public class GxoClient
                 {
                     try
                     {
-                        if (local)
-                        {
-                            String s = stream.toXML(o);
-                            logger.trace("Writing out message: " + s);
-                            LocalAccess.writeToServer(s);
-                            s = LocalAccess.readFromClient();
-                            result = stream.fromXML(s);
-                            logger.trace("Received response message: " + s);
-                        }
-                        else
-                        {
-                            stream.toXML(o, out);
-                            out.flush();
-                            result = stream.fromXML(in);
-                        }
+                        stream.toXML(o, out);
+                        out.flush();
+                        result = stream.fromXML(in);
 
                         break;
                     }

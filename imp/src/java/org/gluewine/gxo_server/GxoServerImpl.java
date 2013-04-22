@@ -199,8 +199,6 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
                 }
             }
         }
-
-        LocalAccess.stop();
     }
 
     // ===========================================================================
@@ -270,29 +268,40 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
         // The map containing the instantiated services.
         Map<String, Object> instantiated = new HashMap<String, Object>();
 
-        while (!stopRequested)
+        try
         {
-            try
-            {
-                Object ob = stream.fromXML(LocalAccess.readFromServer());
+            LocalAccess la = LocalAccess.getInstance();
+            InputStreamReader in = new InputStreamReader(la.getClientInputStream(), "UTF-8");
+            OutputStreamWriter out = new OutputStreamWriter(la.getClientOutputStream(), "UTF-8");
 
-                if (ob instanceof ExecBean)
-                {
-                    ExecBean bean = (ExecBean) ob;
-                    Object result = processExecBean(instantiated, bean);
-                    LocalAccess.writeToClient(stream.toXML(result));
-                }
-                else if (ob instanceof InitBean)
-                {
-                    InitBean bean = (InitBean) ob;
-                    Object result = processInitBean(instantiated, bean);
-                    LocalAccess.writeToClient(stream.toXML(result));
-                }
-            }
-            catch (Throwable e)
+            while (!stopRequested)
             {
-                if (!stopRequested) e.printStackTrace();
+                try
+                {
+                    Object ob = stream.fromXML(in);
+
+                    if (ob instanceof ExecBean)
+                    {
+                        ExecBean bean = (ExecBean) ob;
+                        Object result = processExecBean(instantiated, bean);
+                        stream.toXML(result, out);
+                    }
+                    else if (ob instanceof InitBean)
+                    {
+                        InitBean bean = (InitBean) ob;
+                        Object result = processInitBean(instantiated, bean);
+                        stream.toXML(result, out);
+                    }
+                }
+                catch (Throwable e)
+                {
+                    if (!stopRequested) e.printStackTrace();
+                }
             }
+        }
+        catch (Throwable e)
+        {
+            e.printStackTrace();
         }
     }
 

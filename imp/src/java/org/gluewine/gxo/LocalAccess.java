@@ -1,6 +1,10 @@
 package org.gluewine.gxo;
 
-import java.util.Stack;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 
 /**
  * Static class that allows to register the streams for local usage.
@@ -12,112 +16,96 @@ public final class LocalAccess
 {
     // ===========================================================================
     /**
-     * The client stack.
+     * The client input stream.
      */
-    private static Stack<String> client = new Stack<String>();
+    private PipedInputStream clientInput = new PipedInputStream();
 
     /**
-     * The server stack.
+     * The client output stream.
      */
-    private static Stack<String> server = new Stack<String>();
+    private PipedOutputStream clientOutput = new PipedOutputStream();
 
     /**
-     * Flag that stops the access.
+     * The server input stream.
      */
-    private static boolean stopRequested = false;
+    private PipedInputStream serverInput = new PipedInputStream();
+
+    /**
+     * The server output stream.
+     */
+    private PipedOutputStream serverOutput = new PipedOutputStream();
+
+    /**
+     * The singleton instance to use.
+     */
+    private static LocalAccess instance = null;
 
     // ===========================================================================
     /**
      * Creates an instance.
-     */
-    private LocalAccess()
-    {
-    }
-
-    // ===========================================================================
-    /**
-     * Writes an item to the server queue.
      *
-     * @param item The item to write.
+     * @throws IOException If an error occurs connecting the streams.
      */
-    public static void writeToServer(String item)
+    private LocalAccess() throws IOException
     {
-        synchronized (server)
-        {
-            server.push(item);
-            server.notifyAll();
-        }
+        clientInput.connect(serverOutput);
+        serverInput.connect(clientOutput);
     }
 
     // ===========================================================================
     /**
-     * Writes an item to the client queue.
+     * Returns the inputstream to read from the client.
      *
-     * @param item The item to write.
+     * @return The input stream.
      */
-    public static void writeToClient(String item)
+    public InputStream getClientInputStream()
     {
-        synchronized (client)
-        {
-            client.push(item);
-            client.notifyAll();
-        }
+        return clientInput;
     }
 
     // ===========================================================================
     /**
-     * Reads and returns a String. This method blocks until a String is available.
+     * Returns the inputstream to read from the server.
      *
-     * @return The string to read.
-     * @throws InterruptedException If a problem occurs.
+     * @return The input stream.
      */
-    public static String readFromServer() throws InterruptedException
+    public InputStream getServerInputStream()
     {
-        synchronized (server)
-        {
-            while (!stopRequested && server.isEmpty())
-                server.wait();
-
-            if (!stopRequested) return server.pop();
-            else return "";
-        }
+        return serverInput;
     }
 
     // ===========================================================================
     /**
-     * Reads and returns a String. This method blocks until a String is available.
+     * Returns the outputstream to write to the client.
      *
-     * @return The string to read.
-     * @throws InterruptedException If a problem occurs.
+     * @return The output stream.
      */
-    public static String readFromClient() throws InterruptedException
+    public OutputStream getClientOutputStream()
     {
-        synchronized (client)
-        {
-            while (!stopRequested && client.isEmpty())
-                client.wait();
-
-            if (!stopRequested) return client.pop();
-            else return "";
-        }
+        return clientOutput;
     }
 
     // ===========================================================================
     /**
-     * Stops the access.
+     * Returns the inputstream to read from the server.
+     *
+     * @return The input stream.
      */
-    public static void stop()
+    public OutputStream getServerOutputStream()
     {
-        synchronized (server)
-        {
-            stopRequested = true;
-            server.notifyAll();
-        }
+        return serverOutput;
+    }
 
-        synchronized (client)
-        {
-            stopRequested = true;
-            client.notifyAll();
-        }
+    // ===========================================================================
+    /**
+     * Returns the instance to use.
+     *
+     * @return The instance.
+     * @throws IOException If an error occurs connecting the streams.
+     */
+    public static synchronized LocalAccess getInstance() throws IOException
+    {
+        if (instance == null) instance = new LocalAccess();
+        return instance;
     }
 }

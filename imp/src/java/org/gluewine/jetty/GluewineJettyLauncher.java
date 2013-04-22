@@ -27,6 +27,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
+import java.security.AccessController;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -343,18 +346,33 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
      * @param context The context to deploy into.
      * @throws IOException If an error occurs reading the file.
      */
-    public void deployWar(File war, String context) throws IOException
+    public void deployWar(final File war, final String context) throws IOException
     {
-        WebAppContext webapp = new WebAppContext();
-        WebAppClassLoader wp = new WebAppClassLoader(getClass().getClassLoader(), webapp);
-        webapp.setClassLoader(wp);
-        webapp.setContextPath(context);
-        webapp.setWar(war.getAbsolutePath());
+        try
+        {
+            AccessController.doPrivileged(new PrivilegedExceptionAction<Void>()
+            {
+                @Override
+                public Void run() throws Exception
+                {
+                    WebAppContext webapp = new WebAppContext();
+                    WebAppClassLoader wp = new WebAppClassLoader(getClass().getClassLoader(), webapp);
+                    webapp.setClassLoader(wp);
+                    webapp.setContextPath(context);
+                    webapp.setWar(war.getAbsolutePath());
 
-        logger.info("Deploying war " + war.getAbsolutePath() + " in context " + context);
+                    logger.info("Deploying war " + war.getAbsolutePath() + " in context " + context);
 
-        if (context.equals("/default")) baseHandler.setDefaultHandler(webapp);
-        else baseHandler.addHandler(context, webapp);
+                    if (context.equals("/default")) baseHandler.setDefaultHandler(webapp);
+                    else baseHandler.addHandler(context, webapp);
+                    return null;
+                }
+            });
+        }
+        catch (PrivilegedActionException e)
+        {
+            throw new IOException(e.getMessage());
+        }
     }
 
     // ===========================================================================
