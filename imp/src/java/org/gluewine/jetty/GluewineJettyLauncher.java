@@ -31,6 +31,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.servlet.ServletContextListener;
 
@@ -139,6 +141,8 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
         }, "JettyLauncher").start();
     }
 
+
+
     // ===========================================================================
     /**
      * Invoked when the config file has been refreshed.
@@ -197,6 +201,19 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
             cc.tableRow(e.getKey(), e.getValue().getClass().getName());
 
         cc.printTable();
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the set of available contexts.
+     *
+     * @return The set of contexts.
+     */
+    Set<String> getContexts()
+    {
+       Set<String> sorted = new TreeSet<String>();
+       sorted.addAll(baseHandler.getContexts().keySet());
+       return sorted;
     }
 
     // ===========================================================================
@@ -301,12 +318,13 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
 
     // ===========================================================================
     /**
-     * Deploys the given war in the context specified.
+     * Deploys the given war in the context specified. The context used will be the
+     * name of the file, without path and extension.
      *
      * @param war The war to deploy.
      * @throws IOException If an error occurs.
      */
-    private void deployWar(File war) throws IOException
+    public void deployWar(File war) throws IOException
     {
         if (!war.exists()) throw new IOException("The war file " + war.getAbsolutePath() + " does not exist.");
         String context = war.getName();
@@ -314,23 +332,29 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
         if (i > -1) context = context.substring(0, i);
 
         context = "/" + context;
+        deployWar(war, context);
+    }
 
-        try
-        {
-            WebAppContext webapp = new WebAppContext();
-            WebAppClassLoader wp = new WebAppClassLoader(getClass().getClassLoader(), webapp);
-            webapp.setClassLoader(wp);
-            webapp.setContextPath(context);
-            webapp.setWar(war.getAbsolutePath());
+    // ===========================================================================
+    /**
+     * Deploys the war specified in the given context.
+     *
+     * @param war The file to deploy;
+     * @param context The context to deploy into.
+     * @throws IOException If an error occurs reading the file.
+     */
+    public void deployWar(File war, String context) throws IOException
+    {
+        WebAppContext webapp = new WebAppContext();
+        WebAppClassLoader wp = new WebAppClassLoader(getClass().getClassLoader(), webapp);
+        webapp.setClassLoader(wp);
+        webapp.setContextPath(context);
+        webapp.setWar(war.getAbsolutePath());
 
-            logger.info("Deploying war " + war.getAbsolutePath() + " in context " + context);
+        logger.info("Deploying war " + war.getAbsolutePath() + " in context " + context);
 
-            baseHandler.addHandler(context, webapp);
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
+        if (context.equals("/default")) baseHandler.setDefaultHandler(webapp);
+        else baseHandler.addHandler(context, webapp);
     }
 
     // ===========================================================================
@@ -340,7 +364,9 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
         String context = t.getContextPath();
         if (!context.startsWith("/")) context = "/" + context;
         logger.info("Deploying servlet " + t.getClass().getName() + " in context " + context);
-        baseHandler.addHandler(context, new GluewineServletHandler(t));
+
+        if (context.equals("/default")) baseHandler.setDefaultHandler(new GluewineServletHandler(t));
+        else baseHandler.addHandler(context, new GluewineServletHandler(t));
     }
 
     // ===========================================================================

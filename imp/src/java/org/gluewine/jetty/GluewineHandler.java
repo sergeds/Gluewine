@@ -54,6 +54,12 @@ public class GluewineHandler extends ContextHandlerCollection
      */
     private Logger logger = Logger.getLogger(getClass());
 
+    /**
+     * The default handler. This handler handles all requests for contexts that
+     * have not yet been registered.
+     */
+    private Handler defaultHandler = null;
+
     // ===========================================================================
     @Override
     public void handle(String target, Request baseRequest, HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException
@@ -68,6 +74,11 @@ public class GluewineHandler extends ContextHandlerCollection
             logger.debug("Dispatching request to " + handler.getClass().getName());
             handler.handle(target, baseRequest, req, resp);
         }
+        else if (defaultHandler != null)
+        {
+            logger.debug("Dispatching request to default handler.");
+            defaultHandler.handle(target, baseRequest, req, resp);
+        }
         else
         {
             logger.debug("No handler found for context " + context);
@@ -76,6 +87,17 @@ public class GluewineHandler extends ContextHandlerCollection
             resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
             baseRequest.setHandled(true);
         }
+    }
+
+    // ===========================================================================
+    /**
+     * Sets the default handler.
+     *
+     * @param handler The handler.
+     */
+    public void setDefaultHandler(Handler handler)
+    {
+        this.defaultHandler = handler;
     }
 
     // ===========================================================================
@@ -93,7 +115,8 @@ public class GluewineHandler extends ContextHandlerCollection
 
     // ===========================================================================
     /**
-     * Parses and returns the context.
+     * Parses and returns the context. The context is considered the first
+     * part of the uri, after the host.
      *
      * @param c The String to process.
      * @return The context.

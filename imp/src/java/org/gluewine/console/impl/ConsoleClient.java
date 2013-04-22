@@ -32,10 +32,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import jline.Completor;
-import jline.ConsoleReader;
+import jline.console.ConsoleReader;
+import jline.console.completer.Completer;
+import jline.console.history.FileHistory;
+import jline.console.history.History;
 
-import org.fusesource.jansi.AnsiConsole;
 import org.gluewine.console.AnsiCodes;
 import org.gluewine.console.AuthenticationAbortedException;
 import org.gluewine.console.ConsoleServer;
@@ -48,7 +49,7 @@ import org.gluewine.gxo_client.GxoClient;
  * @author fks/Serge de Schaetzen
  *
  */
-public final class ConsoleClient implements Runnable, Completor, AnsiCodes
+public final class ConsoleClient implements Runnable, Completer, AnsiCodes
 {
     // ===========================================================================
     /**
@@ -98,17 +99,16 @@ public final class ConsoleClient implements Runnable, Completor, AnsiCodes
     {
         try
         {
-            //String s = Ansi.Color.RED + "\u001b[31;1mGluewine Framework\u001b[0m";
-            String s = HOME + CLS + WELCOME;
-            System.out.println(s);
             ConsoleReader reader = new ConsoleReader();
             reader.clearScreen();
-            reader.setBellEnabled(false);
+            reader.setBellEnabled(true);
+            reader.println(WELCOME);
+
             String home = System.getProperty("user.home");
-            reader.getHistory().clear();
-            reader.getHistory().setHistoryFile(new File(home, ".osgi_history"));
-            reader.getHistory().setMaxSize(50);
-            reader.addCompletor(this);
+            History his = new FileHistory(new File(home, ".osgi_history"));
+            reader.setHistory(his);
+            reader.setHistoryEnabled(true);
+            reader.addCompleter(this);
 
             boolean initial = true;
             boolean stopRequested = false;
@@ -131,7 +131,7 @@ public final class ConsoleClient implements Runnable, Completor, AnsiCodes
                         stopRequested = true;
 
                     else if (line.equals("cls") || line.equals("clear"))
-                        System.out.println(HOME + CLS);
+                        reader.println(CLS + HOME);
 
                     else if (line.startsWith("logoff"))
                     {
@@ -151,7 +151,7 @@ public final class ConsoleClient implements Runnable, Completor, AnsiCodes
                         try
                         {
                             String output = server.executeCommand(line);
-                            System.out.println(output);
+                            reader.println(output);
                         }
                         catch (SyntaxException e)
                         {
@@ -341,9 +341,6 @@ public final class ConsoleClient implements Runnable, Completor, AnsiCodes
     @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "NP_ALWAYS_NULL")
     public static void main(String[] args)
     {
-        //System.setProperty("file.encoding", "UTF-8");
-        AnsiConsole.systemInstall();
-
         if (args == null || args.length < 2)
         {
             System.out.println("Syntax: ConsoleClient <host> <port>");

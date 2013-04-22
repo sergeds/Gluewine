@@ -21,7 +21,8 @@
  **************************************************************************/
 package org.gluewine.dbauth;
 
-import jline.ConsoleReader;
+
+import jline.console.ConsoleReader;
 
 import org.gluewine.console.AuthenticationAbortedException;
 

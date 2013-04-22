@@ -21,8 +21,6 @@
 	<classpathentry kind="lib" path="imp/lib/java/runtime/hibernate/jboss-transaction-api_1.1_spec-1.0.0.Final.jar"/>
 	<classpathentry kind="lib" path="imp/lib/java/runtime/hibernate/xstream-hibernate-1.4.4.jar"/>
 	<classpathentry kind="lib" path="imp/lib/java/runtime/support/cglib-nodep-2.2.3.jar"/>
-	<classpathentry kind="lib" path="imp/lib/java/runtime/support/jansi-1.9.jar"/>
-	<classpathentry kind="lib" path="imp/lib/java/runtime/support/jline.jar"/>
 	<classpathentry kind="lib" path="imp/lib/java/runtime/support/log4j-1.2.15.jar"/>
 	<classpathentry kind="lib" path="imp/lib/java/runtime/support/postgresql-9.1-901.jdbc4.jar"/>
 	<classpathentry kind="lib" path="imp/lib/java/runtime/camel/camel-core-2.10.4.jar"/>
@@ -34,5 +32,6 @@
 	<classpathentry kind="lib" path="imp/lib/java/runtime/jetty/jetty-util-9.0.1.v20130408.jar"/>
 	<classpathentry kind="lib" path="imp/lib/java/runtime/xstream/xpp3_min-1.1.4c.jar"/>
 	<classpathentry kind="lib" path="imp/lib/java/runtime/xstream/xstream-1.4.4.jar"/>
+	<classpathentry kind="lib" path="imp/lib/java/runtime/support/jline-2.11-SNAPSHOT.jar" sourcepath="C:/java/jline2-master/src/main/java"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
