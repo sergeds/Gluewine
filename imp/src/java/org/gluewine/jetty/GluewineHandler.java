@@ -61,6 +61,15 @@ public class GluewineHandler extends ContextHandlerCollection
     private Handler defaultHandler = null;
 
     // ===========================================================================
+    /**
+     * Creates an instance.
+     */
+    public GluewineHandler()
+    {
+        defaultHandler = new GluewineServletHandler(new DefaultServlet(this));
+    }
+
+    // ===========================================================================
     @Override
     public void handle(String target, Request baseRequest, HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException
     {

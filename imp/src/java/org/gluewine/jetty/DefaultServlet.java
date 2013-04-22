@@ -2,11 +2,11 @@ package org.gluewine.jetty;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.gluewine.core.Glue;
 
 /**
  * The default servlet.
@@ -25,8 +25,18 @@ public class DefaultServlet extends GluewineServlet
     /**
      * The jetty instance.
      */
-    @Glue
-    private GluewineJettyLauncher jetty = null;
+    private GluewineHandler handler;
+
+    // ===========================================================================
+    /**
+     * Creates an instance.
+     *
+     * @param handler The handler instance.
+     */
+    DefaultServlet(GluewineHandler handler)
+    {
+        this.handler = handler;
+    }
 
     // ===========================================================================
     @Override
@@ -45,7 +55,11 @@ public class DefaultServlet extends GluewineServlet
         b.append("<p>We're sorry but the context you tried to reach does not seem to exist!");
         b.append("<br>Here's the list of available contexts:");
         b.append("<ul>");
-        for (String s : jetty.getContexts())
+
+        Set<String> contexts = new TreeSet<String>();
+        contexts.addAll(handler.getContexts().keySet());
+
+        for (String s : contexts)
         {
             b.append("<li>");
             b.append("<A HREF='").append(s).append("'>").append(s).append("</A>");
