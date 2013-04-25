@@ -74,7 +74,6 @@ public class GluewineHandler extends ContextHandlerCollection
     public void handle(String target, Request baseRequest, HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException
     {
         String context = parseContext(baseRequest.getRequestURI());
-
         logger.debug("Request recieved for context " + context);
 
         if (handlers.containsKey(context))
@@ -106,7 +105,8 @@ public class GluewineHandler extends ContextHandlerCollection
      */
     public void setDefaultHandler(Handler handler)
     {
-        this.defaultHandler = handler;
+        addHandler("/", handler);
+        defaultHandler = handler;
     }
 
     // ===========================================================================

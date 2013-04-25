@@ -202,7 +202,7 @@ public class GluewineLoader extends URLClassLoader
         }
 
         if (cl == null && dispatch)
-            throw new ClassNotFoundException("GluewineLoader: " + name + " could not load the class " + name);
+            throw new ClassNotFoundException("GluewineLoader: " + this.name + " could not load the class " + name);
         return cl;
     }
 

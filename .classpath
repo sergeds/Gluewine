@@ -4,7 +4,7 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
 	<classpathentry kind="lib" path="imp/lib/java/compile/junit-4.8.2.jar"/>
 	<classpathentry kind="lib" path="imp/lib/java/compile/findbugs_annotations.jar"/>
-	<classpathentry kind="lib" path="imp/lib/gwt/compile/gwt-dev.jar"/>
+	<classpathentry kind="lib" path="imp/lib/gwt/compile/gwt-dev.jar" sourcepath="C:/java/jetty-9.0.1.v20130408/jetty-9.0.1.v20130408/jetty-deploy/src/main/java"/>
 	<classpathentry kind="lib" path="imp/lib/gwt/compile/gwt-user.jar"/>
 	<classpathentry kind="lib" path="imp/lib/gwt/runtime/gwt-servlet.jar"/>
 	<classpathentry kind="lib" path="imp/lib/java/compile/dom4j-1.6.1.jar"/>

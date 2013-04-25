@@ -42,6 +42,7 @@ import javax.servlet.ServletContextListener;
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.webapp.WebAppClassLoader;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.gluewine.console.CLICommand;
@@ -131,6 +132,8 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
                         }
                     }
 
+                    loadStaticHandlers();
+
                     server = new Server(port);
                     server.setHandler(baseHandler);
                     server.start();
@@ -144,7 +147,35 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
         }, "JettyLauncher").start();
     }
 
+    // ===========================================================================
+    /**
+     * Loads the static handlers.
+     */
+    private void loadStaticHandlers()
+    {
+        int i = 0;
+        String path = properties.getProperty("static." + i + ".path");
+        while (path != null)
+        {
+            File dir = new File(path);
+            if (!dir.exists())
+            {
+                if (!dir.mkdirs())
+                    logger.warn("Could not create directory " + dir.getAbsolutePath());
+            }
 
+            String pref = "static." + i;
+            ResourceHandler handler = new GluewineStaticHandler(dir.getName());
+            handler.setResourceBase(path);
+            handler.setDirectoriesListed(Boolean.parseBoolean(properties.getProperty(pref + ".directoryListing", "false")));
+            handler.setWelcomeFiles(properties.getProperty(pref + ".welcome", "index.html").split(","));
+
+            baseHandler.addHandler(dir.getName(), handler);
+
+            i++;
+            path = properties.getProperty("static." + i + ".path");
+        }
+    }
 
     // ===========================================================================
     /**
@@ -358,13 +389,20 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
                     WebAppContext webapp = new WebAppContext();
                     WebAppClassLoader wp = new WebAppClassLoader(getClass().getClassLoader(), webapp);
                     webapp.setClassLoader(wp);
-                    webapp.setContextPath(context);
                     webapp.setWar(war.getAbsolutePath());
 
                     logger.info("Deploying war " + war.getAbsolutePath() + " in context " + context);
 
-                    if (context.equals("/default")) baseHandler.setDefaultHandler(webapp);
-                    else baseHandler.addHandler(context, webapp);
+                    if (context.equals("/default"))
+                    {
+                        webapp.setContextPath("/");
+                        baseHandler.setDefaultHandler(webapp);
+                    }
+                    else
+                    {
+                        webapp.setContextPath(context);
+                        baseHandler.addHandler(context, webapp);
+                    }
                     return null;
                 }
             });
