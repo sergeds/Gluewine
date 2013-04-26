@@ -1,6 +1,7 @@
 package org.gluewine.jetty;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -8,8 +9,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.Request;
-import org.gluewine.console.AuthenticationException;
-import org.gluewine.dbauth.DBAuthenticator;
+import org.gluewine.authentication.AuthenticationException;
+import org.gluewine.authentication.UseridPasswordAuthentication;
 
 import com.thoughtworks.xstream.core.util.Base64Encoder;
 
@@ -25,7 +26,7 @@ public class GluewineSecuredStaticHandler extends GluewineStaticHandler
     /**
      * The authenticator to use.
      */
-    private DBAuthenticator authenticator;
+    private UseridPasswordAuthentication authenticator;
 
     /**
      * The logger instance to use.
@@ -39,7 +40,7 @@ public class GluewineSecuredStaticHandler extends GluewineStaticHandler
      * @param context The context.
      * @param authenticator The authenticator to use.
      */
-    public GluewineSecuredStaticHandler(String context, DBAuthenticator authenticator)
+    public GluewineSecuredStaticHandler(String context, UseridPasswordAuthentication authenticator)
     {
         super(context);
         this.authenticator = authenticator;
@@ -81,11 +82,12 @@ public class GluewineSecuredStaticHandler extends GluewineStaticHandler
      *
      * @param enc The string to process.
      * @return The userid and password.
+     * @throws UnsupportedEncodingException If decoding fails.
      */
-    private String[] parseBasic(String enc)
+    private String[] parseBasic(String enc) throws UnsupportedEncodingException
     {
         byte[] bytes = new Base64Encoder().decode(enc);
-        String s = new String(bytes);
+        String s = new String(bytes, "utf8");
         int pos = s.indexOf(":");
         if (pos >= 0)
             return new String[] {s.substring(0, pos), s.substring(pos + 1)};

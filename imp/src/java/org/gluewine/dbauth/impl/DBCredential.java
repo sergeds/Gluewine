@@ -30,7 +30,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import org.gluewine.console.AuthenticationException;
+import org.gluewine.authentication.AuthenticationException;
 
 /**
  * Entity used to store a credential (userid + password) in the database.

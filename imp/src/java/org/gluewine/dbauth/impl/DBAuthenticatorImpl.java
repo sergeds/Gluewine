@@ -24,7 +24,7 @@ package org.gluewine.dbauth.impl;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.gluewine.console.AuthenticationException;
+import org.gluewine.authentication.AuthenticationException;
 import org.gluewine.console.CLICommand;
 import org.gluewine.console.CLIOption;
 import org.gluewine.console.CommandContext;

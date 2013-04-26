@@ -21,8 +21,9 @@
  **************************************************************************/
 package org.gluewine.dbauth;
 
-import org.gluewine.console.AuthenticationException;
-import org.gluewine.console.Authenticator;
+import org.gluewine.authentication.AuthenticationException;
+import org.gluewine.authentication.Authenticator;
+import org.gluewine.authentication.UseridPasswordAuthentication;
 
 /**
  * Defines the DBAuthenticator. This authenticator uses a userid and password
@@ -31,19 +32,8 @@ import org.gluewine.console.Authenticator;
  * @author fks/Serge de Schaetzen
  *
  */
-public interface DBAuthenticator extends Authenticator
+public interface DBAuthenticator extends Authenticator, UseridPasswordAuthentication
 {
-    // ===========================================================================
-    /**
-     * Authenticates using the given userid and password.
-     *
-     * @param user The user to authenticate.
-     * @param password The password of the user.
-     * @return The session id.
-     * @throws AuthenticationException If authentication failed.
-     */
-    String authenticate(String user, String password) throws AuthenticationException;
-
     // ===========================================================================
     /**
      * Adds a credential for the given user and password.

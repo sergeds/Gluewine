@@ -45,6 +45,7 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.webapp.WebAppClassLoader;
 import org.eclipse.jetty.webapp.WebAppContext;
+import org.gluewine.authentication.UseridPasswordAuthentication;
 import org.gluewine.console.CLICommand;
 import org.gluewine.console.CLIOption;
 import org.gluewine.console.CommandContext;
@@ -54,7 +55,6 @@ import org.gluewine.core.Repository;
 import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.RunOnActivate;
 import org.gluewine.core.RunOnDeactivate;
-import org.gluewine.dbauth.DBAuthenticator;
 import org.gluewine.launcher.Launcher;
 
 /**
@@ -78,6 +78,9 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
     @Glue
     private Launcher launcher;
 
+    /**
+     * The service repository.
+     */
     @Glue
     private Repository repository;
 
@@ -175,7 +178,7 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
 
             if (properties.getProperty("static." + i + ".secured", "false").equals("true"))
             {
-                DBAuthenticator authenticator = repository.getService(DBAuthenticator.class);
+                UseridPasswordAuthentication authenticator = repository.getService(UseridPasswordAuthentication.class);
                 if (authenticator != null)
                     handler = new GluewineSecuredStaticHandler(dir.getName(), authenticator);
 

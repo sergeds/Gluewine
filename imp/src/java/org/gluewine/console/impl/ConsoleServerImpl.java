@@ -33,7 +33,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.gluewine.console.Authenticator;
+import org.gluewine.authentication.Authenticator;
 import org.gluewine.console.CLICommand;
 import org.gluewine.console.CLIOption;
 import org.gluewine.console.CommandContext;

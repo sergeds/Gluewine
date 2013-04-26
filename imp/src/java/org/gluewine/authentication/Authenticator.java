@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Gluewine Console Module
+ * Gluewine Authentication Module
  *
  * Copyright (C) 2013 FKS bvba               http://www.fks.be/
  *
@@ -19,20 +19,36 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  **************************************************************************/
-package org.gluewine.console;
+package org.gluewine.authentication;
 
 /**
- * Exception thrown to indicate that authentication has been aborted,
- * and the console should exit.
+ * Defines an authenticator.
  *
  * @author fks/Serge de Schaetzen
  *
  */
-public class AuthenticationAbortedException extends Exception
+public interface Authenticator
 {
     // ===========================================================================
     /**
-     * The serial uid.
+     * Returns the name of the authenticator.
+     *
+     * @return The name of the authenticator.
      */
-    private static final long serialVersionUID = -3586833959468366016L;
+    String getAuthenticatorName();
+
+    // ===========================================================================
+    /**
+     * Returns the 'base' class name of the authenticator.
+     * Note that the class is the 'base' name of the authenticator.
+     * The actual class must be named:
+     * <ul>
+     * <li>- clazz + TxtClient</li>
+     * <li>- clazz + GwtClient</li>
+     * <li>- clazz + AwtClient</li>
+     * </ul>
+     * depending on which console client is running.
+     * @return The name of the authenticator calss.
+     */
+    String getAuthenticatorClassName();
 }

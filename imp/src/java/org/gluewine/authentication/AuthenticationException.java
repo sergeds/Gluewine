@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Gluewine Console Module
+ * Gluewine Authentication Module
  *
  * Copyright (C) 2013 FKS bvba               http://www.fks.be/
  *
@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  **************************************************************************/
-package org.gluewine.console;
+package org.gluewine.authentication;
 
 /**
  * An exception that is thrown when an authentication fails, or

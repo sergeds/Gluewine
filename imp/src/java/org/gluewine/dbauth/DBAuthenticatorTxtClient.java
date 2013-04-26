@@ -24,7 +24,7 @@ package org.gluewine.dbauth;
 
 import jline.console.ConsoleReader;
 
-import org.gluewine.console.AuthenticationAbortedException;
+import org.gluewine.authentication.AuthenticationAbortedException;
 
 /**
  * Text console client authenticator.
