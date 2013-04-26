@@ -50,9 +50,11 @@ import org.gluewine.console.CLIOption;
 import org.gluewine.console.CommandContext;
 import org.gluewine.console.CommandProvider;
 import org.gluewine.core.Glue;
+import org.gluewine.core.Repository;
 import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.RunOnActivate;
 import org.gluewine.core.RunOnDeactivate;
+import org.gluewine.dbauth.DBAuthenticator;
 import org.gluewine.launcher.Launcher;
 
 /**
@@ -75,6 +77,9 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
      */
     @Glue
     private Launcher launcher;
+
+    @Glue
+    private Repository repository;
 
     /**
      * The server instance.
@@ -165,7 +170,25 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
             }
 
             String pref = "static." + i;
-            ResourceHandler handler = new GluewineStaticHandler(dir.getName());
+
+            ResourceHandler handler = null;
+
+            if (properties.getProperty("static." + i + ".secured", "false").equals("true"))
+            {
+                DBAuthenticator authenticator = repository.getService(DBAuthenticator.class);
+                if (authenticator != null)
+                    handler = new GluewineSecuredStaticHandler(dir.getName(), authenticator);
+
+                else
+                {
+                    logger.warn("No Authenticator available!");
+                    handler = new GluewineStaticHandler(dir.getName());
+                }
+
+            }
+            else
+                handler = new GluewineStaticHandler(dir.getName());
+
             handler.setResourceBase(path);
             handler.setDirectoriesListed(Boolean.parseBoolean(properties.getProperty(pref + ".directoryListing", "false")));
             handler.setWelcomeFiles(properties.getProperty(pref + ".welcome", "index.html").split(","));
