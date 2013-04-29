@@ -692,6 +692,7 @@ public final class Gluer implements CodeSourceListener, RepositoryListener<CodeS
             deactivate();
             unglue();
             unresolve();
+            Launcher.getInstance().savePersistentMap();
             logger.info("Framework shut down.");
         }
     }
