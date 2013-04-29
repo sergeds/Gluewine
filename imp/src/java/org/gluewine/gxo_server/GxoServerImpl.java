@@ -199,6 +199,15 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
                 }
             }
         }
+
+        try
+        {
+            LocalAccess.getInstance().close();
+        }
+        catch (IOException e)
+        {
+            logger.warn(e);
+        }
     }
 
     // ===========================================================================

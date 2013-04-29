@@ -108,4 +108,18 @@ public final class LocalAccess
         if (instance == null) instance = new LocalAccess();
         return instance;
     }
+
+    // ===========================================================================
+    /**
+     * Closes the streams.
+     *
+     * @throws IOException Thrown if an error occurs.
+     */
+    public void close() throws IOException
+    {
+        clientInput.close();
+        clientOutput.close();
+        serverInput.close();
+        serverOutput.close();
+    }
 }

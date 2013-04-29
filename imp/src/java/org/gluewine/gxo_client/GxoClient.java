@@ -205,6 +205,17 @@ public class GxoClient
             connected = false;
             socket = null;
         }
+        else
+        {
+            try
+            {
+                LocalAccess.getInstance().close();
+            }
+            catch (Throwable e)
+            {
+                logger.warn(e);
+            }
+        }
     }
 
     // ===========================================================================
