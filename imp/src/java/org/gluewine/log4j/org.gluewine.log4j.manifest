@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+Ant-Version: Apache Ant 1.6.5
+Created-By: Serge de Schaetzen
+Gluewine-Name: org.gluewine.log4j
+Gluewine-Services: org.gluewine.log4j.Log4jLog
+Jar-Version: 0.1
+Group: gluewine

@@ -365,6 +365,7 @@ public final class Gluer implements CodeSourceListener, RepositoryListener<CodeS
 
             if (getClassLoaderForObject(s.getActualService()) == loader)
             {
+                logger.debug("ClassLoader of service " + s.getActualService().getClass().getName() + " has been removed!");
                 unresolve(new int[] {s.getId()}, false);
                 siter.remove();
             }
@@ -373,7 +374,10 @@ public final class Gluer implements CodeSourceListener, RepositoryListener<CodeS
         for (Object o : repository.getRegisteredObjectMap().values())
         {
             if (getClassLoaderForObject(o) == loader)
+            {
+                logger.debug("ClassLoader of registered object " + o.getClass().getName() + " has been removed!");
                 repository.unregister(o);
+            }
         }
     }
 

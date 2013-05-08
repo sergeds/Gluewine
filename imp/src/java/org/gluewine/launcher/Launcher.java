@@ -151,6 +151,11 @@ public final class Launcher implements Runnable, DirectoryAnnotations
      */
     private Set<String> jarFilter = new HashSet<String>();
 
+    /**
+     * The log to use.
+     */
+    private Log log = Logging.getInstance();
+
     // ===========================================================================
     /**
      * Creates an instance.
@@ -540,6 +545,8 @@ public final class Launcher implements Runnable, DirectoryAnnotations
     public File fetch(URL url, File dir) throws IOException
     {
         File target = new File(dir + ".notactivated");
+
+        log.debug(getClass(), "Fetching", url.toExternalForm(), "to be stored in", dir.getAbsolutePath());
 
         if (target.exists())
             if (!target.delete()) throw new IOException("Could not delete " + target.getAbsolutePath());
@@ -1048,6 +1055,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
     {
         boolean updated = false;
 
+        log.debug(getClass(), "Updating codesources to be removed");
         List<CodeSource> l = new ArrayList<CodeSource>(toRemove.size());
         l.addAll(toRemove);
         for (CodeSource s : l)
@@ -1055,8 +1063,9 @@ public final class Launcher implements Runnable, DirectoryAnnotations
             for (CodeSource r : sourcesMap.values())
             {
                 // If r loaded classes from s, it must be added to the list of loaders to be removed.
-                if (r.getSourceClassLoader().references(s.getSourceClassLoader()) && !toRemove.contains(r))
+                if (r.getSourceClassLoader().references(s.getSourceClassLoader()) && !toRemove.contains(r) && !r.getDisplayName().equals("/"))
                 {
+                    log.debug(getClass(), "Adding codesource", r.getDisplayName(), "as it references", s.getDisplayName());
                     toRemove.add(r);
                     updated = true;
                 }
@@ -1093,8 +1102,9 @@ public final class Launcher implements Runnable, DirectoryAnnotations
             {
                 JarCodeSource jcs = (JarCodeSource) src;
                 jcs.closeLoader();
+                log.debug(getClass(), "Deleting", jcs.getDisplayName());
                 if (!jcs.getFile().delete())
-                    System.out.println("Could not delete " + jcs.getFile().getAbsolutePath());
+                    log.warn(getClass(), "Could not delete", jcs.getFile().getAbsolutePath());
             }
 
             else if (src instanceof URLCodeSource)
@@ -1120,7 +1130,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
                 removeSources(children, deleteFile);
                 dcs.closeLoader();
                 if (!dcs.getDirectory().delete())
-                    System.out.println("Could not delete " + dcs.getDirectory().getAbsolutePath());
+                    log.warn(getClass(), "Could not delete", dcs.getDirectory().getAbsolutePath());
             }
         }
 
