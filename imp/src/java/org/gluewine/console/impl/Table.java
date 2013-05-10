@@ -163,7 +163,7 @@ public class Table
 
         for (String[] row : rows)
         {
-            if (row[0].startsWith("@@") && row[0].endsWith("@@") && row[0].length() == 5)
+            if (row[0] != null && row[0].startsWith("@@") && row[0].endsWith("@@") && row[0].length() == 5)
             {
                 String fill = row[0].substring(2, 3);
                 printSeparator(cc, fill);

@@ -1130,12 +1130,14 @@ public final class Launcher implements Runnable, DirectoryAnnotations
     {
         List<CodeSource> toReload = new ArrayList<CodeSource>();
 
-        for (CodeSourceListener l : listeners)
+        Set<CodeSourceListener> s = new HashSet<CodeSourceListener>(listeners);
+        for (CodeSourceListener l : s)
             l.codeSourceRemoved(toRemove);
 
         getSourcesToReload(toRemove, toReload);
 
-        for (CodeSourceListener l : listeners)
+        s = new HashSet<CodeSourceListener>(listeners);
+        for (CodeSourceListener l : s)
             l.codeSourceRemoved(toReload);
 
         unload(toReload);
