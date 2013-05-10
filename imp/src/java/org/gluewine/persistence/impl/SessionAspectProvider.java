@@ -59,6 +59,7 @@ import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.RunOnActivate;
 import org.gluewine.launcher.CodeSource;
 import org.gluewine.launcher.CodeSourceListener;
+import org.gluewine.launcher.GluewineLoader;
 import org.gluewine.launcher.Launcher;
 import org.gluewine.launcher.sources.JarCodeSource;
 import org.gluewine.launcher.utils.FileUtils;
@@ -553,9 +554,26 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
     }
 
     // ===========================================================================
+    /**
+     * Returns true if one of the sources specified contains entities.
+     *
+     * @param sources The sources to check.
+     * @return True if at least one source contains entities.
+     */
+    private boolean hasEntities(List<CodeSource> sources)
+    {
+        for (CodeSource src : sources)
+            if (src.getEntities().length > 0) return true;
+
+        return false;
+    }
+
+    // ===========================================================================
     @Override
     public void codeSourceAdded(List<CodeSource> sources)
     {
+        if (!hasEntities(sources)) return;
+
         synchronized (factoryLocker)
         {
             try
@@ -644,11 +662,19 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
     @Override
     public void codeSourceRemoved(List<CodeSource> sources)
     {
+        if (!hasEntities(sources)) return;
+
         synchronized (factoryLocker)
         {
             try
             {
                 Configuration config = new Configuration();
+
+                ClassLoader loader = config.getClass().getClassLoader();
+                GluewineLoader gw = null;
+                if (loader instanceof GluewineLoader)
+                    gw = (GluewineLoader) loader;
+
                 config.setProperties(properties);
                 ServiceRegistry serviceRegistry = new ServiceRegistryBuilder().applySettings(config.getProperties()).buildServiceRegistry();
 
@@ -660,6 +686,8 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
                         if (iter.next().getClassLoader() == source.getSourceClassLoader())
                             iter.remove();
                     }
+
+                    if (gw != null) gw.removeReference(source.getSourceClassLoader());
                 }
 
                 for (Class<?> cl : entities)

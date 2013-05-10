@@ -519,6 +519,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
         if (i > -1)
         {
             name = name.substring(0, i);
+            log.debug(getClass(), "Activating source: " + name);
             File target = new File(name);
             if (target.exists())
                 if (!target.delete()) throw new IOException("The file " + target.getAbsolutePath() + " could not be deleted.");
@@ -892,57 +893,78 @@ public final class Launcher implements Runnable, DirectoryAnnotations
 
     // ===========================================================================
     /**
+     * Returns the list of codesources that have changed.
+     *
+     * @return The list of sources that changed.
+     */
+    public List<CodeSource> getChangedSources()
+    {
+        List<CodeSource> changed = new ArrayList<CodeSource>();
+
+        for (CodeSource src : sourcesMap.values())
+        {
+            if (src.hasChanged())
+                changed.add(src);
+        }
+
+        return changed;
+    }
+
+    // ===========================================================================
+    /**
+     * Reloads the sources that have changed.
+     *
+     * @throws IOException Thrown if an error occurs reading the sources.
+     */
+    public void reload() throws IOException
+    {
+        List<CodeSource> changed = getChangedSources();
+        List<CodeSource> reload = new ArrayList<CodeSource>();
+
+        for (CodeSourceListener l : listeners)
+            l.codeSourceRemoved(changed);
+
+        getSourcesToReload(changed, reload);
+
+        for (CodeSourceListener l : listeners)
+            l.codeSourceRemoved(reload);
+
+        unload(changed);
+        unload(reload);
+
+        List<CodeSource> newSources = processRoot();
+        for (CodeSourceListener l : listeners)
+            l.codeSourceAdded(newSources);
+    }
+
+    // ===========================================================================
+    /**
      * Adds the objects specified and returns a list of codesources.
      *
      * @param toadd The objects to add.
      * @return The list of new CodeSources.
+     * @throws IOException Thrown if the fetch failed.
      */
-    public List<CodeSource> add(List<SourceVersion> toadd)
+    public List<CodeSource> add(List<SourceVersion> toadd) throws IOException
     {
         List<CodeSource> added = new ArrayList<CodeSource>();
-        try
+        List<File> toActivate = new ArrayList<File>();
+        for (SourceVersion s : toadd)
         {
-            List<File> toActivate = new ArrayList<File>();
-            for (SourceVersion s : toadd)
-            {
-                URL url = new URL(s.getUrl());
-                String jar = s.getSource().getDisplayName().substring(1);
-                File f = new File(root, jar);
-                toActivate.add(fetch(url, f));
-            }
-
-            List<File> activated = new ArrayList<File>();
-            for (File f : toActivate)
-                activated.add(activate(f));
-
-            /*
-            for (File f : activated)
-            {
-                if (isFileAllowed(f))
-                {
-                    CodeSource cs = getCodeSource(f, null);
-                    sourcesMap.put(cs.getDisplayName(), cs);
-                    added.add(cs);
-                    List<CodeSource> l = codeSources.get(f.getParentFile().getAbsolutePath());
-                    if (l == null)
-                    {
-                        l = new ArrayList<CodeSource>();
-                        codeSources.put(f.getParentFile().getAbsolutePath(), l);
-                    }
-                    l.add(cs);
-                }
-            }
-
-            mapLoaders();
-            */
-            List<CodeSource> newSources = processRoot();
-            for (CodeSourceListener l : listeners)
-                l.codeSourceAdded(newSources);
+            log.debug(getClass(), "Fetching new source from " + s.getUrl());
+            URL url = new URL(s.getUrl());
+            String jar = s.getSource().getDisplayName().substring(1);
+            File f = new File(root, jar);
+            toActivate.add(fetch(url, f));
         }
-        catch (Throwable e)
-        {
-            e.printStackTrace();
-        }
+
+        List<File> activated = new ArrayList<File>();
+        for (File f : toActivate)
+            activated.add(activate(f));
+
+        List<CodeSource> newSources = processRoot();
+        for (CodeSourceListener l : listeners)
+            l.codeSourceAdded(newSources);
 
         return added;
     }
@@ -1043,38 +1065,54 @@ public final class Launcher implements Runnable, DirectoryAnnotations
 
     // ===========================================================================
     /**
-     * Updates the list of codesources to be removed, with all codesources
-     * that references one of the sources in the list.
+     * Updates the list of sources to be reloaded based on the given data.
      *
      * This method recalls itself as long as true is returned.
      *
-     * @param toRemove The list to update.
-     * @return boolean If an entry was added to the list.
+     * @param toRemove The list of sources that are to be removed.
+     * @param toReload The list to update.
+     * @return True if the toReload list has been updated.
      */
-    private boolean updateToRemove(List<CodeSource> toRemove)
+    public boolean getSourcesToReload(List<CodeSource> toRemove, List<CodeSource> toReload)
     {
         boolean updated = false;
 
-        log.debug(getClass(), "Updating codesources to be removed");
+        log.debug(getClass(), "Updating codesources to be reloaded.");
         List<CodeSource> l = new ArrayList<CodeSource>(toRemove.size());
         l.addAll(toRemove);
+        l.addAll(toReload);
         for (CodeSource s : l)
         {
             for (CodeSource r : sourcesMap.values())
             {
                 // If r loaded classes from s, it must be added to the list of loaders to be removed.
-                if (r.getSourceClassLoader().references(s.getSourceClassLoader()) && !toRemove.contains(r) && !r.getDisplayName().equals("/"))
+                if (r.getSourceClassLoader().references(s.getSourceClassLoader()) && !toReload.contains(r) && !r.getDisplayName().equals("/"))
                 {
                     log.debug(getClass(), "Adding codesource", r.getDisplayName(), "as it references", s.getDisplayName());
-                    toRemove.add(r);
+                    toReload.add(r);
                     updated = true;
                 }
             }
         }
 
-        if (updated) updateToRemove(toRemove);
+        if (updated) getSourcesToReload(toRemove, toReload);
 
         return updated;
+    }
+
+    // ===========================================================================
+    /**
+     * Unloads the sources specified.
+     *
+     * @param sources The sources to unload.
+     */
+    private void unload(List<CodeSource> sources)
+    {
+        for (CodeSource src : sources)
+        {
+            sourcesMap.remove(src.getDisplayName());
+            src.closeLoader();
+        }
     }
 
     // ===========================================================================
@@ -1090,18 +1128,24 @@ public final class Launcher implements Runnable, DirectoryAnnotations
     @SuppressWarnings("unchecked")
     public List<CodeSource> removeSources(List<CodeSource> toRemove, boolean deleteFile)
     {
-        updateToRemove(toRemove);
+        List<CodeSource> toReload = new ArrayList<CodeSource>();
 
         for (CodeSourceListener l : listeners)
             l.codeSourceRemoved(toRemove);
 
+        getSourcesToReload(toRemove, toReload);
+
+        for (CodeSourceListener l : listeners)
+            l.codeSourceRemoved(toReload);
+
+        unload(toReload);
+        unload(toRemove);
+
         for (CodeSource src : toRemove)
         {
-            sourcesMap.remove(src.getDisplayName());
             if (src instanceof JarCodeSource)
             {
                 JarCodeSource jcs = (JarCodeSource) src;
-                jcs.closeLoader();
                 log.debug(getClass(), "Deleting", jcs.getDisplayName());
                 if (!jcs.getFile().delete())
                     log.warn(getClass(), "Could not delete", jcs.getFile().getAbsolutePath());
@@ -1118,9 +1162,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
                     removedUrls = new HashSet<String>();
                     persistentMap.put("GLUEWINE:REMOVEDURLS", removedUrls);
                 }
-                ucs.closeLoader();
                 removedUrls.add(ucs.getURL().toExternalForm());
-                savePersistentMap();
             }
 
             else if (src instanceof DirectoryCodeSource)
@@ -1128,11 +1170,12 @@ public final class Launcher implements Runnable, DirectoryAnnotations
                 DirectoryCodeSource dcs = (DirectoryCodeSource) src;
                 List<CodeSource> children = codeSources.remove(dcs.getDirectory().getAbsolutePath());
                 removeSources(children, deleteFile);
-                dcs.closeLoader();
                 if (!dcs.getDirectory().delete())
                     log.warn(getClass(), "Could not delete", dcs.getDirectory().getAbsolutePath());
             }
         }
+
+        savePersistentMap();
 
         return toRemove;
     }

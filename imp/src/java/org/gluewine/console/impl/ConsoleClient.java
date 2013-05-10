@@ -21,7 +21,11 @@
  **************************************************************************/
 package org.gluewine.console.impl;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.lang.reflect.Method;
 import java.net.ConnectException;
 import java.net.InetAddress;
@@ -112,6 +116,9 @@ public final class ConsoleClient implements Runnable, Completer, AnsiCodes
 
             boolean initial = true;
             boolean stopRequested = false;
+            boolean outputRouted = false;
+            String outputFile = null;
+            BufferedWriter writer = null;
             while (!stopRequested)
             {
                 try
@@ -133,6 +140,25 @@ public final class ConsoleClient implements Runnable, Completer, AnsiCodes
                     else if (line.equals("cls") || line.equals("clear"))
                         reader.println(CLS + HOME);
 
+                    else if (line.startsWith(">"))
+                    {
+                        outputFile = line.substring(1).trim();
+                        if (outputFile.equals("!"))
+                        {
+                            if (writer != null)
+                            {
+                                outputRouted = false;
+                                writer.close();
+                                writer = null;
+                            }
+                        }
+                        else
+                        {
+                            outputRouted = true;
+                            writer = prepareOutputFile(outputFile);
+                        }
+                    }
+
                     else if (line.startsWith("logoff"))
                     {
                         server = null;
@@ -151,7 +177,14 @@ public final class ConsoleClient implements Runnable, Completer, AnsiCodes
                         try
                         {
                             String output = server.executeCommand(line);
-                            reader.println(output);
+                            if (outputRouted)
+                            {
+                                writer.write(output);
+                                writer.newLine();
+                                writer.flush();
+                            }
+
+                            else reader.println(output);
                         }
                         catch (SyntaxException e)
                         {
@@ -193,6 +226,24 @@ public final class ConsoleClient implements Runnable, Completer, AnsiCodes
         {
             e.printStackTrace();
         }
+    }
+
+    // ===========================================================================
+    /**
+     * Prepares the output file.
+     *
+     * @param file The file.
+     * @return The printwriter to use.
+     * @throws IOException If an error occurs.
+     */
+    private BufferedWriter prepareOutputFile(String file) throws IOException
+    {
+        File f = new File(file);
+        if (!f.getParentFile().exists())
+            if (!f.getParentFile().mkdirs())
+                throw new IOException("Could not create dir: " + f.getParentFile().getAbsolutePath());
+
+        return new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "utf-8"));
     }
 
     // ===========================================================================

@@ -36,6 +36,9 @@ import org.gluewine.launcher.Logging;
 public class Log4jLog implements Log
 {
     // ===========================================================================
+    /**
+     * Invoked when the module is activated.
+     */
     @RunOnActivate
     public void activate()
     {
@@ -43,6 +46,9 @@ public class Log4jLog implements Log
     }
 
     // ===========================================================================
+    /**
+     * Invoked when the module is deactivated.
+     */
     @RunOnDeactivate
     public void deactivate()
     {

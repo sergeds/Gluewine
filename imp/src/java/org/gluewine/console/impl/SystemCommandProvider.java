@@ -25,10 +25,14 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.gluewine.console.CLICommand;
 import org.gluewine.console.CLIOption;
@@ -39,6 +43,7 @@ import org.gluewine.core.GluewineProperties;
 import org.gluewine.core.glue.Gluer;
 import org.gluewine.core.glue.Service;
 import org.gluewine.launcher.CodeSource;
+import org.gluewine.launcher.GluewineLoader;
 import org.gluewine.launcher.Launcher;
 import org.gluewine.launcher.SourceVersion;
 import org.gluewine.launcher.sources.MissingCodeSource;
@@ -112,8 +117,13 @@ public class SystemCommandProvider implements CommandProvider
         CLICommand update = new CLICommand("update", "Displays or updates the codesources that changed");
         update.addOption(new CLIOption("-f", "Does the update", false, false));
         update.addOption(new CLIOption("-s", "The source URL", false, true));
+        update.addOption(new CLIOption("-v", "Show reloads", false, true));
         update.addOption(new CLIOption("-i", "Install Missing", false, false));
         commands.add(update);
+
+        CLICommand reload = new CLICommand("reload", "Displays or reloads the codesources that have changed.");
+        reload.addOption(new CLIOption("-f", "Does the reload", false, false));
+        commands.add(reload);
 
         commands.add(new CLICommand("shutdown", "Shuts the framework down."));
         commands.add(new CLICommand("unresolved", "Lists all unresolved services."));
@@ -129,9 +139,16 @@ public class SystemCommandProvider implements CommandProvider
         commands.add(new CLICommand("close", "Closes the console client."));
         commands.add(new CLICommand("cls", "Clears the screen."));
         commands.add(new CLICommand("clear", "Clears the screen."));
+        commands.add(new CLICommand(">", "Routes the output to a file."));
+        commands.add(new CLICommand(">!", "Stops routing the output to a file."));
         commands.add(new CLICommand("exit", "Closes the console client."));
         commands.add(new CLICommand("logoff", "Logs off the console client."));
         commands.add(new CLICommand("props_list", "Lists the property files in use."));
+
+        CLICommand dump = new CLICommand("dump", "Dumps the class usage.");
+        dump.addOption(new CLIOption("-p", "Only dumps packages", false, false));
+        dump.addOption(new CLIOption("-r", "Only dumps references", false, false));
+        commands.add(dump);
 
         CLICommand refresh = new CLICommand("props_refresh", "Refreshes the property file specified.");
         refresh.addOption(new CLIOption("-cfg", "The config file", true, true));
@@ -253,6 +270,154 @@ public class SystemCommandProvider implements CommandProvider
             }
         }
         else cc.println("You must specify a service name!");
+    }
+
+    // ===========================================================================
+    /**
+     * Executes the dump command.
+     *
+     * @param cc The current context.
+     */
+    public void _dump(CommandContext cc)
+    {
+        if (cc.hasOption("-p")) dumpPackages(cc);
+        else if (cc.hasOption("-r")) dumpReferences(cc);
+        else dumpClasses(cc);
+    }
+
+    // ===========================================================================
+    /**
+     * Dumps the references.
+     *
+     * @param cc The current context.
+     */
+    private void dumpReferences(CommandContext cc)
+    {
+        cc.tableHeader("CodeSource", "Referenced loader");
+        HashSet<GluewineLoader> loaders = new HashSet<GluewineLoader>();
+        Iterator<CodeSource> sIter = Launcher.getInstance().getSources().iterator();
+        while (sIter.hasNext())
+        {
+            CodeSource source = sIter.next();
+            GluewineLoader loader = source.getSourceClassLoader();
+            if (!loaders.contains(loader))
+            {
+                String name = source.getDisplayName();
+                Iterator<String> iter = loader.getReferences().iterator();
+                while (iter.hasNext())
+                {
+                    cc.tableRow(name, iter.next());
+                    name = "";
+                }
+
+                if (!name.equals("")) cc.tableRow(name, "");
+                if (sIter.hasNext()) cc.tableSeparator();
+            }
+
+            loaders.add(loader);
+        }
+
+        cc.printTable();
+    }
+
+    // ===========================================================================
+    /**
+     * Dumps the packages information.
+     *
+     * @param cc The current context.
+     */
+    private void dumpPackages(CommandContext cc)
+    {
+        cc.tableHeader("CodeSource", "Internal Classes", "External Classes");
+        HashSet<GluewineLoader> loaders = new HashSet<GluewineLoader>();
+        Iterator<CodeSource> sIter = Launcher.getInstance().getSources().iterator();
+        while (sIter.hasNext())
+        {
+            CodeSource source = sIter.next();
+            GluewineLoader loader = source.getSourceClassLoader();
+            if (!loaders.contains(loader))
+            {
+                String name = source.getDisplayName();
+                Set<String> intPackages = new TreeSet<String>();
+                Set<String> extPackages = new TreeSet<String>();
+                for (String s : loader.getInternalClasses())
+                {
+                    int i = s.lastIndexOf('.');
+                    if (i > 0)
+                    {
+                        s = s.substring(0, i);
+                        intPackages.add(s);
+                    }
+                }
+
+                for (String s : loader.getExternalClasses())
+                {
+                    int i = s.lastIndexOf('.');
+                    if (i > 0)
+                    {
+                        s = s.substring(0, i);
+                        extPackages.add(s);
+                    }
+                }
+                Iterator<String> intIter = intPackages.iterator();
+                Iterator<String> extIter = extPackages.iterator();
+                while (intIter.hasNext() || extIter.hasNext())
+                {
+                    String ic = "";
+                    String ec = "";
+                    if (intIter.hasNext()) ic = intIter.next();
+                    if (extIter.hasNext()) ec = extIter.next();
+                    cc.tableRow(name, ic, ec);
+                    name = "";
+                }
+
+                if (!name.equals("")) cc.tableRow(name, "", "");
+                if (sIter.hasNext()) cc.tableSeparator();
+            }
+            loaders.add(loader);
+        }
+
+        cc.printTable();
+    }
+
+    // ===========================================================================
+    /**
+     * Dumps the classes information.
+     *
+     * @param cc The current context.
+     */
+    private void dumpClasses(CommandContext cc)
+    {
+        cc.tableHeader("CodeSource", "Internal Classes", "External Classes");
+        HashSet<GluewineLoader> loaders = new HashSet<GluewineLoader>();
+        Iterator<CodeSource> sIter = Launcher.getInstance().getSources().iterator();
+        while (sIter.hasNext())
+        {
+            CodeSource source = sIter.next();
+            GluewineLoader loader = source.getSourceClassLoader();
+            if (!loaders.contains(loader))
+            {
+                String name = source.getDisplayName();
+                Iterator<String> intIter = loader.getInternalClasses().iterator();
+                Iterator<String> extIter = loader.getExternalClasses().iterator();
+                while (intIter.hasNext() || extIter.hasNext())
+                {
+                    String ic = "";
+                    String ec = "";
+                    if (intIter.hasNext()) ic = intIter.next();
+                    if (extIter.hasNext()) ec = extIter.next();
+                    cc.tableRow(name, ic, ec);
+                    name = "";
+                }
+
+                if (!name.equals("")) cc.tableRow(name, "", "");
+                if (sIter.hasNext()) cc.tableSeparator();
+            }
+
+            loaders.add(loader);
+        }
+
+        cc.printTable();
     }
 
     // ===========================================================================
@@ -419,6 +584,42 @@ public class SystemCommandProvider implements CommandProvider
 
     // ===========================================================================
     /**
+     * Executes the reload command.
+     *
+     * @param cc The current context.
+     * @throws Throwable If an error occurs.
+     */
+    public void _reload(CommandContext cc) throws Throwable
+    {
+        if (cc.hasOption("-f")) Launcher.getInstance().reload();
+
+        else
+        {
+            List<CodeSource> sources = Launcher.getInstance().getChangedSources();
+            if (sources.isEmpty())
+                cc.println("Nothing to reload.");
+
+            else
+            {
+                List<CodeSource> toReload = new ArrayList<CodeSource>();
+                Launcher.getInstance().getSourcesToReload(sources, toReload);
+
+                cc.println("Changes sources:");
+                cc.println();
+                for (CodeSource src : sources)
+                    cc.println(src.getDisplayName());
+
+                cc.println("");
+                cc.println("Sources that will reload:");
+                cc.println("");
+                for (CodeSource src : toReload)
+                    cc.println('\t' + src.getDisplayName());
+            }
+        }
+    }
+
+    // ===========================================================================
+    /**
      * Executes the remove command.
      *
      * @param ci The current context.
@@ -442,8 +643,9 @@ public class SystemCommandProvider implements CommandProvider
      * Executes the install command.
      *
      * @param ci The current context.
+     * @throws Throwable Thrown if a problem occurs.
      */
-    public void _install(CommandContext ci)
+    public void _install(CommandContext ci) throws Throwable
     {
         String jar = ci.nextArgument();
         List<SourceVersion> toAdd = new ArrayList<SourceVersion>();
@@ -477,21 +679,22 @@ public class SystemCommandProvider implements CommandProvider
 
         List<SourceVersion> updates = Launcher.getInstance().getCodeSourceToUpdate(ci.hasOption("-i"));
         String source = Launcher.getInstance().getSourceRepositoryURL();
-        //File root = Launcher.getInstance().getRoot();
+
+        List<CodeSource> toRemove = new ArrayList<CodeSource>();
+        for (SourceVersion sv : updates)
+        {
+            if (!(sv.getSource() instanceof MissingCodeSource))
+                toRemove.add(sv.getSource());
+        }
         if (ci.hasOption("-f"))
         {
-            List<CodeSource> toRemove = new ArrayList<CodeSource>();
-            for (SourceVersion sv : updates)
-            {
-                if (!(sv.getSource() instanceof MissingCodeSource))
-                    toRemove.add(sv.getSource());
-            }
 
             Launcher.getInstance().removeSources(toRemove, false);
             Launcher.getInstance().add(updates);
         }
         else
         {
+            ci.println("Sources that will be updated:");
             ci.tableHeader("CodeSource", "URL");
             for (SourceVersion sv : updates)
             {
@@ -500,6 +703,17 @@ public class SystemCommandProvider implements CommandProvider
             }
 
             ci.printTable();
+
+            if (ci.hasOption("-v"))
+            {
+                List<CodeSource> toReload = new ArrayList<CodeSource>();
+                Launcher.getInstance().getSourcesToReload(toRemove, toReload);
+                ci.println();
+                ci.println("Sources that will be reloaded:");
+
+                for (CodeSource src : toReload)
+                    ci.println('\t' + src.getDisplayName());
+            }
         }
     }
 }

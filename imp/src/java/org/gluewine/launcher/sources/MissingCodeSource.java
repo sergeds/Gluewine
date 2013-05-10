@@ -39,4 +39,11 @@ public class MissingCodeSource extends AbstractCodeSource
         super("Missing", new URL[0]);
         setChecksum("-Missing-");
     }
+
+    // ===========================================================================
+    @Override
+    public boolean hasChanged()
+    {
+        return false;
+    }
 }

@@ -160,4 +160,13 @@ public interface CodeSource
      * @return The version.
      */
     String getVersion();
+
+    // ===========================================================================
+    /**
+     * Returns true if the source has changed. Ie, the one loaded is outdated
+     * from the one stored in the source.
+     *
+     * @return True if changed.
+     */
+    boolean hasChanged();
 }

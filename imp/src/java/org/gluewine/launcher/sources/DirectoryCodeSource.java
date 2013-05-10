@@ -98,4 +98,11 @@ public class DirectoryCodeSource extends AbstractCodeSource implements Directory
                 addEnhancer(enhancer);
         }
     }
+
+    // ===========================================================================
+    @Override
+    public boolean hasChanged()
+    {
+        return false;
+    }
 }

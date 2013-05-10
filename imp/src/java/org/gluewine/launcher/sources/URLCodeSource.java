@@ -184,4 +184,51 @@ public class URLCodeSource extends AbstractCodeSource
             }
         }
     }
+
+    // ===========================================================================
+    @Override
+    public boolean hasChanged()
+    {
+        JarInputStream jin  = null;
+        String currCheckSum = null;
+        try
+        {
+
+            jin = new JarInputStream(getURLs()[0].openStream());
+            //jar = new JarFile(file);
+            Manifest manifest = jin.getManifest();
+            if (manifest != null)
+            {
+                Attributes attr = manifest.getMainAttributes();
+                String fks = attr.getValue("X-Fks-Checksum");
+                if (fks != null)
+                    currCheckSum = fks.trim();
+
+            }
+
+            if (currCheckSum == null)
+                currCheckSum = FileUtils.getSHA1HashCode(getURLs()[0]);
+        }
+        catch (Throwable e)
+        {
+            e.printStackTrace();
+        }
+
+        finally
+        {
+            if (jin != null)
+            {
+                try
+                {
+                    jin.close();
+                }
+                catch (Throwable e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return !getChecksum().equals(currCheckSum);
+    }
 }

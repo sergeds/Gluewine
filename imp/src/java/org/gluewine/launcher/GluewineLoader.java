@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Gluewine Classloader.
@@ -47,6 +48,16 @@ public class GluewineLoader extends URLClassLoader
      * The name of the loader. (This can be a file name, directory or a url)
      */
     private String name = null;
+
+    /**
+     * Set of the internal classnames that have been loaded.
+     */
+    private Set<String> internalClassesUsed = new HashSet<String>();
+
+    /**
+     * Set of the external classnames that have been loaded.
+     */
+    private Set<String> externalClassesUsed = new HashSet<String>();
 
     /**
      * The set of references. (ie. the loaders that this loader used to resolve classes)
@@ -186,7 +197,8 @@ public class GluewineLoader extends URLClassLoader
         {
             try
             {
-                return super.findClass(name);
+                cl = super.findClass(name);
+                internalClassesUsed.add(name);
             }
             catch (ClassNotFoundException e)
             {
@@ -195,7 +207,12 @@ public class GluewineLoader extends URLClassLoader
                     for (int i = 0; i < dispatchers.size() && cl == null; i++)
                     {
                         cl = dispatchers.get(i).loadOrDispatchClass(name, false);
-                        if (cl != null) references.add(dispatchers.get(i));
+                        if (cl != null)
+                        {
+                            if (cl.getClassLoader() instanceof GluewineLoader)
+                                references.add((GluewineLoader) cl.getClassLoader());
+                            externalClassesUsed.add(name);
+                        }
                     }
                 }
             }
@@ -203,7 +220,67 @@ public class GluewineLoader extends URLClassLoader
 
         if (cl == null && dispatch)
             throw new ClassNotFoundException("GluewineLoader: " + this.name + " could not load the class " + name);
+
         return cl;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the set of all classes that have been loaded internally.
+     *
+     * @return The set of classes.
+     */
+    public Set<String> getInternalClasses()
+    {
+        return new TreeSet<String>(internalClassesUsed);
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the set of referenced gluewine loaders.
+     *
+     * @return The set of references.
+     */
+    public Set<String> getReferences()
+    {
+        Set<String> s = new TreeSet<String>();
+        for (GluewineLoader l : references)
+            s.add(l.getName());
+
+        return s;
+    }
+
+    // ===========================================================================
+    /**
+     * Removes the given loader from the reference list.
+     *
+     * @param loader The loader to remove.
+     */
+    public void removeReference(GluewineLoader loader)
+    {
+        references.remove(loader);
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the name of the classloader.
+     *
+     * @return The name of the classloader.
+     */
+    public String getName()
+    {
+        return name;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the set of all classes that have been loaded internally.
+     *
+     * @return The set of classes.
+     */
+    public Set<String> getExternalClasses()
+    {
+        return new TreeSet<String>(externalClassesUsed);
     }
 
     // ===========================================================================
