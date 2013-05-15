@@ -18,38 +18,66 @@ public final class LocalAccess
     /**
      * The client input stream.
      */
-    private PipedInputStream clientInput = new PipedInputStream();
+    private PipedInputStream clientInput = null;
 
     /**
      * The client output stream.
      */
-    private PipedOutputStream clientOutput = new PipedOutputStream();
+    private PipedOutputStream clientOutput = null;
 
     /**
      * The server input stream.
      */
-    private PipedInputStream serverInput = new PipedInputStream();
+    private PipedInputStream serverInput = null;
 
     /**
      * The server output stream.
      */
-    private PipedOutputStream serverOutput = new PipedOutputStream();
+    private PipedOutputStream serverOutput = null;
 
     /**
      * The singleton instance to use.
      */
     private static LocalAccess instance = null;
 
+    /**
+     * Flag indicating whether the streams are connected.
+     */
+    private boolean connected = false;
+
+    /**
+     * Flag indicating whether the streams are closed.
+     */
+    private boolean closed = false;
+
     // ===========================================================================
     /**
      * Creates an instance.
+     */
+    private LocalAccess()
+    {
+    }
+
+    // ===========================================================================
+    /**
+     * Connects the streams.
      *
      * @throws IOException If an error occurs connecting the streams.
      */
-    private LocalAccess() throws IOException
+    private synchronized void connect() throws IOException
     {
-        clientInput.connect(serverOutput);
-        serverInput.connect(clientOutput);
+        if (!connected)
+        {
+            clientInput = new PipedInputStream();
+            clientOutput = new PipedOutputStream();
+            serverInput = new PipedInputStream();
+            serverOutput = new PipedOutputStream();
+
+            clientInput.connect(serverOutput);
+            serverInput.connect(clientOutput);
+            connected = true;
+            closed = false;
+        }
     }
 
     // ===========================================================================
@@ -57,9 +85,11 @@ public final class LocalAccess
      * Returns the inputstream to read from the client.
      *
      * @return The input stream.
+     * @throws IOException If an error occurs connecting the streams.
      */
-    public InputStream getClientInputStream()
+    public InputStream getClientInputStream() throws IOException
     {
+        connect();
         return clientInput;
     }
 
@@ -68,9 +98,11 @@ public final class LocalAccess
      * Returns the inputstream to read from the server.
      *
      * @return The input stream.
+     * @throws IOException If an error occurs connecting the streams.
      */
-    public InputStream getServerInputStream()
+    public InputStream getServerInputStream() throws IOException
     {
+        connect();
         return serverInput;
     }
 
@@ -79,9 +111,11 @@ public final class LocalAccess
      * Returns the outputstream to write to the client.
      *
      * @return The output stream.
+     * @throws IOException If an error occurs connecting the streams.
      */
-    public OutputStream getClientOutputStream()
+    public OutputStream getClientOutputStream() throws IOException
     {
+        connect();
         return clientOutput;
     }
 
@@ -90,9 +124,11 @@ public final class LocalAccess
      * Returns the inputstream to read from the server.
      *
      * @return The input stream.
+     * @throws IOException If an error occurs connecting the streams.
      */
-    public OutputStream getServerOutputStream()
+    public OutputStream getServerOutputStream() throws IOException
     {
+        connect();
         return serverOutput;
     }
 
@@ -101,12 +137,22 @@ public final class LocalAccess
      * Returns the instance to use.
      *
      * @return The instance.
-     * @throws IOException If an error occurs connecting the streams.
      */
-    public static synchronized LocalAccess getInstance() throws IOException
+    public static synchronized LocalAccess getInstance()
     {
         if (instance == null) instance = new LocalAccess();
         return instance;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns true if the closed method has been invoked.
+     *
+     * @return True if is has been closed.
+     */
+    public boolean isClosed()
+    {
+        return closed;
     }
 
     // ===========================================================================
@@ -115,11 +161,16 @@ public final class LocalAccess
      *
      * @throws IOException Thrown if an error occurs.
      */
-    public void close() throws IOException
+    public synchronized void close() throws IOException
     {
-        clientInput.close();
-        clientOutput.close();
-        serverInput.close();
-        serverOutput.close();
+        if (connected)
+        {
+            connected = false;
+            closed = true;
+            clientInput.close();
+            clientOutput.close();
+            serverInput.close();
+            serverOutput.close();
+        }
     }
 }

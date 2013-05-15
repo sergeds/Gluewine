@@ -304,7 +304,13 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
                 }
                 catch (Throwable e)
                 {
-                    if (!stopRequested) e.printStackTrace();
+                    if (la.isClosed())
+                    {
+                        in = new InputStreamReader(la.getClientInputStream(), "UTF-8");
+                        out = new OutputStreamWriter(la.getClientOutputStream(), "UTF-8");
+                    }
+
+                    else if (!stopRequested) e.printStackTrace();
                 }
             }
         }
