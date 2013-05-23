@@ -93,7 +93,7 @@ public class GoogleAnalytics implements AspectProvider
         {
             StringBuilder b = new StringBuilder("payload_data&v=1");
             b.append("&tid=").append(id);
-            b.append("&cid=555");
+            b.append("&cid={CLIENTID}");
             b.append("&t=pageview");
             b.append("&dh=").append(URLEncoder.encode(hostName, "UTF-8"));
             b.append("&dp=").append(URLEncoder.encode(page, "UTF-8"));
@@ -124,7 +124,7 @@ public class GoogleAnalytics implements AspectProvider
         {
             StringBuilder b = new StringBuilder("payload_data&v=1");
             b.append("&tid=").append(id);
-            b.append("&cid=555");
+            b.append("&cid={CLIENTID}");
             b.append("&t=event");
             b.append("&ec=").append(URLEncoder.encode(category, "UTF-8"));
             b.append("&ea=").append(URLEncoder.encode(action, "UTF-8"));
@@ -154,7 +154,7 @@ public class GoogleAnalytics implements AspectProvider
         {
             StringBuilder b = new StringBuilder("payload_data&v=1");
             b.append("&tid=").append(id);
-            b.append("&cid=555");
+            b.append("&cid={CLIENTID}");
             b.append("&t=appview");
             b.append("&an=").append(URLEncoder.encode(appName, "UTF-8"));
             b.append("&av=").append(URLEncoder.encode(appVersion, "UTF-8"));
@@ -183,7 +183,7 @@ public class GoogleAnalytics implements AspectProvider
         {
             StringBuilder b = new StringBuilder("payload_data&v=1");
             b.append("&tid=").append(id);
-            b.append("&cid=555");
+            b.append("&cid={CLIENTID}");
             b.append("&t=event");
             b.append("&an=").append(URLEncoder.encode(appName, "UTF-8"));
             b.append("&ec=").append(URLEncoder.encode(category, "UTF-8"));
@@ -207,6 +207,7 @@ public class GoogleAnalytics implements AspectProvider
     private void postRequest(HttpServletRequest req, String parameters) throws IOException
     {
         String target = props.getProperty(URL);
+        parameters = parameters.replace("{CLIENTID}", req.getRemoteAddr());
         URL url = new URL(target + "?" + parameters);
 
         logger.debug("GoogleAnalytics Report : " + url.toExternalForm());

@@ -429,7 +429,7 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
             provider.unbindSession();
             try
             {
-                session.getHibernateSession().getTransaction().commit();
+                session.getHibernateSession().getTransaction().rollback();
                 notifyRolledback(session.getRegisteredCallbacks());
                 session.getHibernateSession().close();
             }

@@ -474,6 +474,17 @@ public final class Gluer implements CodeSourceListener, RepositoryListener<CodeS
 
     // ===========================================================================
     /**
+     * Clears the state.
+     */
+    public void clearState()
+    {
+        stoppedServices.clear();
+        ungluedServices.clear();
+        unresolvedServices.clear();
+    }
+
+    // ===========================================================================
+    /**
      * Deregisters the given object from the repository. If the object
      * is a RepositoryListener, it is removed as a listener as well.
      *

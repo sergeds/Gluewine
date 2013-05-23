@@ -32,6 +32,7 @@ import org.gluewine.console.CommandProvider;
 import org.gluewine.core.Glue;
 import org.gluewine.core.RunOnActivate;
 import org.gluewine.dbauth.DBAuthenticator;
+import org.gluewine.dbauth.DBCredential;
 import org.gluewine.persistence.PersistenceException;
 import org.gluewine.persistence.SessionProvider;
 import org.gluewine.persistence.Transactional;

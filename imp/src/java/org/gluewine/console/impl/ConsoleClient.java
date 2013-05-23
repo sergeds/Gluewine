@@ -39,7 +39,6 @@ import java.util.TreeMap;
 import jline.console.ConsoleReader;
 import jline.console.completer.Completer;
 import jline.console.history.FileHistory;
-import jline.console.history.History;
 
 import org.gluewine.authentication.AuthenticationAbortedException;
 import org.gluewine.console.AnsiCodes;
@@ -109,7 +108,7 @@ public final class ConsoleClient implements Runnable, Completer, AnsiCodes
             reader.println(WELCOME);
 
             String home = System.getProperty("user.home");
-            History his = new FileHistory(new File(home, ".osgi_history"));
+            FileHistory his = new FileHistory(new File(home, ".osgi_history"));
             reader.setHistory(his);
             reader.setHistoryEnabled(true);
             reader.addCompleter(this);
@@ -221,6 +220,7 @@ public final class ConsoleClient implements Runnable, Completer, AnsiCodes
                     System.out.println("Cannot connect to server!");
                 }
             }
+            his.flush();
         }
         catch (Throwable e)
         {

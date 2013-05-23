@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  **************************************************************************/
-package org.gluewine.dbauth.impl;
+package org.gluewine.dbauth;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -69,7 +69,7 @@ public class DBCredential
      *
      * @param id The userid.
      */
-    void setUserid(String id)
+    public void setUserid(String id)
     {
         this.userid = id;
     }
@@ -94,7 +94,7 @@ public class DBCredential
      * @return True if they match.
      * @throws AuthenticationException Thrown if the password verification could not be done.
      */
-    boolean verify(String password) throws AuthenticationException
+    public boolean verify(String password) throws AuthenticationException
     {
         if (salt != null && digest != null)
         {

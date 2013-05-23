@@ -123,6 +123,7 @@ public class SystemCommandProvider implements CommandProvider
 
         CLICommand reload = new CLICommand("reload", "Displays or reloads the codesources that have changed.");
         reload.addOption(new CLIOption("-f", "Does the reload", false, false));
+        reload.addOption(new CLIOption("-c", "Clears the state before reloading", false, false));
         commands.add(reload);
 
         commands.add(new CLICommand("shutdown", "Shuts the framework down."));
@@ -591,6 +592,8 @@ public class SystemCommandProvider implements CommandProvider
      */
     public void _reload(CommandContext cc) throws Throwable
     {
+        if (cc.hasOption("-c")) gluer.clearState();
+
         if (cc.hasOption("-f")) Launcher.getInstance().reload();
 
         else
