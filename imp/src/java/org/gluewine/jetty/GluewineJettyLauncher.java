@@ -43,6 +43,8 @@ import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ResourceHandler;
+import org.eclipse.jetty.server.session.HashSessionManager;
+import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.webapp.WebAppClassLoader;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.gluewine.authentication.UseridPasswordAuthentication;
@@ -55,6 +57,7 @@ import org.gluewine.core.Repository;
 import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.RunOnActivate;
 import org.gluewine.core.RunOnDeactivate;
+import org.gluewine.core.utils.ErrorLogger;
 import org.gluewine.launcher.Launcher;
 
 /**
@@ -153,6 +156,88 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
                 }
             }
         }, "JettyLauncher").start();
+    }
+
+    // ===========================================================================
+    /**
+     * Initializes and returns the session manager to use for the given context.
+     *
+     * @param context The context of the session manager.
+     * @return The Session Manager.
+     * @throws IOException If the store directory could not be set.
+     */
+    private SessionHandler initSessionHandler(String context) throws IOException
+    {
+        if (context.startsWith("/")) context = context.substring(1);
+
+        HashSessionManager sessionManager = new HashSessionManager();
+
+        if (properties.contains(context + ".setCheckingRemoteSessionIdEncoding"))
+            sessionManager.setCheckingRemoteSessionIdEncoding(Boolean.parseBoolean(properties.getProperty(context + ".setCheckingRemoteSessionIdEncoding")));
+        else if (properties.contains("default.setCheckingRemoteSessionIdEncoding"))
+            sessionManager.setCheckingRemoteSessionIdEncoding(Boolean.parseBoolean(properties.getProperty("default.setCheckingRemoteSessionIdEncoding")));
+
+        if (properties.contains(context + ".setDeleteUnrestorableSessions"))
+            sessionManager.setDeleteUnrestorableSessions(Boolean.parseBoolean(properties.getProperty(context + ".setDeleteUnrestorableSessions")));
+        else if (properties.contains("default.setDeleteUnrestorableSessions"))
+            sessionManager.setDeleteUnrestorableSessions(Boolean.parseBoolean(properties.getProperty("default.setDeleteUnrestorableSessions")));
+
+        if (properties.contains(context + ".setHttpOnly"))
+            sessionManager.setHttpOnly(Boolean.parseBoolean(properties.getProperty(context + ".setHttpOnly")));
+        else if (properties.contains("default.setHttpOnly"))
+            sessionManager.setHttpOnly(Boolean.parseBoolean(properties.getProperty("default.setHttpOnly")));
+
+        if (properties.contains(context + ".setIdleSavePeriod"))
+            sessionManager.setIdleSavePeriod(Integer.parseInt(properties.getProperty(context + ".setIdleSavePeriod")));
+        else if (properties.contains("default.setIdleSavePeriod"))
+            sessionManager.setIdleSavePeriod(Integer.parseInt(properties.getProperty("default.setIdleSavePeriod")));
+
+        if (properties.contains(context + ".setLazyLoad"))
+            sessionManager.setLazyLoad(Boolean.parseBoolean(properties.getProperty(context + ".setLazyLoad")));
+        else if (properties.contains("default.setLazyLoad"))
+            sessionManager.setLazyLoad(Boolean.parseBoolean(properties.getProperty("default.setLazyLoad")));
+
+        if (properties.contains(context + ".setMaxInactiveInterval"))
+            sessionManager.setMaxInactiveInterval(Integer.parseInt(properties.getProperty(context + ".setMaxInactiveInterval")));
+        else if (properties.contains("default.setMaxInactiveInterval"))
+            sessionManager.setMaxInactiveInterval(Integer.parseInt(properties.getProperty("default.setMaxInactiveInterval")));
+
+        if (properties.contains(context + ".setNodeIdInSessionId"))
+            sessionManager.setNodeIdInSessionId(Boolean.parseBoolean(properties.getProperty(context + ".setNodeIdInSessionId")));
+        else if (properties.contains("default.setNodeIdInSessionId"))
+            sessionManager.setNodeIdInSessionId(Boolean.parseBoolean(properties.getProperty("default.setNodeIdInSessionId")));
+
+        if (properties.contains(context + ".storeDirectory"))
+        {
+            File f = new File(context + ".storeDirectory");
+            if (!f.exists())
+                if (!f.mkdirs()) throw new IOException("Could not create directory " + f.getAbsolutePath());
+            sessionManager.setStoreDirectory(f);
+        }
+        else if (properties.contains("default.storeDirectory"))
+        {
+            File f = new File("default.storeDirectory");
+            if (!f.exists())
+                if (!f.mkdirs()) throw new IOException("Could not create directory " + f.getAbsolutePath());
+            sessionManager.setStoreDirectory(f);
+        }
+
+        if (properties.contains(context + ".setSavePeriod"))
+            sessionManager.setSavePeriod(Integer.parseInt(properties.getProperty(context + ".setSavePeriod")));
+        else if (properties.contains("default.setSavePeriod"))
+            sessionManager.setSavePeriod(Integer.parseInt(properties.getProperty("default.setSavePeriod")));
+
+        if (properties.contains(context + ".setScavengePeriod"))
+            sessionManager.setScavengePeriod(Integer.parseInt(properties.getProperty(context + ".setScavengePeriod")));
+        else if (properties.contains("default.setScavengePeriod"))
+            sessionManager.setScavengePeriod(Integer.parseInt(properties.getProperty("default.setScavengePeriod")));
+
+        if (properties.contains(context + ".setUsingCookies"))
+            sessionManager.setUsingCookies(Boolean.parseBoolean(properties.getProperty(context + ".setUsingCookies")));
+        else if (properties.contains("default.setUsingCookies"))
+            sessionManager.setUsingCookies(Boolean.parseBoolean(properties.getProperty("default.setUsingCookies")));
+
+        return new SessionHandler(sessionManager);
     }
 
     // ===========================================================================
@@ -413,9 +498,11 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
                 public Void run() throws Exception
                 {
                     WebAppContext webapp = new WebAppContext();
+
                     WebAppClassLoader wp = new WebAppClassLoader(getClass().getClassLoader(), webapp);
                     webapp.setClassLoader(wp);
                     webapp.setWar(war.getAbsolutePath());
+                    webapp.setSessionHandler(initSessionHandler(context));
 
                     logger.info("Deploying war " + war.getAbsolutePath() + " in context " + context);
 
@@ -443,12 +530,21 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
     @Override
     public void registered(GluewineServlet t)
     {
-        String context = t.getContextPath();
-        if (!context.startsWith("/")) context = "/" + context;
-        logger.info("Deploying servlet " + t.getClass().getName() + " in context " + context);
+        try
+        {
+            String context = t.getContextPath();
+            if (!context.startsWith("/")) context = "/" + context;
+            logger.info("Deploying servlet " + t.getClass().getName() + " in context " + context);
 
-        if (context.equals("/default")) baseHandler.setDefaultHandler(new GluewineServletHandler(t));
-        else baseHandler.addHandler(context, new GluewineServletHandler(t));
+            GluewineServletHandler handler = new GluewineServletHandler(t);
+            handler.setSessionHandler(initSessionHandler(context));
+            if (context.equals("/default")) baseHandler.setDefaultHandler(handler);
+            else baseHandler.addHandler(context, handler);
+        }
+        catch (IOException e)
+        {
+            ErrorLogger.log(getClass(), e);
+        }
     }
 
     // ===========================================================================

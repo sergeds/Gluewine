@@ -310,7 +310,8 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
                         out = new OutputStreamWriter(la.getClientOutputStream(), "UTF-8");
                     }
 
-                    else if (!stopRequested) e.printStackTrace();
+                    else if (!stopRequested)
+                        la.close();
                 }
             }
         }

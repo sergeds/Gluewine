@@ -27,7 +27,7 @@ public abstract class AbstractGluewineService extends RemoteServiceServlet
     /**
      * The client to use when in GXO mode.
      */
-    private GxoClient gxoClient = null;
+    private static GxoClient gxoClient = null;
 
     /**
      * Name of the attribute containing the OSGi session id.
@@ -43,19 +43,25 @@ public abstract class AbstractGluewineService extends RemoteServiceServlet
     @Override
     public void init()
     {
-        boolean local = System.getProperty("gluewine.gxolocal") != null;
-        if (local)
+        synchronized (OSGI_SESSION)
         {
-            logger.info("Starting servlet " + getClass().getName() + " in 'Local' mode.");
-            gxoClient = new GxoClient();
-        }
+            if (gxoClient == null)
+            {
+                boolean local = System.getProperty("gluewine.gxolocal") != null;
+                if (local)
+                {
+                    logger.info("Starting servlet " + getClass().getName() + " in 'Local' mode.");
+                    gxoClient = new GxoClient();
+                }
 
-        else
-        {
-            String osgiHost = this.getServletContext().getInitParameter("osgi-host");
-            int osgiPort = Integer.parseInt(this.getServletContext().getInitParameter("osgi-port"));
-            logger.info("Starting servlet " + getClass().getName() + " in 'Remove' mode, connecting to server " + osgiHost + ":" + osgiPort);
-            gxoClient = new GxoClient(osgiHost, osgiPort);
+                else
+                {
+                    String osgiHost = this.getServletContext().getInitParameter("osgi-host");
+                    int osgiPort = Integer.parseInt(this.getServletContext().getInitParameter("osgi-port"));
+                    logger.info("Starting servlet " + getClass().getName() + " in 'Remove' mode, connecting to server " + osgiHost + ":" + osgiPort);
+                    gxoClient = new GxoClient(osgiHost, osgiPort);
+                }
+            }
         }
     }
 

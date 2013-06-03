@@ -29,7 +29,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.eclipse.jetty.servlet.ServletContextHandler;
 
 /**
  * Handler that simply services a servlet. The context of the servlet is handled
@@ -38,7 +38,7 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
  * @author fks/Serge de Schaetzen
  *
  */
-public class GluewineServletHandler extends AbstractHandler
+public class GluewineServletHandler extends ServletContextHandler
 {
     // ===========================================================================
     /**
@@ -59,7 +59,7 @@ public class GluewineServletHandler extends AbstractHandler
 
     // ===========================================================================
     @Override
-    public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
+    public void doHandle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
     {
         servlet.service(request, response);
         baseRequest.setHandled(true);
