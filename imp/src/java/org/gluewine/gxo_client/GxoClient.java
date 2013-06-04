@@ -192,29 +192,32 @@ public class GxoClient
      */
     public synchronized void close()
     {
-        if (connected && !local)
+        if (connected)
         {
-            try
+            if (!local)
             {
-                socket.close();
+                try
+                {
+                    socket.close();
+                }
+                catch (Throwable e)
+                {
+                    logger.warn(e);
+                }
+                socket = null;
             }
-            catch (Throwable e)
+            else
             {
-                logger.warn(e);
+                try
+                {
+                    LocalAccess.getInstance().close();
+                }
+                catch (Throwable e)
+                {
+                    logger.warn(e);
+                }
             }
             connected = false;
-            socket = null;
-        }
-        else
-        {
-            try
-            {
-                LocalAccess.getInstance().close();
-            }
-            catch (Throwable e)
-            {
-                logger.warn(e);
-            }
         }
     }
 
@@ -227,9 +230,9 @@ public class GxoClient
      */
     private void connect() throws Throwable
     {
-        if (!local)
+        synchronized (stream)
         {
-            synchronized (stream)
+            if (!local)
             {
                 if (socket != null && socket.isInputShutdown())
                     close();
@@ -243,16 +246,14 @@ public class GxoClient
                     CompressedBlockOutputStream cout = new CompressedBlockOutputStream(socket.getOutputStream(), 1024);
                     in = new InputStreamReader(cin, "UTF-8");
                     out = new OutputStreamWriter(cout, "UTF-8");
-                    connected = true;
                 }
             }
-        }
-        else
-        {
-            LocalAccess la = LocalAccess.getInstance();
-            out = new OutputStreamWriter(la.getServerOutputStream(), "UTF-8");
-            in = new InputStreamReader(la.getServerInputStream(), "UTF-8");
-
+            else
+            {
+                LocalAccess la = LocalAccess.getInstance();
+                out = new OutputStreamWriter(la.getServerOutputStream(), "UTF-8");
+                in = new InputStreamReader(la.getServerInputStream(), "UTF-8");
+            }
             connected = true;
         }
     }
@@ -365,9 +366,6 @@ public class GxoClient
                     catch (StreamException e)
                     {
                         close();
-                        retries--;
-                        if (retries == 0)
-                            throw new GxoException("Could not connect to server");
                     }
                     catch (Throwable e)
                     {
@@ -384,7 +382,12 @@ public class GxoClient
                             connected = false;
                             throw e;
                         }
+                        else
+                            LocalAccess.getInstance().close();
                     }
+                    retries--;
+                    if (retries == 0)
+                        throw new GxoException("Could not connect to server");
                 }
                 else
                     throw new Throwable("Could not connect to server " + host + ":" + port);

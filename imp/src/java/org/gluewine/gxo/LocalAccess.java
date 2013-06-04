@@ -6,6 +6,8 @@ import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 
+import org.apache.log4j.Logger;
+
 /**
  * Static class that allows to register the streams for local usage.
  *
@@ -50,12 +52,18 @@ public final class LocalAccess
      */
     private boolean closed = false;
 
+    /**
+     * The logger instance to use.
+     */
+    private Logger logger = Logger.getLogger(getClass());
+
     // ===========================================================================
     /**
      * Creates an instance.
      */
     private LocalAccess()
     {
+        logger.info("Initializing GXO LocalAccess Instance.");
     }
 
     // ===========================================================================

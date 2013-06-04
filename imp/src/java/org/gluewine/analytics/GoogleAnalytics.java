@@ -27,6 +27,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 
 import javax.servlet.http.HttpServlet;
@@ -73,20 +76,20 @@ public class GoogleAnalytics implements AspectProvider
     /**
      * The logger instance to use.
      */
-    private Logger logger = Logger.getLogger(getClass());
+    private static Logger logger = Logger.getLogger(GoogleAnalytics.class);
 
     // ===========================================================================
     /**
      * Tracks the page with the given properties.
      *
-     * @param req The current request.
+     * @param headers The headers
      * @param hostName The hostname.
      * @param page The page.
      * @param title The page title.
      *
      * @throws IOException If an error occurs.
      */
-    public void trackWebPage(HttpServletRequest req, String hostName, String page, String title) throws IOException
+    public void trackWebPage(Map<String, String> headers, String hostName, String page, String title) throws IOException
     {
         String id = props.getProperty(TRACKID_WEBID);
         if (id != null)
@@ -99,7 +102,7 @@ public class GoogleAnalytics implements AspectProvider
             b.append("&dp=").append(URLEncoder.encode(page, "UTF-8"));
             b.append("&dt=").append(URLEncoder.encode(title, "UTF-8"));
 
-            postRequest(req, b.toString());
+            postRequest(headers, b.toString());
         }
 
         else throw new IOException("There is no " + TRACKID_WEBID + " defined in the google.properties files!");
@@ -109,7 +112,7 @@ public class GoogleAnalytics implements AspectProvider
     /**
      * Tracks the event with the given properties.
      *
-     * @param req The current request.
+     * @param headers The headers
      * @param category The category name.
      * @param action The action.
      * @param label The label.
@@ -117,7 +120,7 @@ public class GoogleAnalytics implements AspectProvider
      *
      * @throws IOException If an error occurs.
      */
-    public void trackWebEvent(HttpServletRequest req, String category, String action, String label, String value) throws IOException
+    public void trackWebEvent(Map<String, String> headers, String category, String action, String label, String value) throws IOException
     {
         String id = props.getProperty(TRACKID_WEBID);
         if (id != null)
@@ -131,7 +134,7 @@ public class GoogleAnalytics implements AspectProvider
             b.append("&el=").append(URLEncoder.encode(label, "UTF-8"));
             b.append("&ev=").append(URLEncoder.encode(value, "UTF-8"));
 
-            postRequest(req, b.toString());
+            postRequest(headers, b.toString());
         }
 
         else throw new IOException("There is no " + TRACKID_WEBID + " defined in the google.properties files!");
@@ -139,15 +142,42 @@ public class GoogleAnalytics implements AspectProvider
 
     // ===========================================================================
     /**
+     * Parses the request specified and returns a map containing all header entries.
+     *
+     * @param req The request to parse.
+     * @return The map of header entries.
+     */
+    @SuppressWarnings("unchecked")
+    public static Map<String, String> parseHeaders(HttpServletRequest req)
+    {
+        Map<String, String> map = new HashMap<String, String>();
+
+        Enumeration<String> names = req.getHeaderNames();
+        while (names.hasMoreElements())
+        {
+            String name = names.nextElement();
+            map.put(name, req.getHeader(name));
+        }
+
+        map.put("CLIENTID", req.getRemoteAddr());
+
+        String forward = req.getHeader("X-Forwarded-For");
+        if (forward != null) map.put("CLIENTID", forward);
+
+        return map;
+    }
+
+    // ===========================================================================
+    /**
      * Tracks a Mobile App screen view.
      *
-     * @param req The current request.
+     * @param headers The headers
      * @param appName The app name.
      * @param appVersion The app version.
      * @param screenName The screen name.
      * @throws IOException If an error ocurrs.
      */
-    public void trackMobileScreen(HttpServletRequest req, String appName, String appVersion, String screenName) throws IOException
+    public void trackMobileScreen(Map<String, String> headers, String appName, String appVersion, String screenName) throws IOException
     {
         String id = props.getProperty(TRACKID_MOBILE);
         if (id != null)
@@ -160,7 +190,7 @@ public class GoogleAnalytics implements AspectProvider
             b.append("&av=").append(URLEncoder.encode(appVersion, "UTF-8"));
             b.append("&cd=").append(URLEncoder.encode(screenName, "UTF-8"));
 
-            postRequest(req, b.toString());
+            postRequest(headers, b.toString());
         }
 
         else throw new IOException("There is no " + TRACKID_WEBID + " defined in the google.properties files!");
@@ -170,13 +200,13 @@ public class GoogleAnalytics implements AspectProvider
     /**
      * Tracks a Mobile App screen view.
      *
-     * @param req The current request.
+     * @param headers The headers
      * @param appName The app name.
      * @param category The category name.
      * @param action The action.
      * @throws IOException If an error ocurrs.
      */
-    public void trackMobileEvent(HttpServletRequest req, String appName, String category, String action) throws IOException
+    public void trackMobileEvent(Map<String, String> headers, String appName, String category, String action) throws IOException
     {
         String id = props.getProperty(TRACKID_MOBILE);
         if (id != null)
@@ -189,7 +219,7 @@ public class GoogleAnalytics implements AspectProvider
             b.append("&ec=").append(URLEncoder.encode(category, "UTF-8"));
             b.append("&ea=").append(URLEncoder.encode(action, "UTF-8"));
 
-            postRequest(req, b.toString());
+            postRequest(headers, b.toString());
         }
 
         else throw new IOException("There is no " + TRACKID_WEBID + " defined in the google.properties files!");
@@ -199,15 +229,14 @@ public class GoogleAnalytics implements AspectProvider
     /**
      * Posts the request with the given parameters to GoolgeAnalytics.
      *
-     * @param req The request invoking the trigger.
+     * @param hreaders The headers to use..
      * @param parameters The parameters to report.
      * @throws IOException If an error occurs connecting to Google.
      */
-    @SuppressWarnings("unchecked")
-    private void postRequest(HttpServletRequest req, String parameters) throws IOException
+    private void postRequest(Map<String, String> headers, String parameters) throws IOException
     {
         String target = props.getProperty(URL);
-        parameters = parameters.replace("{CLIENTID}", req.getRemoteAddr());
+        parameters = parameters.replace("{CLIENTID}", headers.get("CLIENTID"));
         URL url = new URL(target + "?" + parameters);
 
         logger.debug("GoogleAnalytics Report : " + url.toExternalForm());
@@ -215,23 +244,18 @@ public class GoogleAnalytics implements AspectProvider
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setDoOutput(true);
 
-        if (req != null)
+        for (Entry<String, String> e : headers.entrySet())
         {
-            Enumeration<String> names = req.getHeaderNames();
-            while (names.hasMoreElements())
-            {
-                String name = names.nextElement();
-                connection.setRequestProperty(name, req.getHeader(name));
-                logger.trace("HEADER: " + name + " = " + req.getHeader(name));
-            }
+            connection.setRequestProperty(e.getKey(), e.getValue());
+            logger.trace("HEADER: " + e.getKey() + " = " + e.getValue());
+        }
 
-            String forward = req.getHeader("X-Forwarded-For");
-            if (forward == null)
-            {
-                forward = req.getRemoteAddr();
-                connection.setRequestProperty("X-Forwarded-For", forward);
-                logger.trace("HEADER: X-Forwarded-For = " + forward);
-            }
+        String forward = headers.get("X-Forwarded-For");
+        if (forward == null)
+        {
+            forward = headers.get("CLIENTID");
+            connection.setRequestProperty("X-Forwarded-For", forward);
+            logger.trace("HEADER: X-Forwarded-For = " + forward);
         }
 
         connection.setRequestMethod("GET");
@@ -270,7 +294,7 @@ public class GoogleAnalytics implements AspectProvider
                     }
                     try
                     {
-                        postRequest(req, payload);
+                        postRequest(parseHeaders(req), payload);
                     }
                     catch (Throwable e)
                     {
