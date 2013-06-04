@@ -26,18 +26,28 @@ import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.log4j.Logger;
+import org.gluewine.console.CLICommand;
+import org.gluewine.console.CommandContext;
+import org.gluewine.console.CommandProvider;
 import org.gluewine.core.AspectProvider;
 import org.gluewine.core.Glue;
+import org.gluewine.core.RunOnActivate;
+import org.gluewine.core.RunOnDeactivate;
 
 
 /**
@@ -49,7 +59,7 @@ import org.gluewine.core.Glue;
  * @author fks/Serge de Schaetzen
  *
  */
-public class GoogleAnalytics implements AspectProvider
+public class GoogleAnalytics implements AspectProvider, CommandProvider
 {
     // ===========================================================================
     /**
@@ -77,6 +87,39 @@ public class GoogleAnalytics implements AspectProvider
      * The logger instance to use.
      */
     private static Logger logger = Logger.getLogger(GoogleAnalytics.class);
+
+    /**
+     * The thread pool.
+     */
+    private ThreadPoolExecutor threadPool = null;
+
+    /**
+     * The total events posted.
+     */
+    private long totalEvents = 0;
+
+    // ===========================================================================
+    /**
+     * Launches the threadpool.
+     */
+    @RunOnActivate
+    public void launch()
+    {
+        int max = Integer.parseInt(props.getProperty("threads.max", "10"));
+        int idle = Integer.parseInt(props.getProperty("threads.idle", "10"));
+        threadPool = new ThreadPoolExecutor(max, max, idle, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+        threadPool.allowCoreThreadTimeOut(true);
+    }
+
+    // ===========================================================================
+    /**
+     * Deactivates the service.
+     */
+    @RunOnDeactivate
+    public void deactivate()
+    {
+        threadPool.shutdown();
+    }
 
     // ===========================================================================
     /**
@@ -110,6 +153,34 @@ public class GoogleAnalytics implements AspectProvider
 
     // ===========================================================================
     /**
+     * Submits the event asynchronously.
+     *
+     * @param headers The headers
+     * @param hostName The hostname.
+     * @param page The page.
+     * @param title The page title.
+     */
+    public void submitWebPage(final Map<String, String> headers, final String hostName, final String page, final String title)
+    {
+        threadPool.execute(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    trackWebPage(headers, hostName, page, title);
+                }
+                catch (IOException e)
+                {
+                    logger.warn(e.getMessage());
+                }
+            }
+        });
+    }
+
+    // ===========================================================================
+    /**
      * Tracks the event with the given properties.
      *
      * @param headers The headers
@@ -138,6 +209,35 @@ public class GoogleAnalytics implements AspectProvider
         }
 
         else throw new IOException("There is no " + TRACKID_WEBID + " defined in the google.properties files!");
+    }
+
+    // ===========================================================================
+    /**
+     * Submits the event asynchronously.
+     *
+     * @param headers The headers
+     * @param category The category name.
+     * @param action The action.
+     * @param label The label.
+     * @param value The value.
+     */
+    public void submitWebEvent(final Map<String, String> headers, final String category, final String action, final String label, final String value)
+    {
+        threadPool.execute(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    trackWebEvent(headers, category, action, label, value);
+                }
+                catch (IOException e)
+                {
+                    logger.warn(e.getMessage());
+                }
+            }
+        });
     }
 
     // ===========================================================================
@@ -198,6 +298,35 @@ public class GoogleAnalytics implements AspectProvider
 
     // ===========================================================================
     /**
+     * Submits the event asynchronously.
+     *
+     * @param headers The headers
+     * @param appName The app name.
+     * @param appVersion The app version.
+     * @param screenName The screen name.
+     */
+    public void submitMobileScree(final Map<String, String> headers, final String appName, final String appVersion, final String screenName)
+    {
+        threadPool.execute(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    trackMobileScreen(headers, appName, appVersion, screenName);
+                }
+                catch (IOException e)
+                {
+                    logger.warn(e.getMessage());
+                }
+            }
+        });
+    }
+
+
+    // ===========================================================================
+    /**
      * Tracks a Mobile App screen view.
      *
      * @param headers The headers
@@ -223,6 +352,34 @@ public class GoogleAnalytics implements AspectProvider
         }
 
         else throw new IOException("There is no " + TRACKID_WEBID + " defined in the google.properties files!");
+    }
+
+    // ===========================================================================
+    /**
+     * Submits the event asynchronously.
+     *
+     * @param headers The headers
+     * @param appName The app name.
+     * @param category The category name.
+     * @param action The action.
+     */
+    public void submitMobileEvent(final Map<String, String> headers, final String appName, final String category, final String action)
+    {
+        threadPool.execute(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    trackMobileEvent(headers, appName, category, action);
+                }
+                catch (IOException e)
+                {
+                    logger.warn(e.getMessage());
+                }
+            }
+        });
     }
 
     // ===========================================================================
@@ -268,6 +425,11 @@ public class GoogleAnalytics implements AspectProvider
         logger.debug("GoogleAnalytics Report : " + url.toExternalForm() + " done with responce code " + connection.getResponseCode());
 
         connection.disconnect();
+
+        synchronized (this)
+        {
+            totalEvents++;
+        }
     }
 
     // ===========================================================================
@@ -323,5 +485,32 @@ public class GoogleAnalytics implements AspectProvider
     @Override
     public void after(Object o, Method m, Object[] params)
     {
+    }
+
+    // ===========================================================================
+    /**
+     * Executes the google_stats command.
+     *
+     * @param cc The current context.
+     */
+    public void _google_stats(CommandContext cc)
+    {
+        cc.tableHeader("Statistic", "Value");
+        cc.tableRow("# Total Submits", Long.toString(totalEvents));
+        cc.tableRow("# Max Threads", Integer.toString(threadPool.getMaximumPoolSize()));
+        cc.tableRow("# Active Threads", Integer.toString(threadPool.getPoolSize()));
+        cc.tableRow("# Active Jobs", Integer.toString(threadPool.getActiveCount()));
+        cc.tableRow("# Pending jobs", Integer.toString(threadPool.getQueue().size()));
+
+        cc.printTable();
+    }
+
+    // ===========================================================================
+    @Override
+    public List<CLICommand> getCommands()
+    {
+        List<CLICommand> cmds = new ArrayList<CLICommand>();
+        cmds.add(new CLICommand("google_stats", "Displays the Google Analytics statistics."));
+        return cmds;
     }
 }
