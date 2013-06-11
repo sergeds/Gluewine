@@ -115,7 +115,7 @@ public class GluewineProperties extends Properties
         clear();
         load();
 
-        if (refreshMethod != null && owner != null)
+        if (refreshMethod != null && refreshMethod.trim().length() > 0 && owner != null)
         {
             AccessController.doPrivileged(new PrivilegedAction<Void>()
            {
