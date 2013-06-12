@@ -188,9 +188,10 @@ public class HibernateTransactionalSessionImpl implements TransactionalSession
     @Override
     public void delete(Object o)
     {
+        Serializable id = delegate.getIdentifier(o);
         delegate.delete(o);
         for (QueryPostProcessor post : postProcessors)
-            post.deleted(delegate.getIdentifier(o), o);
+            post.deleted(id, o);
     }
 
     // ===========================================================================
