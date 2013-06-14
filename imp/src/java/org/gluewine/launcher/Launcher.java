@@ -206,10 +206,9 @@ public final class Launcher implements Runnable, DirectoryAnnotations
                 if (log4j.exists()) System.setProperty("log4j.configuration", log4j.toURI().toURL().toExternalForm());
             }
 
-            loadPersistentMap();
-
             if (root.exists()) processRoot();
 
+            loadPersistentMap();
             CodeSource rootCs = sourcesMap.get(getShortName(root));
             Class<?> cl = rootCs.getSourceClassLoader().loadClass(classToStart);
 
@@ -337,29 +336,32 @@ public final class Launcher implements Runnable, DirectoryAnnotations
     @SuppressWarnings("unchecked")
     private void loadPersistentMap()
     {
-        if (persistentFile.exists())
+        if (jarFilter.isEmpty())
         {
-            ObjectInputStream in = null;
-            try
+            if (persistentFile.exists())
             {
-                in = new GluewineObjectInputStream(new FileInputStream(persistentFile), sourcesMap.get(getShortName(root)));
-                persistentMap = (HashMap<String, Serializable>) in.readObject();
-            }
-            catch (Throwable e)
-            {
-                e.printStackTrace();
-            }
-            finally
-            {
-                if (in != null)
+                ObjectInputStream in = null;
+                try
                 {
-                    try
+                    in = new GluewineObjectInputStream(new FileInputStream(persistentFile), sourcesMap.get(getShortName(root)));
+                    persistentMap = (HashMap<String, Serializable>) in.readObject();
+                }
+                catch (Throwable e)
+                {
+                    e.printStackTrace();
+                }
+                finally
+                {
+                    if (in != null)
                     {
-                        in.close();
-                    }
-                    catch (IOException e)
-                    {
-                        e.printStackTrace();
+                        try
+                        {
+                            in.close();
+                        }
+                        catch (IOException e)
+                        {
+                            e.printStackTrace();
+                        }
                     }
                 }
             }
@@ -386,27 +388,30 @@ public final class Launcher implements Runnable, DirectoryAnnotations
     {
         synchronized (persistentMap)
         {
-            ObjectOutputStream out = null;
-            try
+            if (jarFilter.isEmpty())
             {
-                out = new ObjectOutputStream(new FileOutputStream(persistentFile));
-                out.writeObject(persistentMap);
-            }
-            catch (Throwable e)
-            {
-                e.printStackTrace();
-            }
-            finally
-            {
-                if (out != null)
+                ObjectOutputStream out = null;
+                try
                 {
-                    try
+                    out = new ObjectOutputStream(new FileOutputStream(persistentFile));
+                    out.writeObject(persistentMap);
+                }
+                catch (Throwable e)
+                {
+                    e.printStackTrace();
+                }
+                finally
+                {
+                    if (out != null)
                     {
-                        out.close();
-                    }
-                    catch (IOException e)
-                    {
-                        e.printStackTrace();
+                        try
+                        {
+                            out.close();
+                        }
+                        catch (IOException e)
+                        {
+                            e.printStackTrace();
+                        }
                     }
                 }
             }
