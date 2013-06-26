@@ -41,10 +41,18 @@ import javax.servlet.ServletContextListener;
 
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.server.session.HashSessionManager;
 import org.eclipse.jetty.server.session.SessionHandler;
+import org.eclipse.jetty.servlets.gzip.GzipHandler;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.webapp.WebAppClassLoader;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.gluewine.authentication.UseridPasswordAuthentication;
@@ -123,11 +131,22 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
             {
                 try
                 {
-                    Thread.currentThread().setContextClassLoader(GluewineJettyLauncher.class.getClassLoader());
+                    logger.info("Launching Jetty Embedded Server");
 
+                    Thread.currentThread().setContextClassLoader(GluewineJettyLauncher.class.getClassLoader());
                     logger.info("Loading class " + ServletContextListener.class.getName());
 
-                    int port = Integer.parseInt(properties.getProperty("jetty.port", "8080"));
+                    // Configure the default handler:
+                    registered(new DefaultServlet(baseHandler));
+
+                    if (properties.containsKey("maxthreads"))
+                    {
+                        logger.info("Launching Jetty with a maximum of " + Integer.parseInt(properties.getProperty("maxthreads")) + " concurrent threads!");
+                        QueuedThreadPool threadPool = new QueuedThreadPool(Integer.parseInt(properties.getProperty("maxthreads")));
+                        server = new Server(threadPool);
+                    }
+                    else
+                        server = new Server();
 
                     warDirectory = new File(properties.getProperty("war.directory", "/tmp"));
                     if (!warDirectory.exists())
@@ -145,8 +164,35 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
 
                     loadStaticHandlers();
 
-                    server = new Server(port);
-                    server.setHandler(baseHandler);
+                    GzipHandler gzipHandler = new GzipHandler();
+                    gzipHandler.setHandler(baseHandler);
+                    server.setHandler(gzipHandler);
+
+                    // Add SSL configuration if configured:
+                    if (properties.containsKey("https.port"))
+                    {
+                        logger.info("Adding HTTPS connection");
+                        SslContextFactory sslContextFactory = new SslContextFactory();
+                        sslContextFactory.setKeyStorePath(properties.getProperty("https.keystorepath", "../cfg/keystore"));
+                        sslContextFactory.setKeyStorePassword(properties.getProperty("https.keystorepassword"));
+                        sslContextFactory.setKeyManagerPassword(properties.getProperty("https.keymanagerpassword"));
+                        sslContextFactory.setTrustStorePath(properties.getProperty("https.truststorepath", "../cfg/truststore"));
+                        sslContextFactory.setTrustStorePassword(properties.getProperty("https.truststorepassword"));
+                        sslContextFactory.setNeedClientAuth(Boolean.parseBoolean(properties.getProperty("https.clientauthentication", "false")));
+                        sslContextFactory.setTrustAll(true);
+
+                        HttpConfiguration https_config = new HttpConfiguration();
+                        https_config.addCustomizer(new SecureRequestCustomizer());
+                        // SSL Connector
+                        ServerConnector sslConnector = new ServerConnector(server, new SslConnectionFactory(sslContextFactory, "http/1.1"), new HttpConnectionFactory(https_config));
+                        sslConnector.setPort(Integer.parseInt(properties.getProperty("https.port")));
+                        server.addConnector(sslConnector);
+                    }
+
+                    ServerConnector http = new ServerConnector(server);
+                    http.setPort(Integer.parseInt(properties.getProperty("http.port", "8080")));
+                    server.addConnector(http);
+
                     server.start();
                     server.join();
                 }
@@ -261,27 +307,30 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
 
             ResourceHandler handler = null;
 
+            String context = properties.getProperty("static." + i + ".context", dir.getName());
+
             if (properties.getProperty("static." + i + ".secured", "false").equals("true"))
             {
                 UseridPasswordAuthentication authenticator = repository.getService(UseridPasswordAuthentication.class);
                 if (authenticator != null)
-                    handler = new GluewineSecuredStaticHandler(dir.getName(), authenticator);
+                    handler = new GluewineSecuredStaticHandler(context, authenticator);
 
                 else
                 {
                     logger.warn("No Authenticator available!");
-                    handler = new GluewineStaticHandler(dir.getName());
+                    handler = new GluewineStaticHandler(context);
                 }
 
             }
             else
-                handler = new GluewineStaticHandler(dir.getName());
+                handler = new GluewineStaticHandler(context);
 
             handler.setResourceBase(path);
             handler.setDirectoriesListed(Boolean.parseBoolean(properties.getProperty(pref + ".directoryListing", "false")));
             handler.setWelcomeFiles(properties.getProperty(pref + ".welcome", "index.html").split(","));
 
-            baseHandler.addHandler(dir.getName(), handler);
+
+            baseHandler.addHandler(context, handler);
 
             i++;
             path = properties.getProperty("static." + i + ".path");
@@ -538,7 +587,12 @@ public class GluewineJettyLauncher implements CommandProvider, RepositoryListene
 
             GluewineServletHandler handler = new GluewineServletHandler(t);
             handler.setSessionHandler(initSessionHandler(context));
-            if (context.equals("/default")) baseHandler.setDefaultHandler(handler);
+            handler.setContextPath(context);
+            if (context.equals("/default"))
+            {
+                baseHandler.setDefaultHandler(handler);
+                handler.setContextPath("/");
+            }
             else baseHandler.addHandler(context, handler);
         }
         catch (IOException e)

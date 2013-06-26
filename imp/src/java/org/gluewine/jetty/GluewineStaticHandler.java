@@ -2,6 +2,7 @@ package org.gluewine.jetty;
 
 import java.net.MalformedURLException;
 
+import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.util.resource.Resource;
 
@@ -19,6 +20,11 @@ public class GluewineStaticHandler extends ResourceHandler
      * The context of this handler.
      */
     private String context = null;
+
+    /**
+     * The logger instance.
+     */
+    private Logger logger = Logger.getLogger(getClass());
 
     // ===========================================================================
     /**
@@ -43,7 +49,17 @@ public class GluewineStaticHandler extends ResourceHandler
     @Override
     public Resource getResource(String path) throws MalformedURLException
     {
-        if (path.startsWith(context)) path = path.substring(context.length());
-        return super.getResource(path);
+        try
+        {
+            if (path.startsWith(context)) path = path.substring(context.length());
+            if (path.equals("")) path = "/";
+            logger.debug("Request for resource: " + path);
+            return super.getResource(path);
+        }
+        catch (RuntimeException e)
+        {
+            e.printStackTrace();
+            throw e;
+        }
     }
 }

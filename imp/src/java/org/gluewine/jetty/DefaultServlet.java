@@ -61,9 +61,12 @@ public class DefaultServlet extends GluewineServlet
 
         for (String s : contexts)
         {
-            b.append("<li>");
-            b.append("<A HREF='").append(s).append("'>").append(s).append("</A>");
-            b.append("</li>");
+            if (s.trim().length() > 0)
+            {
+                b.append("<li>");
+                b.append("<A HREF='").append(s).append("'>").append(s).append("</A>");
+                b.append("</li>");
+            }
         }
         b.append("</ul>");
         b.append("</HEAD>");

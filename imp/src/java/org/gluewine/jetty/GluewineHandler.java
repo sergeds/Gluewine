@@ -66,7 +66,6 @@ public class GluewineHandler extends ContextHandlerCollection
      */
     public GluewineHandler()
     {
-        defaultHandler = new GluewineServletHandler(new DefaultServlet(this));
     }
 
     // ===========================================================================
@@ -135,6 +134,7 @@ public class GluewineHandler extends ContextHandlerCollection
         if (c.startsWith("/")) c = c.substring(1);
         int i = c.indexOf('/');
         if (i > 0) c = c.substring(0, i);
+
         return c;
     }
 

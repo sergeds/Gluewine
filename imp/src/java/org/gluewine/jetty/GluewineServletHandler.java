@@ -28,6 +28,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
@@ -46,6 +47,11 @@ public class GluewineServletHandler extends ServletContextHandler
      */
     private HttpServlet servlet = null;
 
+    /**
+     * The logger instance to use.
+     */
+    private Logger logger = Logger.getLogger(getClass());
+
     // ===========================================================================
     /**
      * The servlet to service.
@@ -59,8 +65,17 @@ public class GluewineServletHandler extends ServletContextHandler
 
     // ===========================================================================
     @Override
+    public void doScope(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
+    {
+        logger.debug("Scoping request for target " + target);
+        doHandle(target, baseRequest, request, response);
+    }
+
+    // ===========================================================================
+    @Override
     public void doHandle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
     {
+        logger.debug("Handling request for target " + target);
         servlet.service(request, response);
         baseRequest.setHandled(true);
     }
