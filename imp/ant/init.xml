@@ -114,6 +114,7 @@
     <path id="classpath.cobertura.full">
         <pathelement location="${dir.build.cobertura}"/>
         <path refid="classpath.junit.full"/>
+        <path refid="classpath.osgi.full" />
         <path>
             <fileset dir="${dir.tools.cobertura}">
                 <include name="cobertura.jar"/>

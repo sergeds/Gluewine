@@ -672,6 +672,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
             dcs.setSourceClassLoader(dirLoader);
             sourcesMap.put(dcs.getDisplayName(), dcs);
             sources.add(dcs);
+            log.trace(getClass(), "Loaded", dcs.getDisplayName());
         }
         else
             dirLoader = sourcesMap.get(key).getSourceClassLoader();
@@ -683,14 +684,20 @@ public final class Launcher implements Runnable, DirectoryAnnotations
             {
                 key = getShortName(file);
                 if (!sourcesMap.containsKey(key))
+                {
                     sources.add(getCodeSource(file, dirLoader));
+                    log.trace(getClass(), "Loaded", key);
+                }
             }
 
             for (URL url : annotatedURLs)
             {
                 key = url.toExternalForm();
                 if (!sourcesMap.containsKey(key))
+                {
                     sources.add(getCodeSource(url, dirLoader));
+                    log.trace(getClass(), "Loaded", key);
+                }
             }
         }
         else
@@ -700,14 +707,20 @@ public final class Launcher implements Runnable, DirectoryAnnotations
             {
                 key = getShortName(file);
                 if (!sourcesMap.containsKey(key))
+                {
                     sources.add(getCodeSource(file, null));
+                    log.trace(getClass(), "Loaded", key);
+                }
             }
 
             for (URL url : annotatedURLs)
             {
                 key = url.toExternalForm();
                 if (!sourcesMap.containsKey(key))
+                {
                     sources.add(getCodeSource(url, null));
+                    log.trace(getClass(), "Loaded", key);
+                }
             }
         }
 
@@ -1115,6 +1128,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
     {
         for (CodeSource src : sources)
         {
+            log.debug(getClass(), "Unloading", src.getDisplayName());
             sourcesMap.remove(src.getDisplayName());
             src.closeLoader();
         }
@@ -1154,7 +1168,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
             {
                 JarCodeSource jcs = (JarCodeSource) src;
                 log.debug(getClass(), "Deleting", jcs.getDisplayName());
-                if (!jcs.getFile().delete())
+                if (deleteFile && !jcs.getFile().delete())
                     log.warn(getClass(), "Could not delete", jcs.getFile().getAbsolutePath());
             }
 
@@ -1177,7 +1191,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
                 DirectoryCodeSource dcs = (DirectoryCodeSource) src;
                 List<CodeSource> children = codeSources.remove(dcs.getDirectory().getAbsolutePath());
                 removeSources(children, deleteFile);
-                if (!dcs.getDirectory().delete())
+                if (deleteFile && !dcs.getDirectory().delete())
                     log.warn(getClass(), "Could not delete", dcs.getDirectory().getAbsolutePath());
             }
         }

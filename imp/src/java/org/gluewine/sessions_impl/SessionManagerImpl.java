@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  **************************************************************************/
-package org.gluewine.sessions.impl;
+package org.gluewine.sessions_impl;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -56,6 +56,11 @@ public class SessionManagerImpl implements SessionManager
      */
     private Timer timer = null;
 
+    /**
+     * The map of session id indexed on the thread.
+     */
+    private Map<Thread, String> threadSessions = new HashMap<Thread, String>();
+
     // ===========================================================================
     /**
      * Creates an instance.
@@ -83,7 +88,7 @@ public class SessionManagerImpl implements SessionManager
 
     // ===========================================================================
     @Override
-    public String createNewSession()
+    public String createNewSession(String user)
     {
         synchronized (sessions)
         {
@@ -134,5 +139,35 @@ public class SessionManagerImpl implements SessionManager
     {
         checkSession(session);
         tickSession(session);
+    }
+
+    // ===========================================================================
+    @Override
+    public void setCurrentSessionId(String session)
+    {
+        synchronized (threadSessions)
+        {
+            threadSessions.put(Thread.currentThread(), session);
+        }
+    }
+
+    // ===========================================================================
+    @Override
+    public void clearCurrentSessionId()
+    {
+        synchronized (threadSessions)
+        {
+            threadSessions.remove(Thread.currentThread());
+        }
+    }
+
+    // ===========================================================================
+    @Override
+    public String getCurrentSessionId()
+    {
+        synchronized (threadSessions)
+        {
+            return threadSessions.get(Thread.currentThread());
+        }
     }
 }

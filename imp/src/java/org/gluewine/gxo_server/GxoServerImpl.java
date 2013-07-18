@@ -50,6 +50,7 @@ import org.gluewine.gxo.ExecBean;
 import org.gluewine.gxo.GxoException;
 import org.gluewine.gxo.InitBean;
 import org.gluewine.gxo.LocalAccess;
+import org.gluewine.sessions.SessionManager;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.converters.basic.DateConverter;
@@ -143,6 +144,12 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
      * The XStream serializer/deserializer.
      */
     private XStream stream = null;
+
+    /**
+     * The session manager.
+     */
+    @Glue
+    private SessionManager sessionManager;
 
     /**
      * The property file to use.
@@ -352,6 +359,7 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
                 {
                     ExecBean bean = (ExecBean) ob;
                     Object result = processExecBean(instantiated, bean);
+                    sessionManager.setCurrentSessionId(bean.getSessionId());
                     stream.toXML(result, out);
                     out.flush();
                 }

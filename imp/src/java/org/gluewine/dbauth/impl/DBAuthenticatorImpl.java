@@ -98,7 +98,7 @@ public class DBAuthenticatorImpl implements DBAuthenticator, CommandProvider
             provider.commitCurrentSession();
             if (cred != null)
             {
-                if (cred.verify(password)) return sessionManager.createNewSession();
+                if (cred.verify(password)) return sessionManager.createNewSession(user);
                 else throw new AuthenticationException("Invalid user or password");
             }
             else throw new AuthenticationException("Invalid user or password");

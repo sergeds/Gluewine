@@ -1,5 +1,6 @@
 package org.gluewine.launcher;
 
+
 /**
  * Static logging that can be used by the classes of the launcher
  * package.
@@ -20,12 +21,48 @@ public final class Logging implements Log
      */
     private static Logging instance = null;
 
+    /** Error level. */
+    private static final int LEVEL_ERROR = 4;
+    /** Warn level. */
+    private static final int LEVEL_WARN = 3;
+    /** Info level. */
+    private static final int LEVEL_INFO = 2;
+    /** Debug level. */
+    private static final int LEVEL_DEBUG = 1;
+    /** Trace level. */
+    private static final int LEVEL_TRACE = 0;
+
+    /** The current loglevel. */
+    private int level = LEVEL_INFO;
+
     // ===========================================================================
     /**
      * Use the static methods to access the class.
      */
     private Logging()
     {
+        String l = System.getProperty("log.level", "info").toLowerCase();
+        switch (l)
+        {
+            case "error" :
+                level = LEVEL_ERROR;
+                break;
+
+            case "warn" :
+                level = LEVEL_WARN;
+                break;
+
+            case "debug" :
+                level = LEVEL_DEBUG;
+                break;
+
+            case "trace" :
+                level = LEVEL_TRACE;
+                break;
+
+            default :
+                level = LEVEL_INFO;
+        }
     }
 
     // ===========================================================================
@@ -60,7 +97,7 @@ public final class Logging implements Log
             b.append(m).append(" ");
 
         if (log != null) log.trace(invoker, b.toString().trim());
-        else System.out.println(b.toString().trim());
+        else if (level == LEVEL_TRACE) System.out.println(b.toString().trim());
     }
 
     // ===========================================================================
@@ -72,7 +109,7 @@ public final class Logging implements Log
             b.append(m).append(" ");
 
         if (log != null) log.debug(invoker, b.toString().trim());
-        else System.out.println(b.toString().trim());
+        else if (level <= LEVEL_DEBUG) System.out.println(b.toString().trim());
     }
 
     // ===========================================================================
@@ -84,7 +121,7 @@ public final class Logging implements Log
             b.append(m).append(" ");
 
         if (log != null) log.info(invoker, b.toString().trim());
-        else System.out.println(b.toString().trim());
+        else if (level <= LEVEL_INFO) System.out.println(b.toString().trim());
     }
 
     // ===========================================================================
@@ -96,7 +133,7 @@ public final class Logging implements Log
             b.append(m).append(" ");
 
         if (log != null) log.warn(invoker, b.toString().trim());
-        else System.out.println(b.toString().trim());
+        else if (level <= LEVEL_WARN) System.out.println(b.toString().trim());
     }
 
     // ===========================================================================
@@ -108,6 +145,6 @@ public final class Logging implements Log
             b.append(m).append(" ");
 
         if (log != null) log.error(invoker, b.toString().trim());
-        else System.out.println(b.toString().trim());
+        else  if (level <= LEVEL_ERROR) System.out.println(b.toString().trim());
     }
 }

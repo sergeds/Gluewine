@@ -1,4 +1,4 @@
 /**
  * Contains the base implementation of SessionManager.
  */
-package org.gluewine.sessions.impl;
+package org.gluewine.sessions_impl;

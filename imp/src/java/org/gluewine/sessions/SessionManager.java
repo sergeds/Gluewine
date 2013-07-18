@@ -33,9 +33,10 @@ public interface SessionManager
     /**
      * Creates a new session and returns its id.
      *
+     * @param userid The user the session is for.
      * @return The new session.
      */
-    String createNewSession();
+    String createNewSession(String userid);
 
     // ===========================================================================
     /**
@@ -72,4 +73,25 @@ public interface SessionManager
      * @param session The session to close.
      */
     void closeSession(String session);
+
+    // ===========================================================================
+    /**
+     * Registers the given session as the session for the current thread.
+     *
+     * @param session The session id.
+     */
+    void setCurrentSessionId(String session);
+
+    // ===========================================================================
+    /**
+     * Clears the session for the current thread.
+     */
+    void clearCurrentSessionId();
+
+    // ===========================================================================
+    /**
+     * Returns the current session, if any.
+     * @return The current session.
+     */
+    String getCurrentSessionId();
 }
