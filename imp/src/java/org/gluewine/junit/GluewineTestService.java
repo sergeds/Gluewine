@@ -22,7 +22,6 @@ import org.gluewine.core.glue.RepositoryImpl;
 import org.gluewine.core.utils.ErrorLogger;
 import org.gluewine.persistence.SessionProvider;
 import org.gluewine.persistence.impl.TestSessionProvider;
-import org.junit.After;
 
 /**
  * Base class that can be extended by real test classes.
@@ -96,7 +95,6 @@ public abstract class GluewineTestService
     /**
      * Closes the gluewine test environment.
      */
-    @After
     public void closeGluewine()
     {
         if (provider != null)
