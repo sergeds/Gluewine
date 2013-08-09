@@ -121,7 +121,34 @@ public abstract class GluewineTestService
     protected void initGluewine()
     {
         glue();
+        registerAllServices();
         activate();
+    }
+
+    // ===========================================================================
+    /**
+     * Registers all active services that implement the RepositoryListener with
+     * the repository.
+     */
+    private void registerAllServices()
+    {
+        for (Object o : services)
+            registerObject(o);
+    }
+
+    // ===========================================================================
+    /**
+     * Registers the given object with the Repository. If the object implements
+     * RepositoryListener, it is registered as a listener as well.
+     *
+     * @param o The object to register.
+     */
+    private void registerObject(Object o)
+    {
+        repos.register(o);
+
+        if (o instanceof RepositoryListener<?>)
+            repos.addListener((RepositoryListener<?>) o);
     }
 
     // ===========================================================================
