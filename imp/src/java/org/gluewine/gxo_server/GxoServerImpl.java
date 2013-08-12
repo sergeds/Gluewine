@@ -148,7 +148,6 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
     /**
      * The session manager.
      */
-    @Glue
     private SessionManager sessionManager;
 
     /**
@@ -359,7 +358,7 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
                 {
                     ExecBean bean = (ExecBean) ob;
                     Object result = processExecBean(instantiated, bean);
-                    sessionManager.setCurrentSessionId(bean.getSessionId());
+                    if (sessionManager != null) sessionManager.setCurrentSessionId(bean.getSessionId());
                     stream.toXML(result, out);
                     out.flush();
                 }
@@ -538,6 +537,9 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
 
         if (o instanceof MethodInvocationChecker)
             checkers.add((MethodInvocationChecker) o);
+
+        if (o instanceof SessionManager)
+            sessionManager = (SessionManager) o;
     }
 
     // ===========================================================================
