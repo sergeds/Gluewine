@@ -21,10 +21,13 @@
  **************************************************************************/
 package org.gluewine.console.impl;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.Method;
 import java.net.ConnectException;
@@ -175,15 +178,24 @@ public final class ConsoleClient implements Runnable, Completer, AnsiCodes
 
                         try
                         {
-                            String output = server.executeCommand(line);
-                            if (outputRouted)
+                            List<String> cmds = new ArrayList<String>();
+                            cmds.add(line);
+                            while (!cmds.isEmpty())
                             {
-                                writer.write(output);
-                                writer.newLine();
-                                writer.flush();
-                            }
+                                line = cmds.remove(0);
+                                String output = null;
 
-                            else reader.println(output);
+                                if (line.startsWith("exec")) output = loadExecutionFile(line.substring(4), cmds);
+                                else output = server.executeCommand(line);
+
+                                if (outputRouted)
+                                {
+                                    writer.write(output);
+                                    writer.newLine();
+                                    writer.flush();
+                                }
+                                else reader.println(output);
+                            }
                         }
                         catch (SyntaxException e)
                         {
@@ -226,6 +238,32 @@ public final class ConsoleClient implements Runnable, Completer, AnsiCodes
         {
             e.printStackTrace();
         }
+    }
+
+    // ===========================================================================
+    /**
+     * Loads the commands specified in the given file.
+     *
+     * @param fileName The file name.
+     * @param cmds The list to update.
+     * @return Text to be output.
+     */
+    private String loadExecutionFile(String fileName, List<String> cmds)
+    {
+        fileName = fileName.trim();
+        String output = "Loaded " + fileName;
+
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName), "UTF-8")))
+        {
+            while (in.ready())
+                cmds.add(in.readLine().trim());
+        }
+        catch (Throwable e)
+        {
+            output = e.getMessage();
+        }
+
+        return output;
     }
 
     // ===========================================================================

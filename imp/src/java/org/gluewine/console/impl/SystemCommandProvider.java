@@ -144,6 +144,7 @@ public class SystemCommandProvider implements CommandProvider
         commands.add(new CLICommand(">!", "Stops routing the output to a file."));
         commands.add(new CLICommand("exit", "Closes the console client."));
         commands.add(new CLICommand("logoff", "Logs off the console client."));
+        commands.add(new CLICommand("exec", "Executes the content of the given local file."));
         commands.add(new CLICommand("props_list", "Lists the property files in use."));
 
         CLICommand dump = new CLICommand("dump", "Dumps the class usage.");
