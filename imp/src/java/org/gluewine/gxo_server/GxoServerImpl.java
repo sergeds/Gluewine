@@ -298,6 +298,7 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
                     if (ob instanceof ExecBean)
                     {
                         ExecBean bean = (ExecBean) ob;
+                        if (sessionManager != null) sessionManager.setCurrentSessionId(bean.getSessionId());
                         Object result = processExecBean(instantiated, bean);
                         stream.toXML(result, out);
                     }
