@@ -256,7 +256,10 @@ public final class ConsoleClient implements Runnable, Completer, AnsiCodes
         try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName), "UTF-8")))
         {
             while (in.ready())
-                cmds.add(in.readLine().trim());
+            {
+                String line = in.readLine().trim();
+                if (line.length() > 0) cmds.add(line);
+            }
         }
         catch (Throwable e)
         {
