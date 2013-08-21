@@ -93,6 +93,14 @@ public interface CodeSource
 
     // ===========================================================================
     /**
+     * If true, SQL files should be parsed.
+     *
+     * @return True of SQL files are to be parsed.
+     */
+    boolean loadSQL();
+
+    // ===========================================================================
+    /**
      * Sets the classloader.
      *
      * @param loader The classloader.

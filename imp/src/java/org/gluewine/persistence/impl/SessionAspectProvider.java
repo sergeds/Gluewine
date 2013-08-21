@@ -593,7 +593,7 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
                         logger.debug("Adding Hibernate Entity: " + entity);
                     }
 
-                    if (source instanceof JarCodeSource)
+                    if (source.loadSQL() && source instanceof JarCodeSource)
                     {
                         JarInputStream jar = null;
                         BufferedReader reader = null;

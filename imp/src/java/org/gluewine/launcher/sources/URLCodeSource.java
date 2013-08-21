@@ -116,6 +116,10 @@ public class URLCodeSource extends AbstractCodeSource
                         addEntity(c.trim());
                 }
 
+                String sql = attr.getValue("Gluewine-Sql");
+                if (sql != null)
+                    setLoadSQL("true".equalsIgnoreCase(sql));
+
                 String enh = attr.getValue("Gluewine-Enhancer");
                 if (enh != null)
                 {

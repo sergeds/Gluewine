@@ -103,6 +103,11 @@ public abstract class AbstractCodeSource implements CodeSource
      */
     private String version = "";
 
+    /**
+     * Flag indicating whether SQL files should be processed or not.
+     */
+    private boolean processSql = false;
+
     // ===========================================================================
     /**
      * Creates an instance with the given urls.
@@ -334,5 +339,23 @@ public abstract class AbstractCodeSource implements CodeSource
     protected void setVersion(String version)
     {
         this.version = version;
+    }
+
+    // ===========================================================================
+    @Override
+    public boolean loadSQL()
+    {
+        return processSql;
+    }
+
+    // ===========================================================================
+    /**
+     * Sets the process SQL flag.
+     *
+     * @param processSql The SQL flag.
+     */
+    protected void setLoadSQL(boolean processSql)
+    {
+        this.processSql = processSql;
     }
 }
