@@ -241,7 +241,7 @@ public class GxoClient
                 {
                     socket = new Socket();
                     socket.connect(new InetSocketAddress(host, port), 10000);
-                    socket.setSoTimeout(300000);
+                    socket.setSoTimeout(30000);
                     CompressedBlockInputStream cin = new CompressedBlockInputStream(socket.getInputStream());
                     CompressedBlockOutputStream cout = new CompressedBlockOutputStream(socket.getOutputStream(), 1024);
                     in = new InputStreamReader(cin, "UTF-8");

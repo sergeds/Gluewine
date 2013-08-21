@@ -967,13 +967,16 @@ public final class Launcher implements Runnable, DirectoryAnnotations
     {
         List<CodeSource> added = new ArrayList<CodeSource>();
         List<File> toActivate = new ArrayList<File>();
-        for (SourceVersion s : toadd)
+        Iterator<SourceVersion> iter = toadd.iterator();
+        while (iter.hasNext())
         {
+            SourceVersion s = iter.next();
             log.debug(getClass(), "Fetching new source from " + s.getUrl());
             URL url = new URL(s.getUrl());
             String jar = s.getSource().getDisplayName().substring(1);
             File f = new File(root, jar);
             toActivate.add(fetch(url, f));
+            iter.remove();
         }
 
         List<File> activated = new ArrayList<File>();

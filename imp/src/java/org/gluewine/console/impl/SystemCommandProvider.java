@@ -42,6 +42,7 @@ import org.gluewine.core.Glue;
 import org.gluewine.core.GluewineProperties;
 import org.gluewine.core.glue.Gluer;
 import org.gluewine.core.glue.Service;
+import org.gluewine.core.utils.ErrorLogger;
 import org.gluewine.launcher.CodeSource;
 import org.gluewine.launcher.GluewineLoader;
 import org.gluewine.launcher.Launcher;
@@ -102,6 +103,21 @@ public class SystemCommandProvider implements CommandProvider
             else return 0;
         }
     }
+
+    /**
+     * Flag indicating that an upgrade is ongoing.
+     */
+    private boolean upgrading = false;
+
+    /**
+     * The list containing the source versions being updated.
+     */
+    private List<SourceVersion> updates = null;
+
+    /**
+     * Flag indicating that the system has been upgraded.
+     */
+    private boolean upgraded = false;
 
     // ===========================================================================
     @Override
@@ -676,15 +692,39 @@ public class SystemCommandProvider implements CommandProvider
      * @param ci The current context.
      * @throws Throwable If an error occurs.
      */
-    public void _update(CommandContext ci) throws Throwable
+    public synchronized void _update(CommandContext ci) throws Throwable
     {
+        if (upgrading)
+        {
+            ci.println("An upgrade is busy! Please wait until this upgrade is done!");
+            if (ci.hasOption("-v"))
+            {
+                if (updates != null)
+                {
+                    List<SourceVersion> l = new ArrayList<SourceVersion>();
+                    l.addAll(updates);
+                    ci.println("Remainging packages to update:");
+                    for (SourceVersion s : l)
+                        ci.println(s.getSource().getDisplayName());
+                }
+            }
+            return;
+        }
+
+        if (upgraded)
+        {
+            ci.println("The Gluewine environment has been upgraded!");
+            ci.println("You have to reload or restart the environment before launching another update!");
+            return;
+        }
+
         if (ci.hasOption("-s"))
             Launcher.getInstance().setSourceRepositoryURL(ci.getOption("-s"));
 
-        List<SourceVersion> updates = Launcher.getInstance().getCodeSourceToUpdate(ci.hasOption("-i"));
+        updates = Launcher.getInstance().getCodeSourceToUpdate(ci.hasOption("-i"));
         String source = Launcher.getInstance().getSourceRepositoryURL();
 
-        List<CodeSource> toRemove = new ArrayList<CodeSource>();
+        final List<CodeSource> toRemove = new ArrayList<CodeSource>();
         for (SourceVersion sv : updates)
         {
             if (!(sv.getSource() instanceof MissingCodeSource))
@@ -692,9 +732,30 @@ public class SystemCommandProvider implements CommandProvider
         }
         if (ci.hasOption("-f"))
         {
+            upgrading = true;
+            new Thread(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    try
+                    {
+                        Launcher.getInstance().removeSources(toRemove, false);
+                        Launcher.getInstance().add(updates);
+                        upgraded = true;
+                    }
+                    catch (Throwable e)
+                    {
+                        ErrorLogger.log(getClass(), e);
+                    }
+                    finally
+                    {
+                        upgrading = false;
+                    }
+                }
+            }).start();
 
-            Launcher.getInstance().removeSources(toRemove, false);
-            Launcher.getInstance().add(updates);
+            ci.println("The upgrade has been launched. Check it's progess using the update -v command!");
         }
         else
         {
@@ -706,18 +767,8 @@ public class SystemCommandProvider implements CommandProvider
                 ci.tableRow(name, source + name);
             }
 
+            ci.println("Execute the update command with -f the perform the update!");
             ci.printTable();
-
-            if (ci.hasOption("-v"))
-            {
-                List<CodeSource> toReload = new ArrayList<CodeSource>();
-                Launcher.getInstance().getSourcesToReload(toRemove, toReload);
-                ci.println();
-                ci.println("Sources that will be reloaded:");
-
-                for (CodeSource src : toReload)
-                    ci.println('\t' + src.getDisplayName());
-            }
         }
     }
 }
