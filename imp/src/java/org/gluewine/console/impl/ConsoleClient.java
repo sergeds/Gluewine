@@ -253,13 +253,9 @@ public final class ConsoleClient implements Runnable, Completer, AnsiCodes
         fileName = fileName.trim();
         String output = "Loaded " + fileName;
 
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName), "UTF-8")))
+        try
         {
-            while (in.ready())
-            {
-                String line = in.readLine().trim();
-                if (line.length() > 0) cmds.add(line);
-            }
+            loadFile(fileName, null, cmds);
         }
         catch (Throwable e)
         {
@@ -267,6 +263,32 @@ public final class ConsoleClient implements Runnable, Completer, AnsiCodes
         }
 
         return output;
+    }
+
+    // ===========================================================================
+    /**
+     * Loads the file stored in the given parent file, and updates the list of commands.
+     *
+     * @param name The name of the file to load.
+     * @param parent The parent file.
+     * @param cmds The list to update.
+     * @throws IOException If an error occurs reading the given file.
+     */
+    private void loadFile(String name, File parent, List<String> cmds) throws IOException
+    {
+        File f = null;
+        if (parent != null) f = new File(parent, name);
+        else f = new File(name);
+
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(f), "UTF-8")))
+        {
+            while (in.ready())
+            {
+                String line = in.readLine().trim();
+                if (line.startsWith("exec")) loadFile(line.substring(4).trim(), f.getParentFile(), cmds);
+                else if (line.length() > 0) cmds.add(line);
+            }
+        }
     }
 
     // ===========================================================================
