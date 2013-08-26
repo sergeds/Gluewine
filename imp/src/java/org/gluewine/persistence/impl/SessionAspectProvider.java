@@ -374,14 +374,14 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
             {
                 session.getHibernateSession().getTransaction().commit();
                 notifyCommitted(session.getRegisteredCallbacks());
-                session.getHibernateSession().close();
             }
             catch (Throwable e)
             {
-                logger.error("An error occurred during a transaction rollback, " + e.getMessage());
+                logger.error("An error occurred during a transaction commit, " + e.getMessage());
                 session.getHibernateSession().getTransaction().rollback();
                 notifyRolledback(session.getRegisteredCallbacks());
             }
+            session.getHibernateSession().close();
         }
     }
 
@@ -431,12 +431,12 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
             {
                 session.getHibernateSession().getTransaction().rollback();
                 notifyRolledback(session.getRegisteredCallbacks());
-                session.getHibernateSession().close();
             }
             catch (Throwable t)
             {
                 logger.error("An error occurred during a rolling back a transaction, " + t.getMessage());
             }
+            session.getHibernateSession().close();
         }
     }
 
