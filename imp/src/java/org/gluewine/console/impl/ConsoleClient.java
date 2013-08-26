@@ -74,6 +74,36 @@ public final class ConsoleClient implements Runnable, Completer, AnsiCodes
     private ConsoleServer server = null;
 
     /**
+     * The console reader.
+     */
+    private ConsoleReader reader = null;
+
+    /**
+     * Flag indicating that a stop has been requested.
+     */
+    private boolean stopRequested = false;
+
+    /**
+     * Flag indicating that the output is routed.
+     */
+    private boolean outputRouted = false;
+
+    /**
+     * Name of the output file when output is routed.
+     */
+    private String outputFile = null;
+
+    /**
+     * The writer used for output.
+     */
+    private BufferedWriter writer = null;
+
+    /**
+     * Flag indicating that the processing has just been initialized.
+     */
+    private boolean initial = true;
+
+    /**
      * The welcome string.
      */
     private static final String WELCOME = "\u001b[47m\u001b[30m                                          \n"
@@ -99,13 +129,112 @@ public final class ConsoleClient implements Runnable, Completer, AnsiCodes
     }
 
     // ===========================================================================
+    /**
+     * Executes the list of commands.
+     *
+     * @param dirContext The current directory context. May be null.
+     * @param cmds The commands to execute.
+     */
+    private void executeCommands(File dirContext, String ... cmds)
+    {
+        for (int i = 0; i < cmds.length; i++)
+        {
+            try
+            {
+                String cmd = cmds[i];
+
+                if (cmd.startsWith("exit") || cmd.startsWith("close"))
+                {
+                    stopRequested = true;
+                    return;
+                }
+
+                else if (cmd.equals("cls") || cmd.equals("clear"))
+                    reader.println(CLS + HOME);
+
+                else if (cmd.startsWith(">"))
+                {
+                    outputFile = cmd.substring(1).trim();
+                    if (outputFile.equals("!"))
+                    {
+                        if (writer != null)
+                        {
+                            outputRouted = false;
+                            writer.close();
+                            writer = null;
+                        }
+                    }
+                    else
+                    {
+                        outputRouted = true;
+                        writer = prepareOutputFile(outputFile);
+                    }
+                }
+
+                else if (cmd.startsWith("logoff"))
+                {
+                    server = null;
+                    initial = true;
+                    prompt = "local>";
+                    return;
+                }
+
+                else if (cmd.startsWith("exec"))
+                {
+                    File f = null;
+                    if (dirContext != null) f = new File(dirContext, cmd.substring(4).trim());
+                    else f = new File(cmd.substring(4).trim());
+
+                    executeCommands(f.getParentFile(), loadExecutionFile(f));
+                }
+
+                else
+                {
+                    String output = server.executeCommand(cmd);
+
+                    if (outputRouted)
+                    {
+                        writer.write(output);
+                        writer.newLine();
+                        writer.flush();
+                    }
+                    else reader.println(output);
+                }
+            }
+            catch (ConnectException e)
+            {
+                System.out.println("Connection lost!");
+                prompt = "local>";
+                server = null;
+                return;
+            }
+            catch (SyntaxException e)
+            {
+                System.out.println("\u001b[31;1m" + e.getMessage() + "\u001b[0m");
+            }
+            catch (Throwable e)
+            {
+                if (e.getMessage() != null && e.getMessage().startsWith("org.gluewine.sessions.SessionExpiredException:"))
+                {
+                    System.out.println("Session Expired!");
+                    initial = true;
+                    server = null;
+                    return;
+                }
+
+                e.printStackTrace();
+            }
+        }
+    }
+
+    // ===========================================================================
     @Override
     @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "NP_ALWAYS_NULL")
     public void run()
     {
         try
         {
-            ConsoleReader reader = new ConsoleReader();
+            reader = new ConsoleReader();
             reader.clearScreen();
             reader.setBellEnabled(true);
             reader.println(WELCOME);
@@ -116,11 +245,6 @@ public final class ConsoleClient implements Runnable, Completer, AnsiCodes
             reader.setHistoryEnabled(true);
             reader.addCompleter(this);
 
-            boolean initial = true;
-            boolean stopRequested = false;
-            boolean outputRouted = false;
-            String outputFile = null;
-            BufferedWriter writer = null;
             while (!stopRequested)
             {
                 try
@@ -135,91 +259,7 @@ public final class ConsoleClient implements Runnable, Completer, AnsiCodes
 
                     String line = reader.readLine(prompt);
                     if (line == null) line = "";
-
-                    if (line.startsWith("exit") || line.startsWith("close"))
-                        stopRequested = true;
-
-                    else if (line.equals("cls") || line.equals("clear"))
-                        reader.println(CLS + HOME);
-
-                    else if (line.startsWith(">"))
-                    {
-                        outputFile = line.substring(1).trim();
-                        if (outputFile.equals("!"))
-                        {
-                            if (writer != null)
-                            {
-                                outputRouted = false;
-                                writer.close();
-                                writer = null;
-                            }
-                        }
-                        else
-                        {
-                            outputRouted = true;
-                            writer = prepareOutputFile(outputFile);
-                        }
-                    }
-
-                    else if (line.startsWith("logoff"))
-                    {
-                        server = null;
-                        initial = true;
-                    }
-
-                    else if (line.trim().length() > 0)
-                    {
-                        if (server == null)
-                        {
-                            server = client.getService(ConsoleServer.class, "-1", getIpAddress());
-                            if (server.needsAuthentication())
-                                authenticate(reader);
-                        }
-
-                        try
-                        {
-                            List<String> cmds = new ArrayList<String>();
-                            cmds.add(line);
-                            while (!cmds.isEmpty())
-                            {
-                                line = cmds.remove(0);
-                                String output = null;
-
-                                if (line.startsWith("exec")) output = loadExecutionFile(line.substring(4), cmds);
-                                else output = server.executeCommand(line);
-
-                                if (outputRouted)
-                                {
-                                    writer.write(output);
-                                    writer.newLine();
-                                    writer.flush();
-                                }
-                                else reader.println(output);
-                            }
-                        }
-                        catch (SyntaxException e)
-                        {
-                            System.out.println("\u001b[31;1m" + e.getMessage() + "\u001b[0m");
-                        }
-                        catch (Throwable e)
-                        {
-                            if (e instanceof ConnectException)
-                            {
-                                System.out.println("Connection lost!");
-                                prompt = "local>";
-                                server = null;
-                            }
-                            else if (e.getMessage() != null && e.getMessage().startsWith("org.gluewine.sessions.SessionExpiredException:"))
-                            {
-                                System.out.println("Session Expired!");
-                                initial = true;
-                                server = null;
-                            }
-
-                            else
-                                e.printStackTrace();
-                        }
-                    }
+                    executeCommands(null, line);
                 }
                 catch (AuthenticationAbortedException e)
                 {
@@ -244,51 +284,22 @@ public final class ConsoleClient implements Runnable, Completer, AnsiCodes
     /**
      * Loads the commands specified in the given file.
      *
-     * @param fileName The file name.
-     * @param cmds The list to update.
-     * @return Text to be output.
+     * @param file The file to load.
+     * @return The list of commands.
      */
-    private String loadExecutionFile(String fileName, List<String> cmds)
+    private String[] loadExecutionFile(File file) throws IOException
     {
-        fileName = fileName.trim();
-        String output = "Loaded " + fileName;
-
-        try
-        {
-            loadFile(fileName, null, cmds);
-        }
-        catch (Throwable e)
-        {
-            output = e.getMessage();
-        }
-
-        return output;
-    }
-
-    // ===========================================================================
-    /**
-     * Loads the file stored in the given parent file, and updates the list of commands.
-     *
-     * @param name The name of the file to load.
-     * @param parent The parent file.
-     * @param cmds The list to update.
-     * @throws IOException If an error occurs reading the given file.
-     */
-    private void loadFile(String name, File parent, List<String> cmds) throws IOException
-    {
-        File f = null;
-        if (parent != null) f = new File(parent, name);
-        else f = new File(name);
-
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(f), "UTF-8")))
+        List<String> cmds = new ArrayList<String>();
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8")))
         {
             while (in.ready())
             {
                 String line = in.readLine().trim();
-                if (line.startsWith("exec")) loadFile(line.substring(4).trim(), f.getParentFile(), cmds);
-                else if (line.length() > 0) cmds.add(line);
+                if (line.length() > 0) cmds.add(line);
             }
         }
+
+        return cmds.toArray(new String[cmds.size()]);
     }
 
     // ===========================================================================
