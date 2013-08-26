@@ -98,6 +98,21 @@ public class CLICommand
 
     // ===========================================================================
     /**
+     * Adds an option. This is a convenience method and is identical to:
+     * <br>addOption(new CLIOption(name, description, required, needsValue).
+     *
+     * @param name The name of the option.
+     * @param description The description.
+     * @param required True if the option is required.
+     * @param needsValue True if the option requires a value.
+     */
+    public void addOption(String name, String description, boolean required, boolean needsValue)
+    {
+        options.add(new CLIOption(name, description, required, needsValue));
+    }
+
+    // ===========================================================================
+    /**
      * Returns the (sorted) set of options. If the command has no options, an
      * empty set is returned.
      *
