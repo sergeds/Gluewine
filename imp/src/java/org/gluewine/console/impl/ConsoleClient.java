@@ -222,6 +222,7 @@ public final class ConsoleClient implements Runnable, Completer, AnsiCodes
                     return;
                 }
 
+                System.out.println("An error occured on line: " + (i + 1));
                 e.printStackTrace();
             }
         }
