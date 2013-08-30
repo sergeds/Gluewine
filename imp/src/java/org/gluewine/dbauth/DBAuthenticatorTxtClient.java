@@ -59,7 +59,6 @@ public class DBAuthenticatorTxtClient
             }
             catch (Throwable e)
             {
-                e.printStackTrace();
                 System.out.println("Invalid user or password!");
             }
         }
