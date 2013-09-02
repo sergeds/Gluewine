@@ -2,8 +2,6 @@ package org.gluewine.jetty;
 
 import java.io.IOException;
 import java.util.Date;
-import java.util.Set;
-import java.util.TreeSet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -25,7 +23,7 @@ public class DefaultServlet extends GluewineServlet
     /**
      * The jetty instance.
      */
-    private GluewineHandler handler;
+    private GluewineJettyLauncher launcher = null;
 
     // ===========================================================================
     /**
@@ -33,9 +31,9 @@ public class DefaultServlet extends GluewineServlet
      *
      * @param handler The handler instance.
      */
-    DefaultServlet(GluewineHandler handler)
+    DefaultServlet(GluewineJettyLauncher launcher)
     {
-        this.handler = handler;
+        this.launcher = launcher;
     }
 
     // ===========================================================================
@@ -56,12 +54,9 @@ public class DefaultServlet extends GluewineServlet
         b.append("<br>Here's the list of available contexts:");
         b.append("<ul>");
 
-        Set<String> contexts = new TreeSet<String>();
-        contexts.addAll(handler.getContexts().keySet());
-
-        for (String s : contexts)
+        for (String s : launcher.getActiveContexts())
         {
-            if (s.trim().length() > 0)
+            if (s.trim().length() > 1)
             {
                 b.append("<li>");
                 b.append("<A HREF='").append(s).append("'>").append(s).append("</A>");
@@ -93,6 +88,6 @@ public class DefaultServlet extends GluewineServlet
     @Override
     public String getContextPath()
     {
-        return "default";
+        return "/";
     }
 }

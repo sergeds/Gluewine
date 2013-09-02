@@ -34,5 +34,8 @@
 	<classpathentry kind="lib" path="imp/lib/java/runtime/xstream/xstream-1.4.4.jar"/>
 	<classpathentry kind="lib" path="imp/lib/java/runtime/support/jline-2.11-SNAPSHOT.jar" sourcepath="C:/java/jline2-master/src/main/java"/>
 	<classpathentry kind="lib" path="imp/lib/java/runtime/mailer/mail.jar"/>
+	<classpathentry kind="lib" path="imp/lib/java/runtime/jackson/jackson-annotations-2.1.1.jar"/>
+	<classpathentry kind="lib" path="imp/lib/java/runtime/jackson/jackson-core-2.1.1.jar"/>
+	<classpathentry kind="lib" path="imp/lib/java/runtime/jackson/jackson-databind-2.1.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
