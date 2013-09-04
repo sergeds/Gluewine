@@ -1,4 +1,4 @@
-package org.gluewine.rest;
+package org.gluewine.rest_server;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

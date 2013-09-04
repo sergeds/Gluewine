@@ -29,7 +29,7 @@ public class DefaultServlet extends GluewineServlet
     /**
      * Creates an instance.
      *
-     * @param handler The handler instance.
+     * @param launcher The Jetty launcher.
      */
     DefaultServlet(GluewineJettyLauncher launcher)
     {

@@ -1,7 +1,6 @@
-package org.gluewine.rest;
+package org.gluewine.rest_server;
 
 import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -17,7 +16,13 @@ import org.gluewine.authentication.AuthenticationException;
 import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.utils.ErrorLogger;
 import org.gluewine.jetty.GluewineServlet;
+import org.gluewine.rest.AnnotationUtility;
+import org.gluewine.rest.REST;
+import org.gluewine.rest.RESTID;
+import org.gluewine.rest.RESTMethod;
+import org.gluewine.rest.RESTSerializer;
 import org.gluewine.sessions.SessionManager;
+import org.gluewine.sessions.Unsecured;
 
 /**
  * Handles all REST requests, and dispatches them to the correct objects.
@@ -44,11 +49,6 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
     private Map<String, RESTMethod> methods = new HashMap<String, RESTMethod>();
 
     /**
-     * The logger instance to use.
-     */
-    private Logger logger = Logger.getLogger(getClass());
-
-    /**
      * The list of available authenticators.
      */
     private List<RESTAuthenticator> authenticators = new ArrayList<RESTAuthenticator>();
@@ -57,6 +57,11 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
      * The session manager to use.
      */
     private SessionManager sessionManager;
+
+    /**
+     * The logger instance to use.
+     */
+    private Logger logger = Logger.getLogger(getClass());
 
     // ===========================================================================
     @Override
@@ -83,6 +88,7 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
             String path = uri.substring(base.length());
             int i = path.indexOf('?');
             if (i > -1) path = path.substring(0, i);
+            if (path.endsWith("/")) path = path.substring(0, path.length() - 1);
             return path;
         }
         else
@@ -119,11 +125,17 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
 
     // ===========================================================================
     @Override
+    public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException
+    {
+        doGet(req, resp);
+    }
+
+    // ===========================================================================
+    @Override
     public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
     {
         try
         {
-            authenticate(req, resp);
             String path = getRESTPath(req);
             if (methods.containsKey(path))
             {
@@ -133,21 +145,23 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
                 if (serializer != null)
                 {
                     RESTMethod rm = methods.get(path);
+
+                    if (AnnotationUtility.getAnnotation(Unsecured.class, rm.getMethod(), rm.getObject()) == null)
+                        authenticate(req, resp);
+
                     Class<?>[] paramTypes = rm.getMethod().getParameterTypes();
-                    Annotation[][] annots = rm.getMethod().getParameterAnnotations();
                     Object[] params = new Object[paramTypes.length];
-                    int i = 0;
-                    for (Annotation[] ann : annots)
+                    for (int i = 0; i < params.length; i++)
                     {
-                        String id = getParameterId(ann);
+                        RESTID id = AnnotationUtility.getAnnotations(RESTID.class, rm.getObject(), rm.getMethod(), i);
                         if (id != null)
                         {
-                            String[] val = req.getParameterValues(id);
+                            String[] val = req.getParameterValues(id.id());
+                            if (logger.isTraceEnabled()) traceParameter(id.id(), val);
                             if (val != null && val.length > 0) params[i] = serializer.deserialize(paramTypes[i], val);
                             else params[i] = null;
                         }
                         else params[i] = null;
-                        i++;
                     }
 
                     try
@@ -157,6 +171,7 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
                         {
                             String s = serializer.serialize(result);
                             resp.setContentType(serializer.getResponseMIME());
+                            resp.setCharacterEncoding("utf8");
                             resp.getWriter().write(s);
                             resp.getWriter().flush();
                             resp.getWriter().close();
@@ -184,6 +199,21 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
 
     // ===========================================================================
     /**
+     * Traces the parameter given.
+     *
+     * @param name The name of the parameter.
+     * @param val The value of the parameter.
+     */
+    private void traceParameter(String name, String[] val)
+    {
+        StringBuilder b = new StringBuilder();
+        for (String v : val)
+            b.append(v).append(" ");
+        logger.trace("Parameter: " + name + " : " + b.toString());
+    }
+
+    // ===========================================================================
+    /**
      * Executes the {@link RESTMethod} specified using the given parameters and returns the
      * result.
      *
@@ -196,6 +226,7 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
     {
         try
         {
+            if (logger.isDebugEnabled()) logger.debug("Executing method: " + method.getMethod());
             return method.getMethod().invoke(method.getObject(), params);
         }
         catch (InvocationTargetException e)
@@ -213,48 +244,19 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
     }
 
     // ===========================================================================
-    /**
-     * Returns the parameter id from the given annotation array, and returns it. If there is
-     * no RESTID annotation found, null is returned.
-     *
-     * @param ann The array of annotations to process.
-     * @return The (possibly null) parameter id.
-     */
-    private String getParameterId(Annotation[] ann)
-    {
-        String id = null;
-
-        for (int i = 0; i < ann.length && id == null; i++)
-        {
-            if (ann[i] instanceof RESTID)
-                id = ((RESTID) ann[i]).id();
-        }
-
-        return id;
-    }
-
-    @REST(path = "test")
-    public void test(String s, int i, long[] l, Object ... o)
-    {
-
-    }
-
-    // ===========================================================================
     @Override
     public void registered(Object t)
     {
-        Class<?> cl = t.getClass();
-        if (t.getClass().getName().indexOf("$$EnhancerByCGLIB$$") > 0) cl = t.getClass().getSuperclass();
-
-        for (Method m : cl.getMethods())
+        for (Method m : t.getClass().getMethods())
         {
-            if (m.isAnnotationPresent(REST.class))
+            REST r = AnnotationUtility.getAnnotation(REST.class, m, t);
+            if (r != null)
             {
-                REST r = m.getAnnotation(REST.class);
+                if (logger.isDebugEnabled()) logger.debug("Registered REST Method " + fixPath(r));
                 RESTMethod rm = new RESTMethod();
                 rm.setMethod(m);
                 rm.setObject(t);
-                methods.put(r.path(), rm);
+                methods.put(fixPath(r), rm);
             }
         }
 
@@ -272,17 +274,28 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
     }
 
     // ===========================================================================
+    /**
+     * Returns the path (fixed) from the annotation given.
+     *
+     * @param r The annotation to process.
+     * @return The fixed path.
+     */
+    private String fixPath(REST r)
+    {
+        String path = r.path();
+        if (path.startsWith("/")) path = path.substring(1);
+        if (path.endsWith("/")) path = path.substring(0, path.length() - 1);
+        return path;
+    }
+
+    // ===========================================================================
     @Override
     public void unregistered(Object t)
     {
         for (Method m : t.getClass().getMethods())
         {
-            if (m.isAnnotationPresent(REST.class))
-            {
-                REST r = m.getAnnotation(REST.class);
-                methods.remove(r.path());
-                logger.debug("Registering REST path " + r.path());
-            }
+            REST r = AnnotationUtility.getAnnotation(REST.class, m, t);
+            if (r != null) methods.remove(fixPath(r));
         }
 
         if (t instanceof RESTSerializer)

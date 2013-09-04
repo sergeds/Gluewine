@@ -2,15 +2,21 @@ package org.gluewine.rest_dbauth;
 
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.gluewine.authentication.AuthenticationException;
 import org.gluewine.core.Glue;
+import org.gluewine.core.RunOnActivate;
+import org.gluewine.core.RunOnDeactivate;
 import org.gluewine.dbauth.DBAuthenticator;
-import org.gluewine.rest.RESTAuthenticator;
+import org.gluewine.rest_server.RESTAuthenticator;
 import org.gluewine.sessions.SessionExpiredException;
 import org.gluewine.sessions.SessionManager;
 
@@ -42,13 +48,70 @@ public class RESTDBAuthenticator implements RESTAuthenticator
      */
     private Map<String, String> sessions = new HashMap<String, String>();
 
+    /**
+     * The checker that checks session validity.
+     */
+    private Timer sessionChecker = null;
+
+    // ===========================================================================
+    @RunOnActivate
+    public void initialize()
+    {
+        sessionChecker = new Timer();
+        sessionChecker.schedule(new TimerTask()
+        {
+            @Override
+            public void run()
+            {
+                synchronized (sessions)
+                {
+                    Iterator<Entry<String, String>> iter = sessions.entrySet().iterator();
+                    while (iter.hasNext())
+                    {
+                        Entry<String, String> e = iter.next();
+                        try
+                        {
+                            sessionManager.checkSession(e.getValue());
+                        }
+                        catch (SessionExpiredException t)
+                        {
+                            iter.remove();
+                        }
+                    }
+                }
+            }
+        }, 60000, 60000);
+    }
+
+    // ===========================================================================
+    /**
+     * Stops the timer.
+     */
+    @RunOnDeactivate
+    public void stopChecker()
+    {
+        if (sessionChecker != null)
+        {
+            sessionChecker.cancel();
+            sessionChecker = null;
+        }
+    }
+
     // ===========================================================================
     @Override
     public String authenticate(HttpServletRequest req, HttpServletResponse response) throws AuthenticationException
     {
         // First we'll check if there's a valid session id.
         String httpSession = req.getSession(true).getId();
-        String session = sessions.get(httpSession);
+        String session = null;
+        synchronized (sessions)
+        {
+            session = sessions.get(httpSession);
+        }
+
+        if (session == null)
+            session = req.getHeader("Gluewine-Session");
+
         if (session != null)
         {
             try
@@ -58,8 +121,11 @@ public class RESTDBAuthenticator implements RESTAuthenticator
             catch (SessionExpiredException e)
             {
                 // Session has expired.
-                sessions.remove(session);
-                session = null;
+                synchronized (sessions)
+                {
+                    sessions.remove(session);
+                    session = null;
+                }
             }
         }
 
@@ -72,7 +138,13 @@ public class RESTDBAuthenticator implements RESTAuthenticator
                 String username = up[0];
                 String password = up[1];
                 session = authenticator.authenticate(username, password);
-                if (session != null) sessions.put(httpSession, session);
+                if (session != null)
+                {
+                    synchronized (sessions)
+                    {
+                        sessions.put(httpSession, session);
+                    }
+                }
                 else throw new AuthenticationException("Could not obtain a valid session id!");
             }
         }
