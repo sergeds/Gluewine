@@ -12,6 +12,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
@@ -120,7 +121,7 @@ public final class RESTClient implements InvocationHandler
                         response.append(inputLine);
                     in.close();
 
-                    return stream.fromXML(response.toString());
+                    return fromString(response.toString(), method.getReturnType());
                 }
 
                 if (con.getResponseCode() != HttpServletResponse.SC_OK) throw new RuntimeException(con.getResponseMessage());
@@ -137,6 +138,20 @@ public final class RESTClient implements InvocationHandler
 
     // ===========================================================================
     /**
+     * Deserializes the string given to an object of the given class.
+     *
+     * @param value The String to deserialize.
+     * @param target The target class.
+     * @return The resulting object.
+     */
+    private Object fromString(String value, Class<?> target)
+    {
+        if (target.equals(String.class)) return value;
+        else return stream.fromXML(value);
+    }
+
+    // ===========================================================================
+    /**
      * Returns the String representation of an object.
      *
      * @param value The string representation.
@@ -146,11 +161,12 @@ public final class RESTClient implements InvocationHandler
     private String toString(Object value) throws UnsupportedEncodingException
     {
         String res = null;
-        switch (value.getClass().getName())
+        switch (value.getClass().getSimpleName().toLowerCase(Locale.getDefault()))
         {
             case "boolean" :
             case "byte" :
             case "char" :
+            case "character" :
             case "double" :
             case "float" :
             case "long" :
@@ -158,7 +174,7 @@ public final class RESTClient implements InvocationHandler
             case "short" :
                 res = value.toString();
                 break;
-            case "java.lang.String" :
+            case "string" :
                 res = (String) value;
                 break;
 

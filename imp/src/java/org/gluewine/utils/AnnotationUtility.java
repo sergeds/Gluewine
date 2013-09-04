@@ -1,4 +1,4 @@
-package org.gluewine.rest;
+package org.gluewine.utils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;

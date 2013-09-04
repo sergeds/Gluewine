@@ -24,6 +24,7 @@ package org.gluewine.dbauth.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.gluewine.authentication.AuthenticationException;
 import org.gluewine.console.CLICommand;
 import org.gluewine.console.CLIOption;
@@ -60,6 +61,11 @@ public class DBAuthenticatorImpl implements DBAuthenticator, CommandProvider
     @Glue
     private SessionManager sessionManager = null;
 
+    /**
+     * The logger to use.
+     */
+    private Logger logger = Logger.getLogger(getClass());
+
     // ===========================================================================
     /**
      * Checks that there's at least 1 credential defined. If not, it will create a
@@ -95,17 +101,30 @@ public class DBAuthenticatorImpl implements DBAuthenticator, CommandProvider
         try
         {
             DBCredential cred = (DBCredential) provider.getSession().get(DBCredential.class, user);
-            provider.commitCurrentSession();
             if (cred != null)
             {
-                if (cred.verify(password)) return sessionManager.createNewSession(user);
-                else throw new AuthenticationException("Invalid user or password");
+                if (logger.isDebugEnabled()) logger.debug("Found credentials for user " + user);
+                if (cred.verify(password))
+                {
+                    if (logger.isDebugEnabled()) logger.debug("Password verified successfully for user " + user);
+                    String session = sessionManager.createNewSession(user);
+                    if (logger.isDebugEnabled()) logger.debug("Obtained new session " + session + " for user " + user);
+                    return session;
+                }
+                else
+                {
+                    if (logger.isDebugEnabled()) logger.debug("Password did not verified for user " + user);
+                    throw new AuthenticationException("Invalid user or password");
+                }
             }
-            else throw new AuthenticationException("Invalid user or password");
+            else
+            {
+                if (logger.isDebugEnabled()) logger.debug("No credentials found for user " + user);
+                throw new AuthenticationException("Invalid user or password");
+            }
         }
         catch (PersistenceException e)
         {
-            provider.rollbackCurrentSession();
             throw new AuthenticationException(e.getMessage());
         }
     }

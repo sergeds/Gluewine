@@ -11,6 +11,7 @@ import java.util.TimerTask;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.log4j.Logger;
 import org.gluewine.authentication.AuthenticationException;
 import org.gluewine.core.Glue;
 import org.gluewine.core.RunOnActivate;
@@ -52,6 +53,11 @@ public class RESTDBAuthenticator implements RESTAuthenticator
      * The checker that checks session validity.
      */
     private Timer sessionChecker = null;
+
+    /**
+     * The logger to use.
+     */
+    private Logger logger = Logger.getLogger(getClass());
 
     // ===========================================================================
     @RunOnActivate
@@ -107,10 +113,14 @@ public class RESTDBAuthenticator implements RESTAuthenticator
         synchronized (sessions)
         {
             session = sessions.get(httpSession);
+            if (logger.isTraceEnabled()) logger.trace("Fetched Session from HTTPSessionCache: " + session);
         }
 
         if (session == null)
+        {
             session = req.getHeader("Gluewine-Session");
+            if (logger.isTraceEnabled()) logger.trace("Fetched Session from Gluewine-SessionHeader: " + session);
+        }
 
         if (session != null)
         {
@@ -120,6 +130,7 @@ public class RESTDBAuthenticator implements RESTAuthenticator
             }
             catch (SessionExpiredException e)
             {
+                if (logger.isTraceEnabled()) logger.trace("Session " + session + " has expired!");
                 // Session has expired.
                 synchronized (sessions)
                 {

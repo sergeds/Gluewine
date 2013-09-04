@@ -49,11 +49,7 @@ public class XMLRESTSerializer extends AbstractRESTSerializer implements Reposit
     @Override
     public String serialize(Object o) throws IOException
     {
-        if (o instanceof String)
-        {
-            String s = (String) o;
-            if (s.startsWith("<?xml")) return s;
-        }
+        if (o instanceof String) return (String) o;
         return stream.toXML(o);
     }
 
@@ -61,6 +57,7 @@ public class XMLRESTSerializer extends AbstractRESTSerializer implements Reposit
     @Override
     protected Object deserializeObject(Class<?> cl, String str) throws IOException
     {
+        if (cl.equals(String.class)) return str;
         return stream.fromXML(str);
     }
 

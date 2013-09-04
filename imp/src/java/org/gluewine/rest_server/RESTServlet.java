@@ -16,13 +16,13 @@ import org.gluewine.authentication.AuthenticationException;
 import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.utils.ErrorLogger;
 import org.gluewine.jetty.GluewineServlet;
-import org.gluewine.rest.AnnotationUtility;
 import org.gluewine.rest.REST;
 import org.gluewine.rest.RESTID;
 import org.gluewine.rest.RESTMethod;
 import org.gluewine.rest.RESTSerializer;
 import org.gluewine.sessions.SessionManager;
 import org.gluewine.sessions.Unsecured;
+import org.gluewine.utils.AnnotationUtility;
 
 /**
  * Handles all REST requests, and dispatches them to the correct objects.
@@ -170,6 +170,7 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
                         if (!rm.getMethod().getReturnType().equals(Void.TYPE))
                         {
                             String s = serializer.serialize(result);
+                            if (logger.isTraceEnabled()) logger.trace("Serialized response: " + s);
                             resp.setContentType(serializer.getResponseMIME());
                             resp.setCharacterEncoding("utf8");
                             resp.getWriter().write(s);
@@ -227,7 +228,9 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
         try
         {
             if (logger.isDebugEnabled()) logger.debug("Executing method: " + method.getMethod());
-            return method.getMethod().invoke(method.getObject(), params);
+            Object result = method.getMethod().invoke(method.getObject(), params);
+            if (logger.isDebugEnabled()) logger.debug("Method returned: " + result);
+            return result;
         }
         catch (InvocationTargetException e)
         {
