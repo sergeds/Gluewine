@@ -107,7 +107,8 @@ public class Table
         String[] row = new String[s.length];
         for (int i = 0; i < s.length; i++)
         {
-            row[i] = s[i];
+            if (s[i] == null) row[i] = "";
+            else row[i] = s[i];
             int l = 0;
             if (s[i] != null) l = s[i].length();
             columnWidth[i] = Math.max(columnWidth[i], l);
