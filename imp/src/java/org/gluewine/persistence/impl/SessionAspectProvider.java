@@ -57,6 +57,7 @@ import org.gluewine.core.Glue;
 import org.gluewine.core.Repository;
 import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.RunOnActivate;
+import org.gluewine.core.utils.ErrorLogger;
 import org.gluewine.launcher.CodeSource;
 import org.gluewine.launcher.CodeSourceListener;
 import org.gluewine.launcher.GluewineLoader;
@@ -377,6 +378,7 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
             }
             catch (Throwable e)
             {
+                ErrorLogger.log(getClass(), e);
                 logger.error("An error occurred during a transaction commit, " + e.getMessage());
                 session.getHibernateSession().getTransaction().rollback();
                 notifyRolledback(session.getRegisteredCallbacks());
@@ -434,6 +436,7 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
             }
             catch (Throwable t)
             {
+                ErrorLogger.log(getClass(), t);
                 logger.error("An error occurred during a rolling back a transaction, " + t.getMessage());
             }
             session.getHibernateSession().close();
