@@ -992,6 +992,49 @@ public final class Launcher implements Runnable, DirectoryAnnotations
 
     // ===========================================================================
     /**
+     * Activates the list of files specified.
+     *
+     * @param toActivate The list to activate.
+     * @return The list of activated files.
+     * @throws IOException If activation failed.
+     */
+    public List<File> activate(List<File> toActivate) throws IOException
+    {
+        List<File> activated = new ArrayList<File>();
+        for (File f : toActivate)
+            activated.add(activate(f));
+
+        return activated;
+    }
+
+    // ===========================================================================
+    /**
+     * Fetches the list of sources specified without activating them, and
+     * returns the list of files that need to be activated.
+     *
+     * @param toFetch The sources to fetch.
+     * @return The files to activate.
+     * @throws IOException If the fetch failed.
+     */
+    public List<File> fetch(List<SourceVersion> toFetch) throws IOException
+    {
+        List<File> toActivate = new ArrayList<File>();
+        Iterator<SourceVersion> iter = toFetch.iterator();
+        while (iter.hasNext())
+        {
+            SourceVersion s = iter.next();
+            log.debug(getClass(), "Fetching new source from " + s.getUrl());
+            URL url = new URL(s.getUrl());
+            String jar = s.getSource().getDisplayName().substring(1);
+            File f = new File(root, jar);
+            toActivate.add(fetch(url, f));
+            iter.remove();
+        }
+        return toActivate;
+    }
+
+    // ===========================================================================
+    /**
      * Returns the short name of the given file. This is the name starting from
      * the root library.
      *

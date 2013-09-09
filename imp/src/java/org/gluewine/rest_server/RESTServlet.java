@@ -63,6 +63,26 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
      */
     private Logger logger = Logger.getLogger(getClass());
 
+    /**
+     * Bean holding the current request and response.
+     */
+    private class RESTBean
+    {
+        /**
+         * The current request.
+         */
+        private HttpServletRequest request;
+        /**
+         * The current response.
+         */
+        private HttpServletResponse response;
+    }
+
+    /**
+     * The map of beans bound with the current thread.
+     */
+    private static Map<Thread, RESTBean> beans = new HashMap<Thread, RESTBean>();
+
     // ===========================================================================
     @Override
     public String getContextPath()
@@ -136,6 +156,11 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
     {
         try
         {
+            RESTBean rb = new RESTBean();
+            rb.request = req;
+            rb.response = resp;
+            beans.put(Thread.currentThread(), rb);
+
             String path = getRESTPath(req);
             if (methods.containsKey(path))
             {
@@ -195,6 +220,7 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
         finally
         {
             if (sessionManager != null) sessionManager.clearCurrentSessionId();
+            beans.remove(Thread.currentThread());
         }
     }
 
@@ -310,5 +336,27 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
         if (t instanceof RESTAuthenticator) authenticators.remove(t);
 
         if (t == sessionManager) sessionManager = null;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the current request.
+     *
+     * @return The current request.
+     */
+    public static HttpServletRequest getCurrentRequest()
+    {
+        return beans.get(Thread.currentThread()).request;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the current response.
+     *
+     * @return The current response.
+     */
+    public static HttpServletResponse getCurrentResponse()
+    {
+        return beans.get(Thread.currentThread()).response;
     }
 }

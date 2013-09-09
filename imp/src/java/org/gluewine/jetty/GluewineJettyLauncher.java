@@ -43,6 +43,7 @@ import org.gluewine.core.Glue;
 import org.gluewine.core.Repository;
 import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.RunOnActivate;
+import org.gluewine.core.RunOnDeactivate;
 import org.gluewine.core.utils.ErrorLogger;
 
 /**
@@ -141,6 +142,31 @@ public class GluewineJettyLauncher implements RepositoryListener<GluewineServlet
     }
 
     // ===========================================================================
+    /**
+     * Stops the server.
+     */
+    @RunOnDeactivate
+    public void stopServer()
+    {
+        if (server != null)
+        {
+            try
+            {
+                logger.info("Stopping Jetty Embedded Server.");
+                server.stop();
+            }
+            catch (Exception e)
+            {
+                ErrorLogger.log(getClass(), e);
+            }
+            server = null;
+        }
+    }
+
+    // ===========================================================================
+    /**
+     * Launches the Jetty server.
+     */
     @RunOnActivate(runThreaded = true)
     public void launch()
     {

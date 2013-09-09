@@ -481,6 +481,7 @@ public final class Gluer implements CodeSourceListener, RepositoryListener<CodeS
         stoppedServices.clear();
         ungluedServices.clear();
         unresolvedServices.clear();
+        launch();
     }
 
     // ===========================================================================

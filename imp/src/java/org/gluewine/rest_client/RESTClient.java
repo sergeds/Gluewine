@@ -2,7 +2,9 @@ package org.gluewine.rest_client;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
@@ -110,22 +112,27 @@ public final class RESTClient implements InvocationHandler
                 DataOutputStream wr = new DataOutputStream(con.getOutputStream());
                 wr.writeBytes(b.toString());
                 wr.flush();
-                wr.close();
-
+                Object result = null;
                 if (!method.getReturnType().equals(Void.TYPE))
                 {
+                    // If the return type is either Input- or Outpustream, we return it, but we must
+                    // make sure that the connection is not closed!.
+                    if (method.getReturnType().equals(InputStream.class)) return con.getInputStream();
+                    else if (method.getReturnType().equals(OutputStream.class)) return con.getOutputStream();
+
                     BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
                     String inputLine;
                     StringBuilder response = new StringBuilder();
                     while ((inputLine = in.readLine()) != null)
                         response.append(inputLine);
                     in.close();
-
-                    return fromString(response.toString(), method.getReturnType());
+                    result = fromString(response.toString(), method.getReturnType());
                 }
 
+                wr.close();
+
                 if (con.getResponseCode() != HttpServletResponse.SC_OK) throw new RuntimeException(con.getResponseMessage());
-                else return null;
+                else return result;
             }
             catch (Throwable e)
             {

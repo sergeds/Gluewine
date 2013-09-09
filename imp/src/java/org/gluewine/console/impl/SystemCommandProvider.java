@@ -21,6 +21,7 @@
  **************************************************************************/
 package org.gluewine.console.impl;
 
+import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -446,7 +447,7 @@ public class SystemCommandProvider implements CommandProvider
      */
     public void _shutdown(CommandContext ci)
     {
-        gluer.shutdown();
+        Launcher.getInstance().stop();
     }
 
     // ===========================================================================
@@ -740,8 +741,8 @@ public class SystemCommandProvider implements CommandProvider
                 {
                     try
                     {
-                        Launcher.getInstance().removeSources(toRemove, false);
-                        Launcher.getInstance().add(updates);
+                        List<File> fetched = Launcher.getInstance().fetch(updates);
+                        Launcher.getInstance().activate(fetched);
                         upgraded = true;
                     }
                     catch (Throwable e)
