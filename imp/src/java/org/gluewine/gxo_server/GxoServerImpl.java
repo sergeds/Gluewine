@@ -43,6 +43,7 @@ import org.gluewine.core.Glue;
 import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.RunOnActivate;
 import org.gluewine.core.RunOnDeactivate;
+import org.gluewine.core.utils.ErrorLogger;
 import org.gluewine.gxo.CloseBean;
 import org.gluewine.gxo.CompressedBlockInputStream;
 import org.gluewine.gxo.CompressedBlockOutputStream;
@@ -50,6 +51,7 @@ import org.gluewine.gxo.ExecBean;
 import org.gluewine.gxo.GxoException;
 import org.gluewine.gxo.InitBean;
 import org.gluewine.gxo.LocalAccess;
+import org.gluewine.persistence.Transactional;
 import org.gluewine.sessions.SessionManager;
 
 import com.thoughtworks.xstream.XStream;
@@ -295,19 +297,8 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
                 {
                     Object ob = stream.fromXML(in);
 
-                    if (ob instanceof ExecBean)
-                    {
-                        ExecBean bean = (ExecBean) ob;
-                        if (sessionManager != null) sessionManager.setCurrentSessionId(bean.getSessionId());
-                        Object result = processExecBean(instantiated, bean);
-                        stream.toXML(result, out);
-                    }
-                    else if (ob instanceof InitBean)
-                    {
-                        InitBean bean = (InitBean) ob;
-                        Object result = processInitBean(instantiated, bean);
-                        stream.toXML(result, out);
-                    }
+                    if (ob instanceof ExecBean) processExecBean(out, instantiated, (ExecBean) ob);
+                    else if (ob instanceof InitBean) processInitBean(out, instantiated, (InitBean) ob);
                 }
                 catch (Throwable e)
                 {
@@ -324,8 +315,45 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
         }
         catch (Throwable e)
         {
-            e.printStackTrace();
+            ErrorLogger.log(getClass(), e);
         }
+    }
+
+    // ===========================================================================
+    /**
+     * Processes the given exec bean and writes the result on the given output stream.
+     * The map contains the list of objects that were instantiated in this session.
+     *
+     * @param out The output stream to write to.
+     * @param instantiated The map of instantiated objects.
+     * @param bean The bean to process.
+     * @throws IOException Thrown if an error occurs writing back to the caller.
+     */
+    @Transactional
+    public void processExecBean(OutputStreamWriter out, Map<String, Object> instantiated, ExecBean bean) throws IOException
+    {
+        if (sessionManager != null) sessionManager.setCurrentSessionId(bean.getSessionId());
+        Object result = processExecBean(instantiated, bean);
+        stream.toXML(result, out);
+        out.flush();
+    }
+
+    // ===========================================================================
+    /**
+     * Processes the given init bean and writes the result on the given output stream.
+     * The map contains the list of objects already instantiated.
+     *
+     * @param out The output stream to write to.
+     * @param instantiated The map of instantiated objects.
+     * @param bean The bean to process.
+     * @throws IOException Thrown if an error occurs writing back to the caller.
+     */
+    @Transactional
+    public void processInitBean(OutputStreamWriter out, Map<String, Object> instantiated, InitBean bean) throws IOException
+    {
+        Object result = processInitBean(instantiated, bean);
+        stream.toXML(result, out);
+        out.flush();
     }
 
     // ===========================================================================
@@ -355,14 +383,10 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
             {
                 Object ob = stream.fromXML(in);
 
-                if (ob instanceof ExecBean)
-                {
-                    ExecBean bean = (ExecBean) ob;
-                    if (sessionManager != null) sessionManager.setCurrentSessionId(bean.getSessionId());
-                    Object result = processExecBean(instantiated, bean);
-                    stream.toXML(result, out);
-                    out.flush();
-                }
+                if (ob instanceof ExecBean) processExecBean(out, instantiated, (ExecBean) ob);
+
+                else if (ob instanceof InitBean) processInitBean(out, instantiated, (InitBean) ob);
+
                 else if (ob instanceof CloseBean)
                 {
                     if (logger.isDebugEnabled())
@@ -372,18 +396,11 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
                     socket = null;
                     return;
                 }
-                else if (ob instanceof InitBean)
-                {
-                    InitBean bean = (InitBean) ob;
-                    Object result = processInitBean(instantiated, bean);
-                    stream.toXML(result, out);
-                    out.flush();
-                }
             }
         }
         catch (Throwable e)
         {
-            logger.error(e);
+            ErrorLogger.log(getClass(), e);
         }
 
         finally
@@ -414,7 +431,8 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
      * @param bean The bean to process.
      * @return The output.
      */
-    private Object processExecBean(Map<String, Object> instantiated, ExecBean bean)
+    @Transactional
+    public Object processExecBean(Map<String, Object> instantiated, ExecBean bean)
     {
         Object result = null;
 
@@ -439,13 +457,13 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
             }
             catch (InvocationTargetException e)
             {
-                logger.warn(e);
+                ErrorLogger.log(getClass(), e);
                 GxoException ge = new GxoException(toRegularException(e.getCause()));
                 result = ge;
             }
             catch (Throwable e)
             {
-                logger.warn(e);
+                ErrorLogger.log(getClass(), e);
                 GxoException ge = new GxoException(toRegularException(e));
                 result = ge;
             }
@@ -505,7 +523,7 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
             }
             catch (Throwable e)
             {
-                e.printStackTrace();
+                ErrorLogger.log(getClass(), e);
                 result = toRegularException(e);
             }
 
@@ -589,7 +607,7 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
                                 }
                                 catch (Throwable e)
                                 {
-                                    logger.error(e);
+                                    ErrorLogger.log(GxoServerImpl.class, e);
                                 }
                             }
                         };
@@ -602,7 +620,7 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
                     catch (Throwable e)
                     {
                         if (!stopRequested)
-                            e.printStackTrace();
+                            ErrorLogger.log(getClass(), e);
                     }
                 }
             }
@@ -610,7 +628,7 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
             {
                 if (!stopRequested)
                 {
-                    e.printStackTrace();
+                    ErrorLogger.log(getClass(), e);
                     try
                     {
                         Thread.sleep(5000);
@@ -715,7 +733,7 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            ErrorLogger.log(getClass(), e);
         }
     }
 }
