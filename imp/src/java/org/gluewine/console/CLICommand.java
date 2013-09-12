@@ -46,6 +46,15 @@ public class CLICommand
     private String description = null;
 
     /**
+     * An alias is the name of the method (without the leading _) that must be invoked
+     * when this command is executed. (The method needs to be part of the same CommandProvider
+     * that handles this command).
+     * Beside the name, additional parameters can be specied. These parameters will
+     * be appended with the parameters entered on the command line.
+     */
+    private String alias = null;
+
+    /**
      * Set of required options.
      */
     private Set<CLIOption> options = new HashSet<CLIOption>();
@@ -61,6 +70,40 @@ public class CLICommand
     {
         this.name = name;
         this.description = description;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the alias, if this command is an alias.
+     *
+     * @return The alias.
+     */
+    public String getAlias()
+    {
+        return alias;
+    }
+
+    // ===========================================================================
+    /**
+     * Sets the alias. When this value is set, whenever the command is invoked,
+     * the alias will be used instead.
+     *
+     * @param alias The alias.
+     */
+    public void setAlias(String alias)
+    {
+        this.alias = alias;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns true if this command is an alias to another method.
+     *
+     * @return True if it is an alias.
+     */
+    public boolean isAlias()
+    {
+        return alias != null;
     }
 
     // ===========================================================================

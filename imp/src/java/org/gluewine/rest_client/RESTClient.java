@@ -118,7 +118,11 @@ public final class RESTClient implements InvocationHandler
                     // If the return type is either Input- or Outpustream, we return it, but we must
                     // make sure that the connection is not closed!.
                     if (method.getReturnType().equals(InputStream.class)) return con.getInputStream();
-                    else if (method.getReturnType().equals(OutputStream.class)) return con.getOutputStream();
+                    else if (method.getReturnType().equals(OutputStream.class))
+                    {
+                        con.getInputStream();
+                        return con.getOutputStream();
+                    }
 
                     BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
                     String inputLine;

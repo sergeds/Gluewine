@@ -69,6 +69,18 @@ public class TestCommandInterpreter
         CLICommand cmd = commands.get(command);
         if (cmd != null)
         {
+            if (cmd.isAlias())
+            {
+                String alias = cmd.getAlias();
+                i = command.indexOf(' ');
+                if (i > 0)
+                {
+                    params = params + alias.substring(i);
+                    command = alias.substring(0, i);
+                }
+                else command = alias;
+            }
+
             try
             {
                 interpreter = new BufferedCommandInterpreter(params);

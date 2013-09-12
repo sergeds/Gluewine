@@ -333,8 +333,17 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
     public void processExecBean(OutputStreamWriter out, Map<String, Object> instantiated, ExecBean bean) throws IOException
     {
         if (sessionManager != null) sessionManager.setCurrentSessionId(bean.getSessionId());
-        Object result = processExecBean(instantiated, bean);
-        stream.toXML(result, out);
+        try
+        {
+            Object result = processExecBean(instantiated, bean);
+            stream.toXML(result, out);
+        }
+        catch (Throwable e)
+        {
+            ErrorLogger.log(getClass(), e);
+            GxoException ge = new GxoException(toRegularException(e));
+            stream.toXML(ge, out);
+        }
         out.flush();
     }
 
@@ -351,8 +360,18 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
     @Transactional
     public void processInitBean(OutputStreamWriter out, Map<String, Object> instantiated, InitBean bean) throws IOException
     {
-        Object result = processInitBean(instantiated, bean);
-        stream.toXML(result, out);
+        try
+        {
+            Object result = processInitBean(instantiated, bean);
+            stream.toXML(result, out);
+            out.flush();
+        }
+        catch (Throwable e)
+        {
+            ErrorLogger.log(getClass(), e);
+            GxoException ge = new GxoException(toRegularException(e));
+            stream.toXML(ge, out);
+        }
         out.flush();
     }
 

@@ -141,8 +141,21 @@ public class ConsoleServerImpl implements ConsoleServer, CommandProvider,  Repos
         if (providers.containsKey(command))
         {
             CommandProvider prov = providers.get(command);
-            BufferedCommandInterpreter ci = new BufferedCommandInterpreter(params);
             CLICommand cmd = commands.get(command);
+
+            if (cmd.isAlias())
+            {
+                String alias = cmd.getAlias();
+                i = command.indexOf(' ');
+                if (i > 0)
+                {
+                    params = params + alias.substring(i);
+                    command = alias.substring(0, i);
+                }
+                else command = alias;
+            }
+
+            BufferedCommandInterpreter ci = new BufferedCommandInterpreter(params);
             if (cmd != null)
             {
                 try
@@ -188,8 +201,7 @@ public class ConsoleServerImpl implements ConsoleServer, CommandProvider,  Repos
             }
             return ci.getOutput();
         }
-
-        return "Unknown command !";
+        else return "Unknown command !";
     }
 
     // ===========================================================================
@@ -268,17 +280,6 @@ public class ConsoleServerImpl implements ConsoleServer, CommandProvider,  Repos
     }
 
     // ===========================================================================
-    /**
-     * Executes the h command, which is a shortcut for help.
-     *
-     * @param ci The current context.
-     */
-    public void _h(CommandContext ci)
-    {
-        _help(ci);
-    }
-
-    // ===========================================================================
     @Override
     @Unsecured
     public boolean needsAuthentication()
@@ -293,7 +294,10 @@ public class ConsoleServerImpl implements ConsoleServer, CommandProvider,  Repos
         List<CLICommand> l = new ArrayList<CLICommand>();
 
         l.add(new CLICommand("help", "Displays the list of available commands."));
-        l.add(new CLICommand("h", "Displays the list of available commands."));
+
+        CLICommand cmd = new CLICommand("h", "Displays the list of available commands.");
+        cmd.setAlias("help");
+        l.add(cmd);
 
         return l;
     }

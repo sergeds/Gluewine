@@ -1,6 +1,8 @@
 package org.gluewine.rest_server;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -16,6 +18,7 @@ import org.gluewine.authentication.AuthenticationException;
 import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.utils.ErrorLogger;
 import org.gluewine.jetty.GluewineServlet;
+import org.gluewine.persistence.Transactional;
 import org.gluewine.rest.REST;
 import org.gluewine.rest.RESTID;
 import org.gluewine.rest.RESTMethod;
@@ -162,6 +165,7 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
             beans.put(Thread.currentThread(), rb);
 
             String path = getRESTPath(req);
+            if (logger.isDebugEnabled()) logger.debug("Received REST request for : " + path);
             if (methods.containsKey(path))
             {
                 String format = req.getParameter("format");
@@ -191,10 +195,13 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
 
                     try
                     {
-                        Object result = executeMethod(rm, params);
-                        if (!rm.getMethod().getReturnType().equals(Void.TYPE))
+                        if (rm.getMethod().getReturnType().equals(Void.TYPE) || rm.getMethod().getReturnType().equals(InputStream.class)
+                                || rm.getMethod().getReturnType().equals(OutputStream.class))
+                            executeMethod(rm, params);
+
+                        else
                         {
-                            String s = serializer.serialize(result);
+                            String s = executeMethod(rm, params, serializer);
                             if (logger.isTraceEnabled()) logger.trace("Serialized response: " + s);
                             resp.setContentType(serializer.getResponseMIME());
                             resp.setCharacterEncoding("utf8");
@@ -205,12 +212,17 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
                     }
                     catch (IOException e)
                     {
+                        ErrorLogger.log(getClass(), e);
                         resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Method execution failed: " + e.getMessage());
                     }
                 }
                 else resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unsupported format " + format);
             }
-            else resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "There is no method registered with path " + path);
+            else
+            {
+                logger.warn("Request for unavailable REST method " + path);
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "There is no method registered with path " + path);
+            }
         }
         catch (AuthenticationException e)
         {
@@ -222,6 +234,24 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
             if (sessionManager != null) sessionManager.clearCurrentSessionId();
             beans.remove(Thread.currentThread());
         }
+    }
+
+    // ===========================================================================
+    /**
+     * Executes the given method using the provided parameters, and returns the result
+     * serialized with the given serializer.
+     *
+     * @param rm The method to execute.
+     * @param params The paramters to use.
+     * @param serializer The serializer to use.
+     * @return The serialized result.
+     * @throws IOException If the method failed execution.
+     */
+    @Transactional
+    public String executeMethod(RESTMethod rm, Object[] params, RESTSerializer serializer) throws IOException
+    {
+        Object result = executeMethod(rm, params);
+        return serializer.serialize(result);
     }
 
     // ===========================================================================
@@ -249,7 +279,8 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
      * @return The result of the method invocation.
      * @throws IOException If an error occurs.
      */
-    private Object executeMethod(RESTMethod method, Object[] params) throws IOException
+    @Transactional
+    public Object executeMethod(RESTMethod method, Object[] params) throws IOException
     {
         try
         {
