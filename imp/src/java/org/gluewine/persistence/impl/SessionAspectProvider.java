@@ -253,6 +253,7 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
                                     st.setSuccess(false);
                                     logger.warn(e);
                                     commit = false;
+                                    break;
                                 }
                                 try
                                 {

@@ -37,5 +37,6 @@
 	<classpathentry kind="lib" path="imp/lib/java/runtime/jackson/jackson-annotations-2.1.1.jar"/>
 	<classpathentry kind="lib" path="imp/lib/java/runtime/jackson/jackson-core-2.1.1.jar"/>
 	<classpathentry kind="lib" path="imp/lib/java/runtime/jackson/jackson-databind-2.1.1.jar"/>
+	<classpathentry kind="lib" path="imp/lib/java/runtime/hibernate/jts-1.12.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

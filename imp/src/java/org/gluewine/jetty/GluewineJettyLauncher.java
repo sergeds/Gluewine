@@ -24,6 +24,7 @@ import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SslConnectionFactory;
+import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.server.session.HashSessionManager;
@@ -125,7 +126,7 @@ public class GluewineJettyLauncher implements RepositoryListener<GluewineServlet
 
                                 if (context.equals("/default")) webapp.setContextPath("/");
                                 else webapp.setContextPath(context);
-
+                                handlers.put(context, webapp);
                                 contexts.addHandler(webapp);
                                 return null;
                             }
@@ -252,6 +253,7 @@ public class GluewineJettyLauncher implements RepositoryListener<GluewineServlet
             ResourceHandler handler = null;
 
             String context = properties.getProperty("static." + i + ".context", dir.getName());
+            if (!context.startsWith("/")) context = "/" + context;
 
             if (properties.getProperty("static." + i + ".secured", "false").equals("true"))
             {
@@ -272,8 +274,10 @@ public class GluewineJettyLauncher implements RepositoryListener<GluewineServlet
             handler.setResourceBase(path);
             handler.setDirectoriesListed(Boolean.parseBoolean(properties.getProperty(pref + ".directoryListing", "false")));
             handler.setWelcomeFiles(properties.getProperty(pref + ".welcome", "index.html").split(","));
-
-            contexts.addHandler(handler);
+            ContextHandler h = new ContextHandler(context);
+            h.setHandler(handler);
+            handlers.put(context, h);
+            contexts.addHandler(h);
 
             i++;
             path = properties.getProperty("static." + i + ".path");

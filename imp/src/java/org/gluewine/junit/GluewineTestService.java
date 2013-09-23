@@ -91,6 +91,11 @@ public abstract class GluewineTestService
      */
     private Repository repos = RepositoryImpl.getInstance();
 
+    /**
+     * Flag indicating that the gluewine test environment has been initialized.
+     */
+    private boolean initialized = false;
+
     // ===========================================================================
     /**
      * Closes the gluewine test environment.
@@ -112,6 +117,8 @@ public abstract class GluewineTestService
                 repos.removeListener((RepositoryListener<?>) o);
 
         deactivate();
+
+        initialized = false;
     }
 
     // ===========================================================================
@@ -120,6 +127,8 @@ public abstract class GluewineTestService
      */
     protected void initGluewine()
     {
+        if (initialized) closeGluewine();
+
         glue();
         registerAllServices();
         activate();
