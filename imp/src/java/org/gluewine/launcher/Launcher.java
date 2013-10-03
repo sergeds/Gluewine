@@ -641,8 +641,9 @@ public final class Launcher implements Runnable, DirectoryAnnotations
     {
         List<CodeSource> sources = new ArrayList<CodeSource>();
 
-        File annotation = new File(dir, SINGLELOADER);
-        boolean single = annotation.exists();
+        // File annotation = new File(dir, SINGLELOADER);
+        // boolean single = annotation.exists();
+        boolean single = true;
         if (single) singleLoaderDirectories.add(dir);
         checkInstallAnnotation(dir);
 
