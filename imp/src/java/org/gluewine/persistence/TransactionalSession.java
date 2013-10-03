@@ -25,6 +25,7 @@ import java.io.Serializable;
 import java.util.List;
 
 import org.hibernate.Criteria;
+import org.hibernate.Query;
 import org.hibernate.jdbc.Work;
 
 /**
@@ -61,6 +62,18 @@ public interface TransactionalSession
      * @return The Criteria.
      */
     Criteria createCriteria(Class<?> entity);
+
+    // ===========================================================================
+    /**
+     * Creates and returns a Criteria for the given entity, starting from the
+     * given offset and limited to the specified amount.
+     *
+     * @param entity The entity to process.
+     * @param offset The offset.
+     * @param limit The max number of entries to return.
+     * @return The Criteria.
+     */
+    Criteria createCriteria(Class<?> entity, int offset, int limit);
 
     // ===========================================================================
     /**
@@ -109,6 +122,19 @@ public interface TransactionalSession
 
     // ===========================================================================
     /**
+     * Returns the entities of the given class starting from the given offset and
+     * limited to the amount specified.
+     *
+     * @param <E> The generic class to retrieve.
+     * @param cl The class to process.
+     * @param offset The offset to start from.
+     * @param limit The max number of entries to return.
+     * @return The list of entities.
+     */
+    <E> List<E> getAll(Class<E> cl, int offset, int limit);
+
+    // ===========================================================================
+    /**
      * Returns all entities of the given class sorted according to the given
      * field.
      *
@@ -127,4 +153,24 @@ public interface TransactionalSession
      * @param o The entity to update.
      */
     void update(Object o);
+
+    // ===========================================================================
+    /**
+     * Creates a query object and returns it. Pre- and Post processors will not
+     * be notified.
+     *
+     * @param query The query string.
+     * @return
+     */
+    Query createQuery(String query);
+
+    // ===========================================================================
+    /**
+     * Returns the count for the given entity.
+     *
+     * @param <E> The generic Entity.
+     * @param cl The class to process.
+     * @return The number of entries.
+     */
+    <E> long getCount(Class<E> cl);
 }

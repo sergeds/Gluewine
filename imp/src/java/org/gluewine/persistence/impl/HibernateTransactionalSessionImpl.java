@@ -32,6 +32,7 @@ import org.gluewine.persistence.QueryPreProcessor;
 import org.gluewine.persistence.TransactionCallback;
 import org.gluewine.persistence.TransactionalSession;
 import org.hibernate.Criteria;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
@@ -196,6 +197,13 @@ public class HibernateTransactionalSessionImpl implements TransactionalSession
 
     // ===========================================================================
     @Override
+    public Query createQuery(String query)
+    {
+        return delegate.createQuery(query);
+    }
+
+    // ===========================================================================
+    @Override
     public void delete(String type, Object id)
     {
         delegate.delete(type, id);
@@ -250,5 +258,39 @@ public class HibernateTransactionalSessionImpl implements TransactionalSession
         Serializable id = delegate.getIdentifier(o);
         for (QueryPostProcessor post : postProcessors)
             post.updated(id, o);
+    }
+
+    // ===========================================================================
+    @Override
+    public <E> long getCount(Class<E> cl)
+    {
+        Query q = createQuery("select count(*) from " + cl.getName());
+        return (Long) q.uniqueResult();
+    }
+
+    // ===========================================================================
+    @SuppressWarnings("unchecked")
+    @Override
+    public <E> List<E> getAll(Class<E> cl, int offset, int limit)
+    {
+        Criteria cr = createCriteria(cl);
+        cr.setFirstResult(offset);
+        cr.setMaxResults(limit);
+        return cr.list();
+    }
+
+    // ===========================================================================
+    @Override
+    public Criteria createCriteria(Class<?> entity, int offset, int limit)
+    {
+        Criteria cr = delegate.createCriteria(entity);
+        cr.setFirstResult(offset);
+        cr.setMaxResults(limit);
+        cr.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+
+        for (QueryPreProcessor pre : preProcessors)
+            cr = pre.preProcess(cr, entity);
+
+        return cr;
     }
 }
