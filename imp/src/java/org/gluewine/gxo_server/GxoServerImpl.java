@@ -419,7 +419,8 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
         }
         catch (Throwable e)
         {
-            ErrorLogger.log(getClass(), e);
+            if (e.getMessage() == null || (e.getMessage().indexOf("Read timed out") < 0 && e.getMessage().indexOf("Connection reset") < 0))
+                ErrorLogger.log(getClass(), e);
         }
 
         finally
