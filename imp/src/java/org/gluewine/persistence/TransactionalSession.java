@@ -65,6 +65,15 @@ public interface TransactionalSession
 
     // ===========================================================================
     /**
+     * Creates and returns a Criteria for the given entity and filter.
+     *
+     * @param The entity to process.
+     * @param filter The filter to apply.
+     */
+    Criteria createCriteria(Class<?> cl, Filter filter);
+
+    // ===========================================================================
+    /**
      * Creates and returns a Criteria for the given entity, starting from the
      * given offset and limited to the specified amount.
      *
@@ -173,4 +182,56 @@ public interface TransactionalSession
      * @return The number of entries.
      */
     <E> long getCount(Class<E> cl);
+
+    // ===========================================================================
+    /**
+     * Returns the list of filtered entries.
+     *
+     * @param <E> The generic Entity.
+     * @param cl The class to process.
+     * @param filter The filter to apply.
+     * @return The matching list.
+     */
+    <E> List<E> getFiltered(Class<E> cl, Filter filter);
+
+    // ===========================================================================
+    /**
+     * Returns the list of filtered entries.
+     *
+     * @param <E> The generic Entity.
+     * @param cl The class to process.
+     * @param filter The filter to apply.
+     * @param offset The offset to start from.
+     * @param limit The max number of entries to return.
+     * @return The matching list.
+     */
+    <E> List<E> getFiltered(Class<E> cl, Filter filter, int offset, int limit);
+
+    // ===========================================================================
+    /**
+     * Returns the list of filtered entries.
+     *
+     * @param <E> The generic Entity.
+     * @param cl The class to process.
+     * @param filter The filter to apply.
+     * @param sortField The field to sort on.
+     * @param ascending True to sort ascending, false to sort descending.
+     * @return The matching list.
+     */
+    <E> List<E> getFiltered(Class<E> cl, Filter filter, String sortField, boolean ascending);
+
+    // ===========================================================================
+    /**
+     * Returns the list of filtered entries.
+     *
+     * @param <E> The generic Entity.
+     * @param cl The class to process.
+     * @param filter The filter to apply.
+     * @param sortField The field to sort on.
+     * @param ascending True to sort ascending, false to sort descending.
+     * @param offset The offset to start from.
+     * @param limit The max number of entries to return.
+     * @return The matching list.
+     */
+    <E> List<E> getFiltered(Class<E> cl, Filter filter, String sortField, boolean ascending, int offset, int limit);
 }

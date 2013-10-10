@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 
+import org.gluewine.persistence.Filter;
+import org.gluewine.persistence.FilterLine;
 import org.gluewine.persistence.QueryPostProcessor;
 import org.gluewine.persistence.QueryPreProcessor;
 import org.gluewine.persistence.TransactionCallback;
@@ -234,6 +236,111 @@ public class HibernateTransactionalSessionImpl implements TransactionalSession
     {
         Criteria cr = createCriteria(cl);
         return cr.list();
+    }
+
+    // ===========================================================================
+    @Override
+    @SuppressWarnings("unchecked")
+    public <E> List<E> getFiltered(Class<E> cl, Filter filter)
+    {
+        Criteria cr = createCriteria(cl, filter);
+        return cr.list();
+    }
+
+    // ===========================================================================
+    @Override
+    @SuppressWarnings("unchecked")
+    public <E> List<E> getFiltered(Class<E> cl, Filter filter, int offset, int limit)
+    {
+        Criteria cr = createCriteria(cl, filter);
+        cr.setFirstResult(offset);
+        cr.setMaxResults(limit);
+        return cr.list();
+    }
+
+    // ===========================================================================
+    @Override
+    @SuppressWarnings("unchecked")
+    public <E> List<E> getFiltered(Class<E> cl, Filter filter, String sortField, boolean ascending)
+    {
+        Criteria cr = createCriteria(cl, filter);
+
+        if (ascending) cr.addOrder(Property.forName(sortField).asc());
+        else cr.addOrder(Property.forName(sortField).desc());
+
+        return cr.list();
+    }
+
+    // ===========================================================================
+    @Override
+    @SuppressWarnings("unchecked")
+    public <E> List<E> getFiltered(Class<E> cl, Filter filter, String sortField, boolean ascending, int offset, int limit)
+    {
+        Criteria cr = createCriteria(cl, filter);
+        if (ascending) cr.addOrder(Property.forName(sortField).asc());
+        else cr.addOrder(Property.forName(sortField).desc());
+        cr.setFirstResult(offset);
+        cr.setMaxResults(limit);
+
+        return cr.list();
+    }
+
+    // ===========================================================================
+    @Override
+    public Criteria createCriteria(Class<?> cl, Filter filter)
+    {
+        Criteria cr = createCriteria(cl);
+
+        for (FilterLine line : filter.getLines())
+        {
+            switch (line.getOperator())
+            {
+                case CONTAINS:
+                    cr.add(Restrictions.like(line.getFieldName(), "%" + line.getValue() + "%"));
+                    break;
+
+                case DOES_NOT_CONTAIN:
+                    cr.add(Restrictions.not(Restrictions.like(line.getFieldName(), "%" + line.getValue() + "%")));
+                    break;
+
+                case DOES_NOT_ICONTAIN:
+                    cr.add(Restrictions.not(Restrictions.ilike(line.getFieldName(), "%" + line.getValue() + "%")));
+                    break;
+
+                case EQUALS:
+                    cr.add(Restrictions.eq(line.getFieldName(), line.getValue()));
+                    break;
+
+                case GREATER_OR_EQUAL_THAN:
+                    cr.add(Restrictions.ge(line.getFieldName(), line.getValue()));
+                    break;
+
+                case GREATER_THAN:
+                    cr.add(Restrictions.gt(line.getFieldName(), line.getValue()));
+                    break;
+
+                case ICONTAINS:
+                    cr.add(Restrictions.ilike(line.getFieldName(), "%" + line.getValue() + "%"));
+                    break;
+
+                case LESS_OR_EQUAL_THAN:
+                    cr.add(Restrictions.le(line.getFieldName(), line.getValue()));
+                    break;
+
+                case LESS_THAN:
+                    cr.add(Restrictions.lt(line.getFieldName(), line.getValue()));
+                    break;
+
+                case NOT_EQUALS:
+                    cr.add(Restrictions.ne(line.getFieldName(), line.getValue()));
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        return cr;
     }
 
     // ===========================================================================

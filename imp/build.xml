@@ -18,6 +18,9 @@
     <target name="bundleextra" depends="osgi.compile">
         <copy file="${dir.src.osgi}/org/gluewine/persistence/Persistence.gwt.xml" todir="${dir.bundle.extra}/org/gluewine/persistence/org/gluewine/" />
         <copy file="${dir.src.osgi}/org/gluewine/persistence/PersistenceException.java" todir="${dir.bundle.extra}/org/gluewine/persistence/org/gluewine/persistence" />
+    	<copy file="${dir.src.osgi}/org/gluewine/persistence/Filter.java" todir="${dir.bundle.extra}/org/gluewine/persistence/org/gluewine/persistence" />
+    	<copy file="${dir.src.osgi}/org/gluewine/persistence/FilterLine.java" todir="${dir.bundle.extra}/org/gluewine/persistence/org/gluewine/persistence" />
+    	<copy file="${dir.src.osgi}/org/gluewine/persistence/FilterOperator.java" todir="${dir.bundle.extra}/org/gluewine/persistence/org/gluewine/persistence" />
     </target>
 
     <import file="ant/common.xml"/>
