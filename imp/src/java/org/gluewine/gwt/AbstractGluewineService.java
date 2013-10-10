@@ -122,4 +122,15 @@ public abstract class AbstractGluewineService extends RemoteServiceServlet
     {
         getThreadLocalRequest().getSession().setAttribute(OSGI_SESSION, session);
     }
+
+    // ===========================================================================
+    /**
+     * Returns the client.
+     *
+     * @return The client to use.
+     */
+    protected static GxoClient getGXOClient()
+    {
+        return gxoClient;
+    }
 }
