@@ -21,6 +21,7 @@
  **************************************************************************/
 package org.gluewine.sysmgm;
 
+import java.awt.GraphicsEnvironment;
 import java.io.Serializable;
 import java.lang.Thread.State;
 import java.lang.management.ManagementFactory;
@@ -168,6 +169,20 @@ public class SysmgmCommandProvider implements CommandProvider
         }
 
         ci.printTable();
+    }
+
+    // ===========================================================================
+    /**
+     * Lists the available fonts.
+     *
+     * @param ci The current context.
+     * @throws Throwable If an error occurs.
+     */
+    public void _sysmgm_fontlist(CommandContext ci) throws Throwable
+    {
+        String fonts[] = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
+        for (String font : fonts)
+            ci.println(font);
     }
 
     // ===========================================================================
@@ -347,6 +362,7 @@ public class SysmgmCommandProvider implements CommandProvider
         commands.add(new CLICommand("sysmgm_info", "Displays information about how the application was started."));
         commands.add(new CLICommand("sysmgm_memory", "Displays information about the memory usage."));
         commands.add(new CLICommand("sysmgm_threaddump", "Dumps all running threads."));
+        commands.add(new CLICommand("sysmgm_fontlist", "Lists all available fonts."));
 
         return commands;
     }
