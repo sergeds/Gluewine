@@ -24,6 +24,7 @@ package org.gluewine.gxo_client;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetSocketAddress;
@@ -102,16 +103,23 @@ public class GxoClient
 
             else
             {
-                ExecBean exec = new ExecBean();
-                exec.setSessionId(sessionId);
-                exec.setService(service);
-                exec.setMethod(method.getName());
-                exec.setIpAddress(ipAddress);
+                try
+                {
+                    ExecBean exec = new ExecBean();
+                    exec.setSessionId(sessionId);
+                    exec.setService(service);
+                    exec.setMethod(method.getName());
+                    exec.setIpAddress(ipAddress);
 
-                exec.setParamTypes(method.getParameterTypes());
-                exec.setParams(args);
-                logger.debug("Sending EXEC request for " + service + ":" + method.getName());
-                return write(exec);
+                    exec.setParamTypes(method.getParameterTypes());
+                    exec.setParams(args);
+                    logger.debug("Sending EXEC request for " + service + ":" + method.getName());
+                    return write(exec);
+                }
+                catch (InvocationTargetException e)
+                {
+                    throw e.getCause();
+                }
             }
         }
     }

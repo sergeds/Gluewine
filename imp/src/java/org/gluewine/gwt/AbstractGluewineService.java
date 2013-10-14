@@ -1,7 +1,9 @@
 package org.gluewine.gwt;
 
 import org.apache.log4j.Logger;
+import org.gluewine.core.utils.ErrorLogger;
 import org.gluewine.gxo_client.GxoClient;
+import org.gluewine.sessions.SessionExpiredException;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
@@ -125,6 +127,15 @@ public abstract class AbstractGluewineService extends RemoteServiceServlet
 
     // ===========================================================================
     /**
+     * Clears the current Gluewine session.
+     */
+    protected void clearCurrentOSGiSession()
+    {
+        getThreadLocalRequest().getSession().setAttribute(OSGI_SESSION, "-1");
+    }
+
+    // ===========================================================================
+    /**
      * Returns the client.
      *
      * @return The client to use.
@@ -132,5 +143,29 @@ public abstract class AbstractGluewineService extends RemoteServiceServlet
     protected static GxoClient getGXOClient()
     {
         return gxoClient;
+    }
+
+    // ===========================================================================
+    /**
+     * Handles the given runtime exception. If the exception is a SessionExpired
+     * exception, the session is cleared, and the exception is thrown.
+     *
+     * The exception is thrown back and logged in all cases.
+     *
+     * @param e The exception to handle.
+     * @param <T> The generic return signature.
+     * @param T Just to fool the compiler.
+     */
+   protected <T> T handleException(Throwable e)
+    {
+        if (e instanceof SessionExpiredException)
+            clearCurrentOSGiSession();
+
+        ErrorLogger.log(getClass(), e);
+
+        e.printStackTrace();
+
+        if (e instanceof RuntimeException) throw (RuntimeException) e;
+        else throw new RuntimeException(e);
     }
 }

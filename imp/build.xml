@@ -21,6 +21,8 @@
     	<copy file="${dir.src.osgi}/org/gluewine/persistence/Filter.java" todir="${dir.bundle.extra}/org/gluewine/persistence/org/gluewine/persistence" />
     	<copy file="${dir.src.osgi}/org/gluewine/persistence/FilterLine.java" todir="${dir.bundle.extra}/org/gluewine/persistence/org/gluewine/persistence" />
     	<copy file="${dir.src.osgi}/org/gluewine/persistence/FilterOperator.java" todir="${dir.bundle.extra}/org/gluewine/persistence/org/gluewine/persistence" />
+    	<copy file="${dir.src.osgi}/org/gluewine/sessions/SessionExpiredException.java" todir="${dir.bundle.extra}/org/gluewine/sessions/org/gluewine/sessions" />
+    	<copy file="${dir.src.osgi}/org/gluewine/sessions/Sessions.gwt.xml" todir="${dir.bundle.extra}/org/gluewine/sessions/org/gluewine/" />
     </target>
 
     <import file="ant/common.xml"/>

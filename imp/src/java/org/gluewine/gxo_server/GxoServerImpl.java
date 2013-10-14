@@ -52,6 +52,7 @@ import org.gluewine.gxo.GxoException;
 import org.gluewine.gxo.InitBean;
 import org.gluewine.gxo.LocalAccess;
 import org.gluewine.persistence.Transactional;
+import org.gluewine.sessions.SessionExpiredException;
 import org.gluewine.sessions.SessionManager;
 
 import com.thoughtworks.xstream.XStream;
@@ -332,11 +333,20 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
     @Transactional
     public void processExecBean(OutputStreamWriter out, Map<String, Object> instantiated, ExecBean bean) throws IOException
     {
-        if (sessionManager != null) sessionManager.setCurrentSessionId(bean.getSessionId());
         try
         {
+            if (sessionManager != null)
+            {
+                sessionManager.setCurrentSessionId(bean.getSessionId());
+                sessionManager.checkAndTickSession(bean.getSessionId());
+            }
             Object result = processExecBean(instantiated, bean);
             stream.toXML(result, out);
+        }
+        catch (SessionExpiredException e)
+        {
+            GxoException ge = new GxoException(e);
+            stream.toXML(ge, out);
         }
         catch (Throwable e)
         {
