@@ -201,6 +201,7 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
                     if (b.toString().endsWith(";"))
                     {
                         String st = b.toString();
+                        st = st.replace("SEMICOLON", ";");
                         b.delete(0, b.length());
                         String id = FileUtils.getSHA1HashCode(st);
                         SQLStatement stmt = new SQLStatement(id);
@@ -246,6 +247,7 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
                                     logger.info("Executing SQL statement " + st.getStatement());
                                     conn.createStatement().execute(st.getStatement());
                                     st.setSuccess(true);
+                                    st.setExecutionTime(new Date());
                                 }
                                 catch (Throwable e)
                                 {
@@ -255,23 +257,27 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
                                     commit = false;
                                     break;
                                 }
-                                try
-                                {
-                                    st.setExecutionTime(new Date());
-                                    Session session2 = factory.openSession();
-                                    session2.beginTransaction();
-                                    session2.save(st);
-                                    session2.getTransaction().commit();
-                                    session2.close();
-                                }
-                                catch (Throwable e)
-                                {
-                                    commit = false;
-                                }
                             }
                         }
 
-                        if (commit) session.getTransaction().commit();
+                        if (commit)
+                        {
+                            // Save all statements.
+                            session.getTransaction().commit();
+                            try
+                            {
+                                Session session2 = factory.openSession();
+                                session2.beginTransaction();
+                                for (SQLStatement st : stmts)
+                                    session2.saveOrUpdate(st);
+                                session2.getTransaction().commit();
+                                session2.close();
+                            }
+                            catch (Throwable e)
+                            {
+                                commit = false;
+                            }
+                        }
                         else session.getTransaction().rollback();
                     }
                 }

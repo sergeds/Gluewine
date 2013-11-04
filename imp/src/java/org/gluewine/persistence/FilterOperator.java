@@ -57,5 +57,15 @@ public enum FilterOperator
     /**
      * The does not contain (case insensitive) operator.
      */
-    DOES_NOT_ICONTAIN;
+    DOES_NOT_ICONTAIN,
+
+    /**
+     * The field is null.
+     */
+    ISNULL,
+
+    /**
+     * The field is not null.
+     */
+    NOTNULL;
 }

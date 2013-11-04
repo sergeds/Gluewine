@@ -31,6 +31,7 @@ import org.gluewine.persistence.Filter;
 import org.gluewine.persistence.FilterLine;
 import org.gluewine.persistence.QueryPostProcessor;
 import org.gluewine.persistence.QueryPreProcessor;
+import org.gluewine.persistence.SortLine;
 import org.gluewine.persistence.TransactionCallback;
 import org.gluewine.persistence.TransactionalSession;
 import org.hibernate.Criteria;
@@ -165,6 +166,18 @@ public class HibernateTransactionalSessionImpl implements TransactionalSession
 
     // ===========================================================================
     @Override
+    public Object merge(Object o)
+    {
+        Object merged = delegate.merge(o);
+        Serializable id = delegate.getIdentifier(o);
+        for (QueryPostProcessor post : postProcessors)
+            post.updated(id, merged);
+
+        return merged;
+    }
+
+    // ===========================================================================
+    @Override
     public void addOrUpdate(Object o)
     {
         delegate.saveOrUpdate(o);
@@ -249,44 +262,6 @@ public class HibernateTransactionalSessionImpl implements TransactionalSession
 
     // ===========================================================================
     @Override
-    @SuppressWarnings("unchecked")
-    public <E> List<E> getFiltered(Class<E> cl, Filter filter, int offset, int limit)
-    {
-        Criteria cr = createCriteria(cl, filter);
-        cr.setFirstResult(offset);
-        cr.setMaxResults(limit);
-        return cr.list();
-    }
-
-    // ===========================================================================
-    @Override
-    @SuppressWarnings("unchecked")
-    public <E> List<E> getFiltered(Class<E> cl, Filter filter, String sortField, boolean ascending)
-    {
-        Criteria cr = createCriteria(cl, filter);
-
-        if (ascending) cr.addOrder(Property.forName(sortField).asc());
-        else cr.addOrder(Property.forName(sortField).desc());
-
-        return cr.list();
-    }
-
-    // ===========================================================================
-    @Override
-    @SuppressWarnings("unchecked")
-    public <E> List<E> getFiltered(Class<E> cl, Filter filter, String sortField, boolean ascending, int offset, int limit)
-    {
-        Criteria cr = createCriteria(cl, filter);
-        if (ascending) cr.addOrder(Property.forName(sortField).asc());
-        else cr.addOrder(Property.forName(sortField).desc());
-        cr.setFirstResult(offset);
-        cr.setMaxResults(limit);
-
-        return cr.list();
-    }
-
-    // ===========================================================================
-    @Override
     public Criteria createCriteria(Class<?> cl, Filter filter)
     {
         Criteria cr = createCriteria(cl);
@@ -335,25 +310,29 @@ public class HibernateTransactionalSessionImpl implements TransactionalSession
                     cr.add(Restrictions.ne(line.getFieldName(), line.getValue()));
                     break;
 
+                case ISNULL:
+                    cr.add(Restrictions.isNull(line.getFieldName()));
+                    break;
+
+                case NOTNULL:
+                    cr.add(Restrictions.isNotNull(line.getFieldName()));
+                    break;
+
                 default:
                     break;
             }
         }
 
+        for (SortLine sort : filter.getSortLines())
+        {
+            if (sort.isAscending()) cr.addOrder(Property.forName(sort.getField()).asc());
+            else cr.addOrder(Property.forName(sort.getField()).desc());
+        }
+
+        if (filter.getLimit() != 0) cr.setMaxResults(filter.getLimit());
+        if (filter.getOffset() != 0) cr.setFirstResult(filter.getOffset());
+
         return cr;
-    }
-
-    // ===========================================================================
-    @Override
-    @SuppressWarnings("unchecked")
-    public <E> List<E> getAllSorted(Class<E> cl, String sortField, boolean ascending)
-    {
-        Criteria cr = createCriteria(cl);
-
-        if (ascending) cr.addOrder(Property.forName(sortField).asc());
-        else cr.addOrder(Property.forName(sortField).desc());
-
-        return cr.list();
     }
 
     // ===========================================================================
@@ -376,28 +355,9 @@ public class HibernateTransactionalSessionImpl implements TransactionalSession
     }
 
     // ===========================================================================
-    @SuppressWarnings("unchecked")
     @Override
-    public <E> List<E> getAll(Class<E> cl, int offset, int limit)
+    public Session getDelegate()
     {
-        Criteria cr = createCriteria(cl);
-        cr.setFirstResult(offset);
-        cr.setMaxResults(limit);
-        return cr.list();
-    }
-
-    // ===========================================================================
-    @Override
-    public Criteria createCriteria(Class<?> entity, int offset, int limit)
-    {
-        Criteria cr = delegate.createCriteria(entity);
-        cr.setFirstResult(offset);
-        cr.setMaxResults(limit);
-        cr.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-
-        for (QueryPreProcessor pre : preProcessors)
-            cr = pre.preProcess(cr, entity);
-
-        return cr;
+        return delegate;
     }
 }

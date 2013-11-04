@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.hibernate.Criteria;
 import org.hibernate.Query;
+import org.hibernate.Session;
 import org.hibernate.jdbc.Work;
 
 /**
@@ -74,18 +75,6 @@ public interface TransactionalSession
 
     // ===========================================================================
     /**
-     * Creates and returns a Criteria for the given entity, starting from the
-     * given offset and limited to the specified amount.
-     *
-     * @param entity The entity to process.
-     * @param offset The offset.
-     * @param limit The max number of entries to return.
-     * @return The Criteria.
-     */
-    Criteria createCriteria(Class<?> entity, int offset, int limit);
-
-    // ===========================================================================
-    /**
      * Deletes the given object.
      *
      * @param o The object to delete.
@@ -131,29 +120,12 @@ public interface TransactionalSession
 
     // ===========================================================================
     /**
-     * Returns the entities of the given class starting from the given offset and
-     * limited to the amount specified.
+     * Merges an existing entity, and returns the merged instance.
      *
-     * @param <E> The generic class to retrieve.
-     * @param cl The class to process.
-     * @param offset The offset to start from.
-     * @param limit The max number of entries to return.
-     * @return The list of entities.
+     * @param o The entity to merge.
+     * @return The merged instance.
      */
-    <E> List<E> getAll(Class<E> cl, int offset, int limit);
-
-    // ===========================================================================
-    /**
-     * Returns all entities of the given class sorted according to the given
-     * field.
-     *
-     * @param <E> The generic class to retrieve.
-     * @param cl The class to process.
-     * @param sortField The field to sort on.
-     * @param ascending True to sort ascending, false to sort descending.
-     * @return The sorted list of entities.
-     */
-    <E> List<E> getAllSorted(Class<E> cl, String sortField, boolean ascending);
+    Object merge(Object o);
 
     // ===========================================================================
     /**
@@ -196,42 +168,9 @@ public interface TransactionalSession
 
     // ===========================================================================
     /**
-     * Returns the list of filtered entries.
+     * Returns the delegate session.
      *
-     * @param <E> The generic Entity.
-     * @param cl The class to process.
-     * @param filter The filter to apply.
-     * @param offset The offset to start from.
-     * @param limit The max number of entries to return.
-     * @return The matching list.
+     * @return The delegate.
      */
-    <E> List<E> getFiltered(Class<E> cl, Filter filter, int offset, int limit);
-
-    // ===========================================================================
-    /**
-     * Returns the list of filtered entries.
-     *
-     * @param <E> The generic Entity.
-     * @param cl The class to process.
-     * @param filter The filter to apply.
-     * @param sortField The field to sort on.
-     * @param ascending True to sort ascending, false to sort descending.
-     * @return The matching list.
-     */
-    <E> List<E> getFiltered(Class<E> cl, Filter filter, String sortField, boolean ascending);
-
-    // ===========================================================================
-    /**
-     * Returns the list of filtered entries.
-     *
-     * @param <E> The generic Entity.
-     * @param cl The class to process.
-     * @param filter The filter to apply.
-     * @param sortField The field to sort on.
-     * @param ascending True to sort ascending, false to sort descending.
-     * @param offset The offset to start from.
-     * @param limit The max number of entries to return.
-     * @return The matching list.
-     */
-    <E> List<E> getFiltered(Class<E> cl, Filter filter, String sortField, boolean ascending, int offset, int limit);
+    Session getDelegate();
 }
