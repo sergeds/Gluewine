@@ -1,5 +1,6 @@
 package org.gluewine.rest;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URLDecoder;
 
@@ -100,6 +101,10 @@ public abstract class AbstractRESTSerializer implements RESTSerializer
 
             case "java.lang.String" :
                 res = value;
+                break;
+
+            case "java.io.File" :
+                res = new File(value);
                 break;
 
             default :

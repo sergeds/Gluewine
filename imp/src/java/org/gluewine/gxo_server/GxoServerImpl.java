@@ -54,6 +54,8 @@ import org.gluewine.gxo.LocalAccess;
 import org.gluewine.persistence.Transactional;
 import org.gluewine.sessions.SessionExpiredException;
 import org.gluewine.sessions.SessionManager;
+import org.gluewine.sessions.Unsecured;
+import org.gluewine.utils.AnnotationUtility;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.converters.basic.DateConverter;
@@ -335,11 +337,6 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
     {
         try
         {
-            if (sessionManager != null)
-            {
-                sessionManager.setCurrentSessionId(bean.getSessionId());
-                sessionManager.checkAndTickSession(bean.getSessionId());
-            }
             Object result = processExecBean(instantiated, bean);
             stream.toXML(result, out);
         }
@@ -478,12 +475,26 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
             {
                 Method m = o.getClass().getMethod(bean.getMethod(), bean.getParamTypes());
 
+                if (AnnotationUtility.getAnnotation(Unsecured.class, m, o) == null)
+                {
+                    if (sessionManager != null)
+                    {
+                        sessionManager.setCurrentSessionId(bean.getSessionId());
+                        sessionManager.checkAndTickSession(bean.getSessionId());
+                    }
+                }
+
                 for (MethodInvocationChecker checker : checkers)
-                    checker.checkAllowed(o.getClass(), m, bean);
+                    checker.checkAllowed(o, m, bean);
 
                 result = m.invoke(o, bean.getParams());
                 if (logger.isTraceEnabled())
                     logger.trace(bean.getService() + ":" + bean.getMethod() + " finished with result: " + result);
+            }
+            catch (SessionExpiredException e)
+            {
+                ErrorLogger.log(getClass(), e);
+                throw e;
             }
             catch (InvocationTargetException e)
             {

@@ -28,6 +28,7 @@ import org.gluewine.gxo.ExecBean;
 import org.gluewine.gxo_server.MethodInvocationChecker;
 import org.gluewine.sessions.SessionManager;
 import org.gluewine.sessions.Unsecured;
+import org.gluewine.utils.AnnotationUtility;
 
 /**
  * Checks that the current session is still valid, except if the
@@ -47,26 +48,9 @@ public class SessionChecker implements MethodInvocationChecker
 
     // ===========================================================================
     @Override
-    public void checkAllowed(Class<?> clazz, Method method, ExecBean bean) throws Throwable
+    public void checkAllowed(Object o, Method method, ExecBean bean) throws Throwable
     {
-        if (!isUnsecured(clazz, bean))
+        if (AnnotationUtility.getAnnotation(Unsecured.class, method, o) == null)
             sessionManager.checkAndTickSession(bean.getSessionId());
-    }
-
-    // ===========================================================================
-    /**
-     * Returns true if the method defined in the bean has been annotated with
-     * the @Unsecured annotation.
-     *
-     * @param c The class to check.
-     * @param bean The exec bean.
-     * @return True if annotated with @Unsecured.
-     * @throws NoSuchMethodException  If the method does not exist.
-     */
-    private boolean isUnsecured(Class<?> c, ExecBean bean) throws NoSuchMethodException
-    {
-        if (c.getName().indexOf("$$Enhance") > -1) c = c.getSuperclass();
-        Method m = c.getMethod(bean.getMethod(), bean.getParamTypes());
-        return m.getAnnotation(Unsecured.class) != null;
     }
 }

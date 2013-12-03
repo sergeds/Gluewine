@@ -39,10 +39,10 @@ public interface MethodInvocationChecker
      * If the implementation finds that the method is not allowed to be executed
      * it should throw an exception.
      *
-     * @param clazz The class impacted.
+     * @param o The object to inspect..
      * @param method The method that will be invoked.
      * @param bean The exec bean.
      * @throws Throwable If the method is not allowed to be executed.
      */
-    void checkAllowed(Class<?> clazz, Method method, ExecBean bean) throws Throwable;
+    void checkAllowed(Object o, Method method, ExecBean bean) throws Throwable;
 }

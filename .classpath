@@ -37,5 +37,8 @@
 	<classpathentry kind="lib" path="imp/lib/java/runtime/jackson/jackson-annotations-2.1.1.jar"/>
 	<classpathentry kind="lib" path="imp/lib/java/runtime/jackson/jackson-core-2.1.1.jar"/>
 	<classpathentry kind="lib" path="imp/lib/java/runtime/jackson/jackson-databind-2.1.1.jar"/>
+	<classpathentry kind="lib" path="imp/lib/java/runtime/support/commons-fileupload-1.2.1.jar"/>
+	<classpathentry kind="lib" path="imp/lib/java/runtime/support/commons-io-1.4.jar"/>
+	<classpathentry kind="lib" path="imp/lib/java/runtime/support/commons-logging-1.1.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

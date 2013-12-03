@@ -20,8 +20,6 @@ import org.gluewine.core.RunOnActivate;
 import org.gluewine.core.RunOnDeactivate;
 import org.gluewine.core.glue.RepositoryImpl;
 import org.gluewine.core.utils.ErrorLogger;
-import org.gluewine.persistence.SessionProvider;
-import org.gluewine.persistence.impl.TestSessionProvider;
 
 /**
  * Base class that can be extended by real test classes.
@@ -75,12 +73,6 @@ public abstract class GluewineTestService
         }
     }
 
-    // ===========================================================================
-    /**
-     * The current provider instance.
-     */
-    private TestSessionProvider provider = null;
-
     /**
      * The set of active servies.
      */
@@ -102,11 +94,6 @@ public abstract class GluewineTestService
      */
     public void closeGluewine()
     {
-        if (provider != null)
-        {
-            provider.closeProvider();
-        }
-
         // Remove all registered services:
         for (Object o : services)
             repos.unregister(o);
@@ -345,38 +332,6 @@ public abstract class GluewineTestService
             throw new RuntimeException(e);
         }
     }
-
-    // ===========================================================================
-    /**
-     * Returns the provider to be used.
-     *
-     * @return The provider to use.
-     */
-    protected SessionProvider getProvider()
-    {
-        if (provider == null)
-        {
-            String cfgDir = System.getProperty("cfg.dir");
-            if (cfgDir != null)
-            {
-                File f = new File(cfgDir, "test_hibernate.properties");
-                provider = new TestSessionProvider(f, getEntities());
-                addService(provider);
-            }
-
-            else throw new RuntimeException("The cfg.dir is not specified as a system property!");
-        }
-
-        return provider;
-    }
-
-    // ===========================================================================
-    /**
-     * Returns the array of entities to be used in this test.
-     *
-     * @return The entities to use.
-     */
-    protected abstract Class<?>[] getEntities();
 
     // ===========================================================================
     /**

@@ -22,6 +22,11 @@ public class RESTMethod
      */
     private Object object = null;
 
+    /**
+     * Flag indicating that the parameters are in a form.
+     */
+    private boolean form = false;
+
     // ===========================================================================
     /**
      * @return the method.
@@ -56,5 +61,23 @@ public class RESTMethod
     public void setObject(Object object)
     {
         this.object = object;
+    }
+
+    // ===========================================================================
+    /**
+     * @return the form.
+     */
+    public boolean isForm()
+    {
+        return form;
+    }
+
+    // ===========================================================================
+    /**
+     * @param form the form to set.
+     */
+    public void setForm(boolean form)
+    {
+        this.form = form;
     }
 }

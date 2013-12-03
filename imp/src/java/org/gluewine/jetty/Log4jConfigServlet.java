@@ -1,4 +1,4 @@
-package org.gluewine.log4j;
+package org.gluewine.jetty;
 
 import java.io.IOException;
 import java.util.Properties;
@@ -9,7 +9,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.gluewine.core.Glue;
-import org.gluewine.jetty.GluewineServlet;
 
 /**
  * Servlet that allows to reconfigure the Log4j.

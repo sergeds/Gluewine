@@ -25,4 +25,12 @@ public @interface REST
      * @return The path.
      */
     String path();
+
+    // ===========================================================================
+    /**
+     * Defines whether the POST is done using a form. (needed for file transfer).
+     *
+     * @return True if a form is required.
+     */
+    boolean form() default false;
 }

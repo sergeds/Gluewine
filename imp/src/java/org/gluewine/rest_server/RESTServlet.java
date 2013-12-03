@@ -1,5 +1,6 @@
 package org.gluewine.rest_server;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -13,6 +14,11 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileItemFactory;
+import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.log4j.Logger;
 import org.gluewine.authentication.AuthenticationException;
 import org.gluewine.core.RepositoryListener;
@@ -154,6 +160,114 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
     }
 
     // ===========================================================================
+    /**
+     * Parses the form stored in the given request, and returns a map containing
+     * all FileItems indexed on their name.
+     *
+     * @param req The request to parse.
+     * @return The map of items.
+     * @throws IOException If an error occurs.
+     */
+    private Map<String, FileItem> parseForm(HttpServletRequest req) throws IOException
+    {
+        Map<String, FileItem> formFields = new HashMap<String, FileItem>();
+        try
+        {
+            FileItemFactory factory = new DiskFileItemFactory();
+            ServletFileUpload upload = new ServletFileUpload(factory);
+            @SuppressWarnings("unchecked")
+            List<FileItem> items = upload.parseRequest(req);
+            for (FileItem item : items)
+                formFields.put(item.getFieldName(), item);
+        }
+        catch (FileUploadException e)
+        {
+            throw new IOException(e.getMessage());
+        }
+
+        return formFields;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the parameter values for the given method parsed from the request.
+     *
+     * @param rm The method to process.
+     * @param req The request containing the parameters.
+     * @param serializer The serializer to use.
+     * @return The array of parameters.
+     * @throws IOException If an error occurs.
+     */
+    private Object[] getParamValuesFromRequest(RESTMethod rm, HttpServletRequest req, RESTSerializer serializer) throws IOException
+    {
+        Class<?>[] paramTypes = rm.getMethod().getParameterTypes();
+        Object[] params = new Object[paramTypes.length];
+        for (int i = 0; i < params.length; i++)
+        {
+            RESTID id = AnnotationUtility.getAnnotations(RESTID.class, rm.getObject(), rm.getMethod(), i);
+            if (id != null)
+            {
+                String[] val = req.getParameterValues(id.id());
+                if (logger.isTraceEnabled()) traceParameter(id.id(), val);
+                if (val != null && val.length > 0) params[i] = serializer.deserialize(paramTypes[i], val);
+                else params[i] = null;
+            }
+            else params[i] = null;
+        }
+
+        return params;
+    }
+
+    // ===========================================================================
+    /**
+     * Parses the parameters from the form stored in the given map.
+     *
+     * @param rm The method to process.
+     * @param formFields The fields to parse.
+     * @param serializer The serializer to use.
+     * @return The parameter values.
+     * @throws IOException If an error occurs.
+     */
+    private Object[] getParamValuesFromForm(RESTMethod rm, Map<String, FileItem> formFields, RESTSerializer serializer) throws IOException
+    {
+        Class<?>[] paramTypes = rm.getMethod().getParameterTypes();
+        Object[] params = new Object[paramTypes.length];
+        for (int i = 0; i < params.length; i++)
+        {
+            RESTID id = AnnotationUtility.getAnnotations(RESTID.class, rm.getObject(), rm.getMethod(), i);
+            if (id != null)
+            {
+                FileItem item = formFields.get(id.id());
+                if (item != null)
+                {
+                    String[] val = null;
+                    if (item.isFormField()) val = new String[] {item.getString()};
+                    else
+                    {
+                        try
+                        {
+                            File nf = new File(item.getName());
+                            File f = File.createTempFile("___", "___" + nf.getName());
+                            item.write(f);
+                            val = new String[] {f.getAbsolutePath()};
+                        }
+                        catch (Exception e)
+                        {
+                            throw new IOException(e.getMessage());
+                        }
+                    }
+                    if (logger.isTraceEnabled()) traceParameter(id.id(), val);
+                    if (val != null && val.length > 0) params[i] = serializer.deserialize(paramTypes[i], val);
+                    else params[i] = null;
+                }
+                else params[i] = null;
+            }
+            else params[i] = null;
+        }
+        return params;
+    }
+
+    // ===========================================================================
     @Override
     public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
     {
@@ -168,30 +282,29 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
             if (logger.isDebugEnabled()) logger.debug("Received REST request for : " + path);
             if (methods.containsKey(path))
             {
-                String format = req.getParameter("format");
+                RESTMethod rm = methods.get(path);
+                Map<String, FileItem> formFields = null;
+                if (rm.isForm()) formFields = parseForm(req);
+
+                String format = null;
+                if (rm.isForm())
+                {
+                    FileItem item = formFields.get("format");
+                    if (item != null) format = item.getString();
+                }
+                else req.getParameter("format");
+
                 if (format == null) format = "json";
                 RESTSerializer serializer = serializers.get(format);
                 if (serializer != null)
                 {
-                    RESTMethod rm = methods.get(path);
 
                     if (AnnotationUtility.getAnnotation(Unsecured.class, rm.getMethod(), rm.getObject()) == null)
                         authenticate(req, resp);
 
-                    Class<?>[] paramTypes = rm.getMethod().getParameterTypes();
-                    Object[] params = new Object[paramTypes.length];
-                    for (int i = 0; i < params.length; i++)
-                    {
-                        RESTID id = AnnotationUtility.getAnnotations(RESTID.class, rm.getObject(), rm.getMethod(), i);
-                        if (id != null)
-                        {
-                            String[] val = req.getParameterValues(id.id());
-                            if (logger.isTraceEnabled()) traceParameter(id.id(), val);
-                            if (val != null && val.length > 0) params[i] = serializer.deserialize(paramTypes[i], val);
-                            else params[i] = null;
-                        }
-                        else params[i] = null;
-                    }
+                    Object[] params = null;
+                    if (rm.isForm()) params = getParamValuesFromForm(rm, formFields, serializer);
+                    else params = getParamValuesFromRequest(rm, req, serializer);
 
                     try
                     {
@@ -316,6 +429,7 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
                 RESTMethod rm = new RESTMethod();
                 rm.setMethod(m);
                 rm.setObject(t);
+                rm.setForm(r.form());
                 methods.put(fixPath(r), rm);
             }
         }
