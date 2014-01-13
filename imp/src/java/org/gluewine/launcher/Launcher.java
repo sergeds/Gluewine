@@ -278,6 +278,15 @@ public final class Launcher implements Runnable, DirectoryAnnotations
 
     // ===========================================================================
     /**
+     * Terminates the framework.
+     */
+    public static void terminate()
+    {
+        getInstance().stop();
+    }
+
+    // ===========================================================================
+    /**
      * Stops the daemon.
      */
     public void destroy()
