@@ -34,6 +34,7 @@ import org.gluewine.core.AspectProvider;
 import org.gluewine.core.ClassEnhancer;
 import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.ServiceProvider;
+import org.gluewine.core.utils.ErrorLogger;
 import org.gluewine.launcher.CodeSource;
 import org.gluewine.launcher.CodeSourceListener;
 import org.gluewine.launcher.Launcher;
@@ -776,7 +777,7 @@ public final class Gluer implements CodeSourceListener, RepositoryListener<CodeS
                 }
                 catch (Throwable e)
                 {
-                    logger.error(e);
+                    ErrorLogger.log(getClass(), e);
                 }
             }
         }
