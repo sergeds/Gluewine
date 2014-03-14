@@ -41,7 +41,7 @@ import org.gluewine.core.NoSuchServiceException;
 import org.gluewine.core.RunOnActivate;
 import org.gluewine.core.RunOnDeactivate;
 import org.gluewine.core.ServiceProvider;
-import org.gluewine.core.utils.ErrorLogger;
+import org.gluewine.utils.ErrorLogger;
 
 /**
  * A bean that wraps a 'glued' service.

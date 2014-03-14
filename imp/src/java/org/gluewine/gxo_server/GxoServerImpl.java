@@ -40,7 +40,6 @@ import org.gluewine.core.Glue;
 import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.RunOnActivate;
 import org.gluewine.core.RunOnDeactivate;
-import org.gluewine.core.utils.ErrorLogger;
 import org.gluewine.gxo.CloseBean;
 import org.gluewine.gxo.CompressedBlockInputStream;
 import org.gluewine.gxo.CompressedBlockOutputStream;
@@ -53,6 +52,7 @@ import org.gluewine.sessions.SessionExpiredException;
 import org.gluewine.sessions.SessionManager;
 import org.gluewine.sessions.Unsecured;
 import org.gluewine.utils.AnnotationUtility;
+import org.gluewine.utils.ErrorLogger;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.converters.basic.DateConverter;

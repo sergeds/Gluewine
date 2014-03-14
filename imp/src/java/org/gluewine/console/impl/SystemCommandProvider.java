@@ -40,12 +40,12 @@ import org.gluewine.core.Glue;
 import org.gluewine.core.GluewineProperties;
 import org.gluewine.core.glue.Gluer;
 import org.gluewine.core.glue.Service;
-import org.gluewine.core.utils.ErrorLogger;
 import org.gluewine.launcher.CodeSource;
 import org.gluewine.launcher.GluewineLoader;
 import org.gluewine.launcher.Launcher;
 import org.gluewine.launcher.SourceVersion;
 import org.gluewine.launcher.sources.MissingCodeSource;
+import org.gluewine.utils.ErrorLogger;
 
 /**
  * CommandProvider providing some system commands.

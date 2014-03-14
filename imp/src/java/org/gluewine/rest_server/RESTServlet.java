@@ -40,7 +40,6 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.log4j.Logger;
 import org.gluewine.authentication.AuthenticationException;
 import org.gluewine.core.RepositoryListener;
-import org.gluewine.core.utils.ErrorLogger;
 import org.gluewine.jetty.GluewineServlet;
 import org.gluewine.persistence.Transactional;
 import org.gluewine.rest.REST;
@@ -50,6 +49,7 @@ import org.gluewine.rest.RESTSerializer;
 import org.gluewine.sessions.SessionManager;
 import org.gluewine.sessions.Unsecured;
 import org.gluewine.utils.AnnotationUtility;
+import org.gluewine.utils.ErrorLogger;
 
 /**
  * Handles all REST requests, and dispatches them to the correct objects.

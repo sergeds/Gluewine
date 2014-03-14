@@ -32,8 +32,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import org.gluewine.core.utils.ErrorLogger;
 import org.gluewine.launcher.Launcher;
+import org.gluewine.utils.ErrorLogger;
 
 
 /**

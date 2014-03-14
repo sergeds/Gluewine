@@ -34,11 +34,11 @@ import org.gluewine.core.AspectProvider;
 import org.gluewine.core.ClassEnhancer;
 import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.ServiceProvider;
-import org.gluewine.core.utils.ErrorLogger;
 import org.gluewine.launcher.CodeSource;
 import org.gluewine.launcher.CodeSourceListener;
 import org.gluewine.launcher.Launcher;
 import org.gluewine.launcher.ShutdownListener;
+import org.gluewine.utils.ErrorLogger;
 
 /**
  * Glues the classes defined in the manifest of every jar/zip file

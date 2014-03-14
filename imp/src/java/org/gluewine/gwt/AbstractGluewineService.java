@@ -19,9 +19,9 @@
 package org.gluewine.gwt;
 
 import org.apache.log4j.Logger;
-import org.gluewine.core.utils.ErrorLogger;
 import org.gluewine.gxo_client.GxoClient;
 import org.gluewine.sessions.SessionExpiredException;
+import org.gluewine.utils.ErrorLogger;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 

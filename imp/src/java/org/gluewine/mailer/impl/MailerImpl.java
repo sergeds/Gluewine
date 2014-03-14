@@ -34,9 +34,9 @@ import javax.mail.internet.MimeMultipart;
 import org.apache.log4j.Logger;
 import org.gluewine.core.Glue;
 import org.gluewine.core.RunOnActivate;
-import org.gluewine.core.utils.ErrorLogger;
 import org.gluewine.mailer.MailException;
 import org.gluewine.mailer.Mailer;
+import org.gluewine.utils.ErrorLogger;
 
 /**
  * The MailImpl is a processor that is invoked every time a mail needs to be sent out.

@@ -37,7 +37,7 @@ import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.RunOnActivate;
 import org.gluewine.core.RunOnDeactivate;
 import org.gluewine.core.glue.RepositoryImpl;
-import org.gluewine.core.utils.ErrorLogger;
+import org.gluewine.utils.ErrorLogger;
 
 /**
  * Base class that can be extended by real test classes.

@@ -33,7 +33,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
 import org.apache.commons.io.output.FileWriterWithEncoding;
-import org.gluewine.core.utils.ErrorLogger;
+import org.gluewine.utils.ErrorLogger;
 
 /**
  * Allows to trace services, and outputs the trace information in XML Files.
