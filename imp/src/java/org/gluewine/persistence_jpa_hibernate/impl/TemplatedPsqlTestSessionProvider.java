@@ -16,7 +16,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ***************************************************************************/
-package org.gluewine.persistence.impl;
+package org.gluewine.persistence_jpa_hibernate.impl;
 
 import java.io.File;
 import java.io.FileInputStream;

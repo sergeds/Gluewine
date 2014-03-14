@@ -16,7 +16,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ***************************************************************************/
-package org.gluewine.persistence.impl;
+package org.gluewine.persistence_jpa_hibernate.impl;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,9 +27,9 @@ import org.apache.log4j.Logger;
 import org.gluewine.core.Glue;
 import org.gluewine.core.glue.Gluer;
 import org.gluewine.persistence.PersistenceException;
-import org.gluewine.persistence.SessionProvider;
 import org.gluewine.persistence.TransactionCallback;
-import org.gluewine.persistence.TransactionalSession;
+import org.gluewine.persistence_jpa_hibernate.HibernateSessionProvider;
+import org.gluewine.persistence_jpa_hibernate.HibernateTransactionalSession;
 
 /**
  * Default implementation of SessionProvider.
@@ -37,7 +37,7 @@ import org.gluewine.persistence.TransactionalSession;
  * @author fks/Serge de Schaetzen
  *
  */
-public class SessionProviderImpl implements SessionProvider
+public class SessionProviderImpl implements HibernateSessionProvider
 {
     // ===========================================================================
     /**
@@ -70,7 +70,8 @@ public class SessionProviderImpl implements SessionProvider
 
     // ===========================================================================
     @Override
-    public TransactionalSession getSession()
+    @SuppressWarnings("unchecked")
+    public HibernateTransactionalSession getSession()
     {
         return getSession(null);
     }
@@ -103,7 +104,8 @@ public class SessionProviderImpl implements SessionProvider
 
     // ===========================================================================
     @Override
-    public TransactionalSession getSession(TransactionCallback callback)
+    @SuppressWarnings("unchecked")
+    public HibernateTransactionalSession getSession(TransactionCallback callback)
     {
         if (gluer.isEnhancedMode())
         {

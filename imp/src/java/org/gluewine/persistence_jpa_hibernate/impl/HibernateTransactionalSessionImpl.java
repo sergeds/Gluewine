@@ -16,7 +16,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ***************************************************************************/
-package org.gluewine.persistence.impl;
+package org.gluewine.persistence_jpa_hibernate.impl;
 
 import java.io.Serializable;
 import java.util.HashSet;
@@ -24,13 +24,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 
-import org.gluewine.persistence.Filter;
-import org.gluewine.persistence.FilterLine;
-import org.gluewine.persistence.QueryPostProcessor;
-import org.gluewine.persistence.QueryPreProcessor;
-import org.gluewine.persistence.SortLine;
 import org.gluewine.persistence.TransactionCallback;
-import org.gluewine.persistence.TransactionalSession;
+import org.gluewine.persistence_jpa.Filter;
+import org.gluewine.persistence_jpa.FilterLine;
+import org.gluewine.persistence_jpa.QueryPostProcessor;
+import org.gluewine.persistence_jpa.QueryPreProcessor;
+import org.gluewine.persistence_jpa.SortLine;
+import org.gluewine.persistence_jpa_hibernate.HibernateTransactionalSession;
 import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -44,7 +44,7 @@ import org.hibernate.jdbc.Work;
  * @author fks/Serge de Schaetzen
  *
  */
-public class HibernateTransactionalSessionImpl implements TransactionalSession
+public class HibernateTransactionalSessionImpl implements HibernateTransactionalSession
 {
     // ===========================================================================
     /**

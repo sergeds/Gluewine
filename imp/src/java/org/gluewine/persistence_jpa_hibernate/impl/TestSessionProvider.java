@@ -16,7 +16,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ***************************************************************************/
-package org.gluewine.persistence.impl;
+package org.gluewine.persistence_jpa_hibernate.impl;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -24,11 +24,11 @@ import java.util.HashSet;
 import java.util.Properties;
 import java.util.Stack;
 
-import org.gluewine.persistence.QueryPostProcessor;
-import org.gluewine.persistence.QueryPreProcessor;
-import org.gluewine.persistence.SessionProvider;
 import org.gluewine.persistence.TransactionCallback;
-import org.gluewine.persistence.TransactionalSession;
+import org.gluewine.persistence_jpa.QueryPostProcessor;
+import org.gluewine.persistence_jpa.QueryPreProcessor;
+import org.gluewine.persistence_jpa_hibernate.HibernateSessionProvider;
+import org.gluewine.persistence_jpa_hibernate.HibernateTransactionalSession;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -42,7 +42,7 @@ import org.hibernate.service.ServiceRegistryBuilder;
  * @author Serge de Schaetzen
  *
  */
-public class TestSessionProvider implements SessionProvider
+public class TestSessionProvider implements HibernateSessionProvider
 {
     // ===========================================================================
     /**
@@ -53,7 +53,7 @@ public class TestSessionProvider implements SessionProvider
     /**
      * The transaction session to use.
      */
-    private TransactionalSession transactionalSession = null;
+    private HibernateTransactionalSession transactionalSession = null;
 
     /**
      * The transaction in use.
@@ -151,14 +151,16 @@ public class TestSessionProvider implements SessionProvider
     }
     // ===========================================================================
     @Override
-    public synchronized TransactionalSession getSession()
+    @SuppressWarnings("unchecked")
+    public synchronized HibernateTransactionalSession getSession()
     {
         return getSession(null);
     }
 
     // ===========================================================================
     @Override
-    public synchronized TransactionalSession getSession(TransactionCallback callback)
+    @SuppressWarnings("unchecked")
+    public synchronized HibernateTransactionalSession getSession(TransactionCallback callback)
     {
         if (transaction == null)
         {

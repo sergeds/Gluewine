@@ -36,8 +36,8 @@ import org.gluewine.core.RunOnActivate;
 import org.gluewine.core.RunOnDeactivate;
 import org.gluewine.core.glue.Gluer;
 import org.gluewine.core.glue.Service;
-import org.gluewine.persistence.SessionProvider;
 import org.gluewine.persistence.Transactional;
+import org.gluewine.persistence_jpa.SessionProvider;
 
 /**
  * Manages the profile entries.

@@ -32,8 +32,8 @@ import org.gluewine.core.RunOnActivate;
 import org.gluewine.dbauth.DBAuthenticator;
 import org.gluewine.dbauth.DBCredential;
 import org.gluewine.persistence.PersistenceException;
-import org.gluewine.persistence.SessionProvider;
 import org.gluewine.persistence.Transactional;
+import org.gluewine.persistence_jpa.SessionProvider;
 import org.gluewine.sessions.SessionManager;
 import org.gluewine.sessions.Unsecured;
 

@@ -16,12 +16,12 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ***************************************************************************/
-package org.gluewine.persistence;
+package org.gluewine.persistence_jpa_hibernate;
 
 import java.io.File;
 
 import org.gluewine.junit.GluewineTestService;
-import org.gluewine.persistence.impl.TestSessionProvider;
+import org.gluewine.persistence_jpa_hibernate.impl.TestSessionProvider;
 
 /**
  * Test service extension to be used in projects using the Hibernate modules.
@@ -52,7 +52,7 @@ public abstract class GluewineHibernateTestService extends GluewineTestService
      *
      * @return The provider to use.
      */
-    protected SessionProvider getProvider()
+    protected HibernateSessionProvider getProvider()
     {
         if (provider == null)
         {

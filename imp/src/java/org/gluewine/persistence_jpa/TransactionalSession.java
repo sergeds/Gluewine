@@ -16,15 +16,10 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ***************************************************************************/
-package org.gluewine.persistence;
+package org.gluewine.persistence_jpa;
 
 import java.io.Serializable;
 import java.util.List;
-
-import org.hibernate.Criteria;
-import org.hibernate.Query;
-import org.hibernate.Session;
-import org.hibernate.jdbc.Work;
 
 /**
  * Defines a transactional session.
@@ -54,24 +49,6 @@ public interface TransactionalSession
 
     // ===========================================================================
     /**
-     * Creates and returns a Criteria for the given entity.
-     *
-     * @param entity The entity to process.
-     * @return The Criteria.
-     */
-    Criteria createCriteria(Class<?> entity);
-
-    // ===========================================================================
-    /**
-     * Creates and returns a Criteria for the given entity and filter.
-     *
-     * @param The entity to process.
-     * @param filter The filter to apply.
-     */
-    Criteria createCriteria(Class<?> cl, Filter filter);
-
-    // ===========================================================================
-    /**
      * Deletes the given object.
      *
      * @param o The object to delete.
@@ -86,14 +63,6 @@ public interface TransactionalSession
      * @param id The id of the object.
      */
     void delete(String type, Object id);
-
-    // ===========================================================================
-    /**
-     * Executes the JDBC worker.
-     *
-     * @param work The worker to execute.
-     */
-    void doWork(Work work);
 
     // ===========================================================================
     /**
@@ -134,16 +103,6 @@ public interface TransactionalSession
 
     // ===========================================================================
     /**
-     * Creates a query object and returns it. Pre- and Post processors will not
-     * be notified.
-     *
-     * @param query The query string.
-     * @return
-     */
-    Query createQuery(String query);
-
-    // ===========================================================================
-    /**
      * Returns the count for the given entity.
      *
      * @param <E> The generic Entity.
@@ -162,12 +121,4 @@ public interface TransactionalSession
      * @return The matching list.
      */
     <E> List<E> getFiltered(Class<E> cl, Filter filter);
-
-    // ===========================================================================
-    /**
-     * Returns the delegate session.
-     *
-     * @return The delegate.
-     */
-    Session getDelegate();
 }

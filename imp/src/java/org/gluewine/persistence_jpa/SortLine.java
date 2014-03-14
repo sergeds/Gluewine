@@ -16,7 +16,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ***************************************************************************/
-package org.gluewine.persistence;
+package org.gluewine.persistence_jpa;
 
 import java.io.Serializable;
 
