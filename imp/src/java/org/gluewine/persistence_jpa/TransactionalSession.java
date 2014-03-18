@@ -4,30 +4,22 @@
  *
  * Copyright (C) 2013 FKS bvba               http://www.fks.be/
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; version
- * 3.0 of the License.
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- *
- **************************************************************************/
-package org.gluewine.persistence;
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ ***************************************************************************/
+package org.gluewine.persistence_jpa;
 
 import java.io.Serializable;
 import java.util.List;
-
-import org.hibernate.Criteria;
-import org.hibernate.Query;
-import org.hibernate.Session;
-import org.hibernate.jdbc.Work;
 
 /**
  * Defines a transactional session.
@@ -57,24 +49,6 @@ public interface TransactionalSession
 
     // ===========================================================================
     /**
-     * Creates and returns a Criteria for the given entity.
-     *
-     * @param entity The entity to process.
-     * @return The Criteria.
-     */
-    Criteria createCriteria(Class<?> entity);
-
-    // ===========================================================================
-    /**
-     * Creates and returns a Criteria for the given entity and filter.
-     *
-     * @param The entity to process.
-     * @param filter The filter to apply.
-     */
-    Criteria createCriteria(Class<?> cl, Filter filter);
-
-    // ===========================================================================
-    /**
      * Deletes the given object.
      *
      * @param o The object to delete.
@@ -89,14 +63,6 @@ public interface TransactionalSession
      * @param id The id of the object.
      */
     void delete(String type, Object id);
-
-    // ===========================================================================
-    /**
-     * Executes the JDBC worker.
-     *
-     * @param work The worker to execute.
-     */
-    void doWork(Work work);
 
     // ===========================================================================
     /**
@@ -137,16 +103,6 @@ public interface TransactionalSession
 
     // ===========================================================================
     /**
-     * Creates a query object and returns it. Pre- and Post processors will not
-     * be notified.
-     *
-     * @param query The query string.
-     * @return
-     */
-    Query createQuery(String query);
-
-    // ===========================================================================
-    /**
      * Returns the count for the given entity.
      *
      * @param <E> The generic Entity.
@@ -165,12 +121,4 @@ public interface TransactionalSession
      * @return The matching list.
      */
     <E> List<E> getFiltered(Class<E> cl, Filter filter);
-
-    // ===========================================================================
-    /**
-     * Returns the delegate session.
-     *
-     * @return The delegate.
-     */
-    Session getDelegate();
 }

@@ -17,11 +17,12 @@
 
     <target name="bundleextra" depends="osgi.compile">
         <copy file="${dir.src.osgi}/org/gluewine/persistence/Persistence.gwt.xml" todir="${dir.bundle.extra}/org/gluewine/persistence/org/gluewine/" />
+    	<copy file="${dir.src.osgi}/org/gluewine/persistence_jpa/PersistenceJPA.gwt.xml" todir="${dir.bundle.extra}/org/gluewine/persistence/org/gluewine/" />
         <copy file="${dir.src.osgi}/org/gluewine/persistence/PersistenceException.java" todir="${dir.bundle.extra}/org/gluewine/persistence/org/gluewine/persistence" />
-    	<copy file="${dir.src.osgi}/org/gluewine/persistence/Filter.java" todir="${dir.bundle.extra}/org/gluewine/persistence/org/gluewine/persistence" />
-    	<copy file="${dir.src.osgi}/org/gluewine/persistence/FilterLine.java" todir="${dir.bundle.extra}/org/gluewine/persistence/org/gluewine/persistence" />
-    	<copy file="${dir.src.osgi}/org/gluewine/persistence/SortLine.java" todir="${dir.bundle.extra}/org/gluewine/persistence/org/gluewine/persistence" />
-    	<copy file="${dir.src.osgi}/org/gluewine/persistence/FilterOperator.java" todir="${dir.bundle.extra}/org/gluewine/persistence/org/gluewine/persistence" />
+    	<copy file="${dir.src.osgi}/org/gluewine/persistence_jpa/Filter.java" todir="${dir.bundle.extra}/org/gluewine/persistence/org/gluewine/persistence_jpa" />
+    	<copy file="${dir.src.osgi}/org/gluewine/persistence_jpa/FilterLine.java" todir="${dir.bundle.extra}/org/gluewine/persistence/org/gluewine/persistence_jpa" />
+    	<copy file="${dir.src.osgi}/org/gluewine/persistence_jpa/SortLine.java" todir="${dir.bundle.extra}/org/gluewine/persistence/org/gluewine/persistence_jpa" />
+    	<copy file="${dir.src.osgi}/org/gluewine/persistence_jpa/FilterOperator.java" todir="${dir.bundle.extra}/org/gluewine/persistence/org/gluewine/persistence_jpa" />
     	<copy file="${dir.src.osgi}/org/gluewine/sessions/SessionExpiredException.java" todir="${dir.bundle.extra}/org/gluewine/sessions/org/gluewine/sessions" />
     	<copy file="${dir.src.osgi}/org/gluewine/sessions/Sessions.gwt.xml" todir="${dir.bundle.extra}/org/gluewine/sessions/org/gluewine/" />
     </target>
