@@ -310,7 +310,7 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
                     FileItem item = formFields.get("format");
                     if (item != null) format = item.getString();
                 }
-                else req.getParameter("format");
+                else format = req.getParameter("format");
 
                 if (format == null) format = "json";
                 RESTSerializer serializer = serializers.get(format);
