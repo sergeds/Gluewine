@@ -408,14 +408,6 @@ public final class ConsoleClient implements Runnable, Completer, AnsiCodes
                 NetworkInterface inf = en.nextElement();
                 if (inf.isUp() && !inf.isVirtual() && !inf.isLoopback())
                 {
-                    StringBuilder b = new StringBuilder();
-                    byte[] mac = inf.getHardwareAddress();
-                    for (int i = 0; i < mac.length; i++)
-                    {
-                        b.append(String.format("%1$02X ", mac[i]));
-                        if (i < mac.length - 1)
-                            b.append("-");
-                    }
                     Enumeration<InetAddress> addrs = inf.getInetAddresses();
                     while (addrs.hasMoreElements())
                     {
