@@ -36,6 +36,4 @@ public interface UseridPasswordAuthentication
      * @throws AuthenticationException If authentication failed.
      */
     String authenticate(String user, String password) throws AuthenticationException;
-    
-    //test
 }
