@@ -6,7 +6,7 @@
     <property name="dir.src" value="src"/>
     <property name="dir.gluewine.lib" value="../../../dist/lib/"/>
     <property name="dir.external.lib" value="../../lib/java/runtime/"/>
-	<property name="example.name" value="hibernate" />
+	<property name="example.name" value="Hibernate" />
 
     <path id="classpath">
         <fileset dir="${dir.lib}" includes="**/*.jar"/>
