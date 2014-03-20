@@ -1,0 +1,1 @@
+create index brand_index on car(brand);
