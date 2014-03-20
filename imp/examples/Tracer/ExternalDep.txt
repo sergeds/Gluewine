@@ -1,0 +1,9 @@
+xstream/xpp3_min-1.1.4c.jar
+xstream/xstream-1.4.4.jar
+support/jline-2.11-SNAPSHOT.jar
+support/log4j-1.2.15.jar
+support/cglib-nodep-2.2.3.jar
+support/commons-fileupload-1.2.1.jar
+support/commons-io-1.4.jar
+support/commons-logging-1.1.1.jar
+

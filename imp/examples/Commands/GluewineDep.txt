@@ -9,5 +9,4 @@ gluewine/org.gluewine.authentication-0.1.jar
 gluewine/org.gluewine.gxo.client-0.1.jar
 gluewine/org.gluewine.gxo.server-0.1.jar
 gluewine/org.gluewine.gxo-0.1.jar
-gluewine/org.gluewine.gxo.hibernate-0.1.jar
 org.gluewine.launcher-0.1.jar

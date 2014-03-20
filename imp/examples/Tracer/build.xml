@@ -6,7 +6,7 @@
     <property name="dir.src" value="src"/>
     <property name="dir.gluewine.lib" value="../../../dist/lib/"/>
     <property name="dir.external.lib" value="../../lib/java/runtime/"/>
-	<property name="example.name" value="rest" />
+	<property name="example.name" value="Rest" />
 
     <path id="classpath">
         <fileset dir="${dir.lib}" includes="**/*.jar"/>
@@ -15,10 +15,6 @@
     <target name="build" description="Build example">
         <mkdir dir="${dir.build}"/>
         <mkdir dir="${dir.lib}/example"/>
-        <javac srcdir="${dir.src}" destdir="${dir.build}" includeantruntime="false" encoding="utf8">
-            <classpath refid="classpath"/>
-        </javac>
-        <jar jarfile="${dir.lib}/example/${example.name}.jar" manifest="${dir.src}/gluewine/${example.name}/manifest.mf" basedir="${dir.build}"/>
     </target>
 
     <target name="prepareExample">
