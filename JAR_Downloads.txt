@@ -1,0 +1,281 @@
+CAMEL
+	* camel-core-2.10.4
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/org.apache.camel/camel-core/2.10.4
+		License: The Apache Software License, Version 2.0
+
+HIBERNATE
+
+	* antlr-2.7.7
+		http://ebr.springsource.com/repository/app/bundle/version/detail?name=com.springsource.antlr&version=2.7.7
+	
+	* dom4j-1.6.1
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/dom4j/dom4j/1.6.1
+
+	* hibernate-commons-annotations-4.0.1.Final
+		http://grepcode.com/snapshot/repository.jboss.org/nexus/content/repositories/releases/org.hibernate.common/hibernate-commons-annotations/4.0.1.Final
+		License: GNU LESSER GENERAL PUBLIC LICENSE
+
+	* hibernate-core-4.1.9.Final
+		http://grepcode.com/snapshot/repository.jboss.org/nexus/content/repositories/releases/org.hibernate/hibernate-core/4.1.9.Final
+		License: GNU Lesser General Public License
+
+	* hibernate-jpa-2.0-api-1.0.1.Final
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/org.hibernate.javax.persistence/hibernate-jpa-2.0-api/1.0.1.Final
+
+	* javassist-3.17.1-GA
+		http://www.java2s.com/Code/Jar/j/Downloadjavassistjar.htm
+
+	* jboss-logging-3.1.0.GA
+		http://mvnrepository.com/artifact/org.jboss.logging/jboss-logging
+
+	* jboss-transactional-api_1.1_spec-1.0.0.Final
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/org.jboss.spec.javax.transaction/jboss-transaction-api_1.1_spec/1.0.0.Final
+		License Lgpl
+
+	* Xstream-hibernate-1.4.4
+		https://nexus.codehaus.org/content/groups/public/com/thoughtworks/xstream/xstream-hibernate/1.4.4/
+
+JACKSON
+
+	* jackson-annotations-2.1.1
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/com.fasterxml.jackson.core/jackson-annotations/2.1.1
+		License: The Apache Software License, Version 2.0
+
+	* jackson-core-2.1.1
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/com.fasterxml.jackson.core/jackson-core/2.1.1
+		The Apache Software License, Version 2.0
+
+	* jackson-databind-2.1.1
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/com.fasterxml.jackson.core/jackson-databind/2.1.1
+		License: The Apache Software License, Version 2.0
+
+JETTY
+
+	ANNOTATIONS
+		
+		* javax.annotation-1.1.0.v201108011116
+			http://www.java2s.com/Code/Jar/j/Downloadjavaxannotationjar.htm
+
+		* org.objectweb.asm-3.1.0.v200803061910
+			http://repo1.maven.org/maven2/org/eclipse/jetty/orbit/org.objectweb.asm/3.1.0.v200803061910/
+
+	JNDI
+	
+		* javax.activation-1.1.0.v201105071233
+			http://repository.opencastproject.org/nexus/content/repositories/public/org/eclipse/jetty/or
+
+		* javax.mail.glassfish-1.4.1.v201005082020
+			http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty.orbit/javax.mail.glassfish/1.4.1.v201005082020
+			License: Apache Software License - Version 2.0
+
+		* javax.transaction-1.1.1.v201105210645
+			http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty.orbit/javax.transaction/1.1.1.v201105210645
+			License: Apache Software License - Version 2.0
+
+	JSP
+
+		* com.sun.el-2.2.0.v201303151357
+			http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty.orbit/com.sun.el/2.2.0.v201303151357
+			License: Apache Software License - Version 2.0
+
+		* javax.el-2.2.0.v201303151357
+			http://repo1.maven.org/maven2/org/eclipse/jetty/orbit/javax.el/2.2.0.v201303151357/
+
+		* javax.servlet.jsp.jstl-1.2.0.v201105211821
+			http://repo1.maven.org/maven2/org/eclipse/jetty/orbit/javax.servlet.jsp.jstl/1.2.0.v201105211821/
+
+		* javax.servlet.jsp-2.2.0.v201112011158
+			http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty.orbit/javax.servlet.jsp/2.2.0.v201112011158
+			License: Apache Software License - Version 2.0
+
+		* org.apache.jasper.glassfish-2.2.2.v201112011158
+			http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty.orbit/org.apache.jasper.glassfish/2.2.2.v201112011158
+			License: Apache Software License - Version 2.0
+
+		* org.apache.taglibs.standard.glassfish-1.2.0.v201112081803
+			http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty.orbit/org.apache.taglibs.standard.glassfish/1.2.0.v201112081803
+			License: Apache Software License - Version 2.0
+
+		* org.eclipse.jdt.core-3.8.2.v20130121
+			http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty.orbit/org.eclipse.jdt.core/3.8.2.v20130121
+			License: Apache Software License - Version 2.0
+
+	MONITOR
+
+		* jetty-monitor-9.0.1.v20130408
+			http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty/jetty-monitor/9.0.1.v20130408
+			License: Apache Software License - Version 2.0
+
+	SETUID
+
+		* jetty-setuid-java-1.0.1
+			http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty.toolchain.setuid/jetty-setuid-java/1.0.1
+			License: Apache Software License - Version 2.0
+
+	SPDY
+
+		* spdy-client-9.0.1.v20130408
+			http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty.spdy/spdy-client/9.0.1.v20130408
+			License: Apache Software License - Version 2.0
+
+		* spdy-core-9.0.1.v20130408
+			http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty.spdy/spdy-core/9.0.1.v20130408
+			License: Apache Software License - Version 2.0
+
+		* spdy-http-server-9.0.1.v20130408
+			http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty.spdy/spdy-http-server/9.0.1.v20130408
+			License: Apache Software License - Version 2.0
+
+		* spdy-server-9.0.1.v20130408
+			http://mvnrepository.com/artifact/org.eclipse.jetty.spdy/spdy-server/9.0.1.v20130408
+
+	WEBSOCKET
+
+		* websocket-api-9.0.1.v20130408
+			http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty.websocket/websocket-api/9.0.1.v20130408
+			License: Apache Software License - Version 2.0
+
+		* websocket-common-9.0.1.v20130408
+			http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty.websocket/websocket-common/9.0.1.v20130408
+			License: Apache Software License - Version 2.0
+
+		* websocket-server-9.0.1.v20130408
+			http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty.websocket/websocket-server/9.0.1.v20130408
+			License: Apache Software License - Version 2.0
+
+		* websocket-servlet-9.0.1.v20130408
+			http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty.websocket/websocket-servlet/9.0.1.v20130408
+			License: Apache Software License - Version 2.0
+
+	* jetty-annotations-9.0.1.v20130408
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty/jetty-annotations/9.0.1.v20130408
+		License: Apache Software License - Version 2.0
+
+	* jetty-client-9.0.1.v20130408
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty/jetty-client/9.0.1.v20130408
+		License: Apache Software License - Version 2.0
+
+	* jetty-continuation-9.0.1.v20130408
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty/jetty-continuation/9.0.1.v20130408
+		License: Apache Software License - Version 2.0
+
+	* jetty-deploy-9.0.1.v20130408
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty/jetty-deploy/9.0.1.v20130408
+		License: Apache Software License - Version 2.0
+
+	* jetty-http-9.0.1.v20130408
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty/jetty-http/9.0.1.v20130408
+		License: Apache Software License - Version 2.0
+
+	* jetty-io-9.0.1.v20130408
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty/jetty-io/9.0.1.v20130408
+		License: Apache Software License - Version 2.0
+
+	* jetty-jaas-9.0.1.v20130408
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty/jetty-jaas/9.0.1.v20130408
+		License: Apache Software License - Version 2.0
+
+	* jetty-jmx-9.0.1.v20130408
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty/jetty-jmx/9.0.1.v20130408
+		License: Apache Software License - Version 2.0
+
+	* jetty-jndi-9.0.1.v20130408
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty/jetty-jndi/9.0.1.v20130408
+		License: Apache Software License - Version 2.0
+	
+	* jetty-plus-9.0.1.v20130408
+		http://mvnrepository.com/artifact/org.eclipse.jetty/jetty-plus/9.0.1.v20130408
+
+	* jetty-proxy-9.0.1.v20130408
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty/jetty-proxy/9.0.1.v20130408
+		License: Apache Software License - Version 2.0
+
+	* jetty-rewrite-9.0.1.v20130408
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty/jetty-rewrite/9.0.1.v20130408
+		License: Apache Software License - Version 2.0
+
+	* jetty-security-9.0.1.v20130408
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty/jetty-security/9.0.1.v20130408
+		License: Apache Software License - Version 2.0
+
+	* jetty-server-9.0.1.v20130408
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty/jetty-server/9.0.1.v20130408
+		License: Apache Software License - Version 2.0
+
+	* jetty-servlet-9.0.1.v20130408
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty/jetty-servlet/9.0.1.v20130408
+		License: Apache Software License - Version 2.0
+
+	* jetty-servlets-9.0.1.v20130408
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty/jetty-servlets/9.0.1.v20130408
+		License: Apache Software License - Version 2.0
+
+	* jetty-util-9.0.1.v20130408
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty/jetty-util/9.0.1.v20130408
+		License: Apache Software License - Version 2.0
+
+	* jetty-webapp-9.0.1.v20130408
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty/jetty-webapp/9.0.1.v20130408
+		License: Apache Software License - Version 2.0
+
+	* jetty-xml-9.0.1.v20130408
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/org.eclipse.jetty/jetty-xml/9.0.1.v20130408
+		License: Apache Software License - Version 2.0
+
+	* servlet-api-3.0
+		http://www.java2s.com/Code/Jar/s/Downloadservletapi30jar.htm
+	
+MAILER
+
+	* mail
+		http://download.java.net/maven/1/javax.mail/jars/
+
+SUPPORT
+
+	* cglib-nodep-2.2.3
+		http://www.java2s.com/Code/Jar/c/Downloadcglibnodep222jar.htm
+
+	* commons-fileupload-1.2.1
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/commons-fileupload/commons-fileupload/1.2.1
+		License: The Apache Software License, Version 2.0
+
+	* commons-io-1.4
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/commons-io/commons-io/1.4
+		License: The Apache Software License, Version 2.0
+
+	* commons-logging-1.1.1
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/commons-logging/commons-logging/1.1.1
+		License: The Apache Software License, Version 2.0
+
+	* jline-2.11-SNAPSHOT
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/jline/jline/2.11
+		License: The BSD License
+
+	* log4j-1.2.15
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/log4j/log4j/1.2.15
+		License: The Apache Software License, Version 2.0
+
+	* postgresql-9.1-901.jdbc4
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/postgresql/postgresql/9.1-901.jdbc4
+		License: BSD License
+
+	* slf4j-api-1.6.1
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/org.slf4j/slf4j-api/1.6.1
+		License: MIT License
+
+	* slf4j-log4j12-1.6.1
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/org.slf4j/slf4j-log4j12/1.6.1
+		License: MIT License
+
+XSTREAM
+
+	* xpp3_min-1.1.4c
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/xpp3/xpp3_min/1.1.4c
+		License: Indiana University Extreme! Lab Software License, vesion 1.1.1
+
+	* xstream-1.4.4
+		http://grepcode.com/snapshot/repo1.maven.org/maven2/com.thoughtworks.xstream/xstream/1.4.4
+		License: BSD style
+
+
+	
