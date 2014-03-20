@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Gluewine-Services: gluewine.hibernate.CarService,gluewine.hibernate.ColorService,gluewine.hibernate.AfterAddedService,gluewine.hibernate.BeforeAddingService
+Gluewine-Entities: gluewine.entities.Car,gluewine.entities.Color
+Gluewine-Sql: true
