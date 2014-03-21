@@ -12,6 +12,16 @@ import org.gluewine.jetty.GluewineServlet;
 
 public class TestServlets2 extends GluewineServlet {
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.gluewine.jetty.GluewineServlet#getContextPath()
+	 * 
+	 * To use this method in the browser, we will need to address the following link:
+	 * 
+	 * http://localhost:portnumber/TestServlet
+	 * 
+	 * We define this link in the method getContextPath()
+	 */
 		@Override
 		public String getContextPath() {
 			return "TestServlet2";
