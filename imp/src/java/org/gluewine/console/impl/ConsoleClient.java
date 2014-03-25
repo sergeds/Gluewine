@@ -107,7 +107,7 @@ public final class ConsoleClient implements Runnable, Completer, AnsiCodes
                                           + "            \u001b[31mGluewine Framework\u001b[30m            \n"
                                           + "                                          \n"
                                           + "             www.gluewine.org             \n"
-                                          + "      GNU Lesser General Public v 3.0     \n"
+                                          + "         Apache version 2 license         \n"
                                           + "                                          \n"
                                           + "              \u001b[32m(c) FKS bvba\u001b[30m                \n"
                                           + "                                          \n\u001b[0m";

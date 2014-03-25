@@ -1,4 +1,4 @@
- <?xml version="1.0"?>
+<?xml version="1.0"?>
 <project name="gluewine" default="default" basedir=".">
     <property name="product" value="gluewine"/>
     <property name="version" value="0.0.1"/>
