@@ -7,3 +7,7 @@ By using the Gluewine-framework, working with hibernate becomes very simple. In 
 Gluewine also has an integration of Jetty, this make it possible for users to create servlets in a very easy way. There is no need for a separate xml-file. You can make your whole servlet in only one java-file. The same goes for RESTful webservices, with just a few steps you can make your own webservice by using Gluewine.
 
 When you start working with Gluewine, you will notice there are also lots of other advantages like adding commands, the use of basic sessionmanagement, the use of authentication, and many more. If you want to find out about the rest of the functionalities of this powerful framework, you can check it out by downloading the code from this github repository.
+
+
+In the code of Gluewine, you can find some examples in the Gluewine/imp/examples folder. In our wiki-page on Github you can find an explanation about these examples. 
+If something isn't clear of if you have any questions, feel free to subscribe to our mailinglist on our webiste: www.gluewine.org/Community.html
