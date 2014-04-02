@@ -293,7 +293,7 @@ public class GoogleAnalytics implements AspectProvider, CommandProvider
             postRequest(headers, b.toString());
         }
 
-        else throw new IOException("There is no " + TRACKID_WEBID + " defined in the google.properties files!");
+        else throw new IOException("There is no " + TRACKID_MOBILE + " defined in the google.properties files!");
     }
 
     // ===========================================================================
@@ -352,7 +352,7 @@ public class GoogleAnalytics implements AspectProvider, CommandProvider
             postRequest(headers, b.toString());
         }
 
-        else throw new IOException("There is no " + TRACKID_WEBID + " defined in the google.properties files!");
+        else throw new IOException("There is no " + TRACKID_MOBILE + " defined in the google.properties files!");
     }
 
     // ===========================================================================
