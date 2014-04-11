@@ -240,4 +240,11 @@ public class TestSessionProvider implements HibernateSessionProvider
         else
             throw new RuntimeException("There is no current transaction to rollback.");
     }
+
+    // ===========================================================================
+    @Override
+    public Configuration getConfiguration()
+    {
+        return configuration;
+    }
 }

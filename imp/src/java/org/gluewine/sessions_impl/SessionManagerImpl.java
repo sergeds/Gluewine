@@ -28,6 +28,7 @@ import java.util.UUID;
 
 import org.gluewine.sessions.SessionExpiredException;
 import org.gluewine.sessions.SessionManager;
+import org.gluewine.sessions.SessionManagerDataStore;
 
 /**
  * Simple implementation that stores sessions in a map.
@@ -35,13 +36,18 @@ import org.gluewine.sessions.SessionManager;
  * @author fks/Serge de Schaetzen
  *
  */
-public class SessionManagerImpl implements SessionManager
+public class SessionManagerImpl implements SessionManager, SessionManagerDataStore
 {
     // ===========================================================================
     /**
      * The map of sessions and their associated timestamps.
      */
     private Map<String, Long> sessions = new HashMap<String, Long>();
+
+    /**
+     * The map of sessions and their associated user data.
+     */
+    private Map<String, Map<String, Object>> sessionData = new HashMap<String, Map<String, Object>>();
 
     /**
      * Max amount of time in milliseconds that a session can be idle.
@@ -91,6 +97,7 @@ public class SessionManagerImpl implements SessionManager
         {
             String id = UUID.randomUUID().toString();
             sessions.put(id, Long.valueOf(System.currentTimeMillis()));
+            putData (id, USERNAME, user);
             return id;
         }
     }
@@ -127,6 +134,7 @@ public class SessionManagerImpl implements SessionManager
         synchronized (sessions)
         {
             sessions.remove(session);
+            sessionData.remove(session);
         }
     }
 
@@ -165,6 +173,37 @@ public class SessionManagerImpl implements SessionManager
         synchronized (threadSessions)
         {
             return threadSessions.get(Thread.currentThread());
+        }
+    }
+
+    // ===========================================================================
+    @Override
+    public void putData(String session, String key, Object data) throws SessionExpiredException
+    {
+        synchronized (sessionData)
+        {
+            checkAndTickSession(session);
+            Map dataMap = sessionData.get(session);
+            if(dataMap == null)
+            {
+                dataMap = new HashMap<String, Object>();
+                sessionData.put(session, dataMap);
+            }
+            dataMap.put(key, data);
+        }
+    }
+
+    // ===========================================================================
+    @Override
+    public Object getData(String session, String key) throws SessionExpiredException
+    {
+        synchronized (sessionData)
+        {
+            checkAndTickSession(session);
+            Map dataMap = sessionData.get(session);
+            if(dataMap == null)
+                return null;
+            return dataMap.get(key);
         }
     }
 }

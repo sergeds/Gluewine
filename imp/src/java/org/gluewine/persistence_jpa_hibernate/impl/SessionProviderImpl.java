@@ -31,6 +31,8 @@ import org.gluewine.persistence.TransactionCallback;
 import org.gluewine.persistence_jpa_hibernate.HibernateSessionProvider;
 import org.gluewine.persistence_jpa_hibernate.HibernateTransactionalSession;
 
+import org.hibernate.cfg.Configuration;
+
 /**
  * Default implementation of SessionProvider.
  *
@@ -207,5 +209,11 @@ public class SessionProviderImpl implements HibernateSessionProvider
                 }
             }
         }
+    }
+
+    @Override
+    public Configuration getConfiguration()
+    {
+        return provider.getConfiguration();
     }
 }
