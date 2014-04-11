@@ -3,7 +3,7 @@
     <import file="init.xml"/>
     <import file="osgi.xml"/>
 
-    <taskdef resource="checkstyletask.properties" classpath="${dir.tools.checkstyle}/checkstyle-5.3-all.jar"/>
+    <taskdef resource="checkstyletask.properties" classpath="${dir.tools.checkstyle}/checkstyle-5.7-all.jar"/>
     <taskdef name="findbugs" classname="edu.umd.cs.findbugs.anttask.FindBugsTask" classpath="${dir.tools.findbugs}/lib/findbugs-ant.jar"/>
 
     <!-- Run checkstyle -->
