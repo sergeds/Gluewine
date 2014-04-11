@@ -4,6 +4,8 @@ import org.gluewine.persistence.TransactionCallback;
 import org.gluewine.persistence_jpa.SessionProvider;
 import org.gluewine.persistence_jpa.TransactionalSession;
 
+import org.hibernate.cfg.Configuration;
+
 /**
  * Hibernate Specific SessionProvider.
  *
@@ -20,6 +22,13 @@ public interface HibernateSessionProvider extends SessionProvider
      */
     @SuppressWarnings("unchecked")
     HibernateTransactionalSession getSession();
+
+    /**
+     * Gets the hibernate configuration. Useful if code needs the class mapping.
+     *
+     * @return the configuration.
+     */
+    Configuration getConfiguration();
 
     // ===========================================================================
     /**

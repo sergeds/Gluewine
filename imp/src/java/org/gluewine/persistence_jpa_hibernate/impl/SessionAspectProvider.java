@@ -99,6 +99,11 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
     }
 
     /**
+     * The hibernate configuration. This is needed to be able to get class mappings.
+     */
+    private Configuration configuration;
+
+    /**
      * The session provider to use.
      */
     @Glue
@@ -655,6 +660,7 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
                 for (Class<?> cl : entities)
                     config.addAnnotatedClass(cl);
 
+                configuration = config;
                 factory = config.buildSessionFactory(serviceRegistry);
                 checkStatements();
             }
@@ -700,6 +706,7 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
                 for (Class<?> cl : entities)
                     config.addAnnotatedClass(cl);
 
+                configuration = config;
                 factory = config.buildSessionFactory(serviceRegistry);
                 checkStatements();
             }
@@ -708,5 +715,15 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
                 e.printStackTrace();
             }
         }
+    }
+
+    /**
+     * Gets the hibernate configuration.
+     *
+     * @return the configuration.
+     */
+    Configuration getConfiguration()
+    {
+        return configuration;
     }
 }
