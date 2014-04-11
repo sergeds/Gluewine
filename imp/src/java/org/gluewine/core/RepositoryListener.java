@@ -32,7 +32,7 @@ public interface RepositoryListener<T extends Object>
     /**
      * Invoked when an instance of the given type has been registered.
      *
-     * @param t Tje class that was registered.
+     * @param t The class that was registered.
      */
     void registered(T t);
 

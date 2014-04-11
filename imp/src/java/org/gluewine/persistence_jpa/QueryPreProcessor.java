@@ -33,7 +33,7 @@ import org.hibernate.Criteria;
  * assumptions should be made !
  *
  * The QueryPreProcessors (and the QueryPostProcessors) can be used to
- * dynamiccaly create Views, SecurityChecks, Debugging info, ...
+ * dynamicaly create Views, SecurityChecks, Debugging info, ...
  *
  * @author fks/Serge de Schaetzen
  *

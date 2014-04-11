@@ -205,7 +205,7 @@ public class Interceptor implements RepositoryListener<AspectProvider>
     {
         if (!providers.contains(provider))
         {
-            logger.debug("Registering AspectProvider" + provider.getClass().getName());
+            logger.debug("Registering AspectProvider " + provider.getClass().getName());
             if (provider.getClass().getAnnotation(InterceptChainStartOnly.class) != null)
                 chainStartProviders.add(provider);
             else
