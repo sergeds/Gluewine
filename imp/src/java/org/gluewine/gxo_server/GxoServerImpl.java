@@ -47,7 +47,6 @@ import org.gluewine.gxo.ExecBean;
 import org.gluewine.gxo.GxoException;
 import org.gluewine.gxo.InitBean;
 import org.gluewine.gxo.LocalAccess;
-import org.gluewine.persistence.Transactional;
 import org.gluewine.sessions.SessionExpiredException;
 import org.gluewine.sessions.SessionManager;
 import org.gluewine.sessions.Unsecured;
@@ -329,8 +328,7 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
      * @param bean The bean to process.
      * @throws IOException Thrown if an error occurs writing back to the caller.
      */
-    @Transactional
-    public void processExecBean(OutputStreamWriter out, Map<String, Object> instantiated, ExecBean bean) throws IOException
+    private void processExecBean(OutputStreamWriter out, Map<String, Object> instantiated, ExecBean bean) throws IOException
     {
         try
         {
@@ -361,8 +359,7 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
      * @param bean The bean to process.
      * @throws IOException Thrown if an error occurs writing back to the caller.
      */
-    @Transactional
-    public void processInitBean(OutputStreamWriter out, Map<String, Object> instantiated, InitBean bean) throws IOException
+    private void processInitBean(OutputStreamWriter out, Map<String, Object> instantiated, InitBean bean) throws IOException
     {
         try
         {
@@ -423,7 +420,7 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
         }
         catch (Throwable e)
         {
-            if (e.getMessage() == null || (e.getMessage().indexOf("Read timed out") < 0 && e.getMessage().indexOf("Connection reset") < 0))
+            if (e.getMessage() == null || (e.getMessage().indexOf("Read timed out") < 0 && e.getMessage().indexOf("Connection reset") < 0) && e.getMessage().indexOf("ParseError at [row,col]:[1,1]") < 0)
                 ErrorLogger.log(getClass(), e);
         }
 
@@ -455,8 +452,7 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
      * @param bean The bean to process.
      * @return The output.
      */
-    @Transactional
-    public Object processExecBean(Map<String, Object> instantiated, ExecBean bean)
+    private Object processExecBean(Map<String, Object> instantiated, ExecBean bean)
     {
         Object result = null;
 
