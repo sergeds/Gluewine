@@ -37,6 +37,7 @@ public interface SessionProvider
     // ===========================================================================
     /**
      * Returns the session to be used.
+     * @param <T> the session class
      *
      * @return The session to use.
      */
@@ -47,6 +48,7 @@ public interface SessionProvider
      * Returns the session to be used and requests the callback specified to be
      * invoked when the session is committed or rolled back.
      *
+     * @param <T> the session class
      * @param callback The callback to notify.
      * @return The session to use.
      */

@@ -36,6 +36,7 @@ public interface HibernateSessionProvider extends SessionProvider
      * invoked when the session is committed or rolled back.
      *
      * @param callback The callback to notify.
+     * @param <T> The session class.
      * @return The session to use.
      */
     <T extends TransactionalSession> T getSession(TransactionCallback callback);

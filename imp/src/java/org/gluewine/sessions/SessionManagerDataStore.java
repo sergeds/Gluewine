@@ -30,7 +30,7 @@ public interface SessionManagerDataStore
     /**
      * The key used to store usernames.
      */
-    public static final String USERNAME = "USERNAME";
+    String USERNAME = "USERNAME";
 
     /**
      * Stores named data with a session.

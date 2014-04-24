@@ -28,8 +28,9 @@ public interface HibernateTransactionalSession extends TransactionalSession
     /**
      * Creates and returns a Criteria for the given entity and filter.
      *
-     * @param The entity to process.
+     * @param cl The entity to process.
      * @param filter The filter to apply.
+     * @return the created Criteria object
      */
     Criteria createCriteria(Class<?> cl, Filter filter);
 
@@ -47,7 +48,7 @@ public interface HibernateTransactionalSession extends TransactionalSession
      * be notified.
      *
      * @param query The query string.
-     * @return
+     * @return the created Query object
      */
     Query createQuery(String query);
 

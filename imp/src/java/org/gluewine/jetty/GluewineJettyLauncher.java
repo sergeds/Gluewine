@@ -228,10 +228,10 @@ public class GluewineJettyLauncher implements RepositoryListener<GluewineServlet
                 sslContextFactory.setNeedClientAuth(Boolean.parseBoolean(properties.getProperty("https.clientauthentication", "false")));
                 sslContextFactory.setTrustAll(true);
 
-                HttpConfiguration https_config = new HttpConfiguration();
-                https_config.addCustomizer(new SecureRequestCustomizer());
+                HttpConfiguration httpsConfig = new HttpConfiguration();
+                httpsConfig.addCustomizer(new SecureRequestCustomizer());
                 // SSL Connector
-                ServerConnector sslConnector = new ServerConnector(server, new SslConnectionFactory(sslContextFactory, "http/1.1"), new HttpConnectionFactory(https_config));
+                ServerConnector sslConnector = new ServerConnector(server, new SslConnectionFactory(sslContextFactory, "http/1.1"), new HttpConnectionFactory(httpsConfig));
                 sslConnector.setPort(Integer.parseInt(properties.getProperty("https.port")));
                 server.addConnector(sslConnector);
             }

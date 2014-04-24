@@ -115,7 +115,7 @@ public class XMLTracer extends AbstractTracer
         }
         else System.out.println("No Writer");
 
-        clearSuppression();;
+        clearSuppression();
     }
 
     // ===========================================================================
@@ -134,7 +134,7 @@ public class XMLTracer extends AbstractTracer
             try
             {
                 writer = xof.createXMLStreamWriter(new FileWriterWithEncoding(file + "_" + Thread.currentThread().getId() + ".xml", "utf8"));
-                writer.writeStartDocument("utf-8","1.0");
+                writer.writeStartDocument("utf-8", "1.0");
                 writer.writeStartElement("trace");
                 writer.writeAttribute("thread", Long.toString(Thread.currentThread().getId()));
                 writers.put(Thread.currentThread(), writer);

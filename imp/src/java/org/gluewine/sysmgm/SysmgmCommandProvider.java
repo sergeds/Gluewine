@@ -177,7 +177,7 @@ public class SysmgmCommandProvider implements CommandProvider
      */
     public void _sysmgm_fontlist(CommandContext ci) throws Throwable
     {
-        String fonts[] = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
+        String[] fonts = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
         for (String font : fonts)
             ci.println(font);
     }

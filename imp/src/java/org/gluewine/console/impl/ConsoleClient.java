@@ -284,6 +284,8 @@ public final class ConsoleClient implements Runnable, Completer, AnsiCodes
      *
      * @param file The file to load.
      * @return The list of commands.
+     *
+     * @throws IOException if the file cannot be opened.
      */
     private String[] loadExecutionFile(File file) throws IOException
     {

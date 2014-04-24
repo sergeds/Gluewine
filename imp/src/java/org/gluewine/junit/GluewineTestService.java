@@ -192,6 +192,8 @@ public abstract class GluewineTestService
      * {@link RunOnDeactivate} annotation.
      *
      * Note that this method will do nothing if isActive() returns false.
+     *
+     * @param o the service to deactivate.
      */
     private void deactivate(Object o)
     {

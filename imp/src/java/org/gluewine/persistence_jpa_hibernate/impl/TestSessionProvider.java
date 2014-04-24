@@ -39,7 +39,7 @@ import org.hibernate.service.ServiceRegistryBuilder;
 /**
  * Provider that can be used for testing purposes.
  *
- * @author Serge de Schaetzen
+ * @author fks/Serge de Schaetzen
  *
  */
 public class TestSessionProvider implements HibernateSessionProvider
@@ -66,7 +66,7 @@ public class TestSessionProvider implements HibernateSessionProvider
     protected static boolean open = false;
 
     /**
-     * Sequence number for empty databases
+     * Sequence number for empty databases.
      */
     private static int dbseq = 0;
 
@@ -134,7 +134,7 @@ public class TestSessionProvider implements HibernateSessionProvider
             {
                 Properties props = new Properties();
                 props.load(new FileInputStream(config));
-                props.setProperty("hibernate.connection.url",props.getProperty("hibernate.connection.url").replaceAll("mem:empty","mem:empty" + (dbseq++)));
+                props.setProperty("hibernate.connection.url", props.getProperty("hibernate.connection.url").replaceAll("mem:empty", "mem:empty" + (dbseq++)));
 
                 configure(props, classes);
 
@@ -218,7 +218,7 @@ public class TestSessionProvider implements HibernateSessionProvider
             transaction.commit();
             transaction = null;
 
-            while (! callbacks.isEmpty())
+            while (!callbacks.isEmpty())
                 callbacks.pop().transactionCommitted();
         }
         else
@@ -234,7 +234,7 @@ public class TestSessionProvider implements HibernateSessionProvider
             transaction.rollback();
             transaction = null;
 
-            while (! callbacks.isEmpty())
+            while (!callbacks.isEmpty())
                 callbacks.pop().transactionRolledBack();
         }
         else
