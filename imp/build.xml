@@ -28,4 +28,5 @@
     </target>
 
     <import file="ant/common.xml"/>
+    <import file="ant/examples.xml"/>
 </project>
