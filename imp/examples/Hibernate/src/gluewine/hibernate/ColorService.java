@@ -9,16 +9,16 @@ import org.gluewine.console.CLICommand;
 import org.gluewine.console.CommandContext;
 import org.gluewine.console.CommandProvider;
 import org.gluewine.core.Glue;
-import org.gluewine.persistence.Filter;
-import org.gluewine.persistence.FilterLine;
-import org.gluewine.persistence.FilterOperator;
-import org.gluewine.persistence.SessionProvider;
+import org.gluewine.persistence_jpa.Filter;
+import org.gluewine.persistence_jpa.FilterLine;
+import org.gluewine.persistence_jpa.FilterOperator;
+import org.gluewine.persistence_jpa_hibernate.HibernateSessionProvider;
 import org.gluewine.persistence.Transactional;
 
 public class ColorService implements CommandProvider
 {
     @Glue
-    private SessionProvider provider;
+    private HibernateSessionProvider provider;
 
     /*
      *The method color_list.

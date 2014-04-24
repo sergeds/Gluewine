@@ -5,7 +5,7 @@ import gluewine.entities.Color;
 
 import java.io.Serializable;
 
-import org.gluewine.persistence.QueryPostProcessor;
+import org.gluewine.persistence_jpa.QueryPostProcessor;
 
 public class AfterAddedService implements QueryPostProcessor
 {

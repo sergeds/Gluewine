@@ -1,20 +1,20 @@
 <?xml version="1.0"?>
 <project name="example" default="build" basedir=".">
-	<!-- Here we define all the properties needed in the build.xml file -->
+    <!-- Here we define all the properties needed in the build.xml file -->
     <property name="dir.dist" value="dist"/>
     <property name="dir.lib" value="lib"/>
     <property name="dir.build" value="build"/>
     <property name="dir.src" value="src"/>
     <property name="dir.gluewine.lib" value="../../../dist/lib/"/>
     <property name="dir.external.lib" value="../../lib/java/runtime/"/>
-	<property name="example.name" value="Commands" />
+    <property name="example.name" value="commands" />
 
-	<!--Here we define the classpath -->
+    <!--Here we define the classpath -->
     <path id="classpath">
         <fileset dir="${dir.lib}" includes="**/*.jar"/>
     </path>
 
-	<!--Here we  create the folder lib/example and build  -->
+    <!--Here we  create the folder lib/example and build  -->
     <target name="build" description="Build example">
         <mkdir dir="${dir.build}"/>
         <mkdir dir="${dir.lib}/example"/>
@@ -24,22 +24,22 @@
         <jar jarfile="${dir.lib}/example/${example.name}.jar" manifest="${dir.src}/gluewine/${example.name}/manifest.mf" basedir="${dir.build}"/>
     </target>
 
-	<!-- Here we add al the jar-files to our lib folder. -->
+    <!-- Here we add al the jar-files to our lib folder. -->
     <target name="prepareExample">
         <mkdir dir="${dir.lib}"/>
-    	
-    	<!-- These are the files which contain all the names of the jar-files needed to build the project-->
-    	<loadfile srcFile="ExternalDep.txt"	property="ExternalDep"/>
-    	<loadfile srcFile="GluewineDep.txt"	property="GluewineDep"/>
-        <copy todir="${dir.lib}">                 
-        	
-        	<!-- The build.xml file will read these names and will add these files to the lib - folder	-->
-        	<filelist dir="${dir.external.lib}" files="${ExternalDep}"/>  
-        	<filelist dir="${dir.gluewine.lib}"	files="${GluewineDep}"/>              	
+
+        <!-- These are the files which contain all the names of the jar-files needed to build the project-->
+        <loadfile srcFile="ExternalDep.txt"	property="ExternalDep"/>
+        <loadfile srcFile="GluewineDep.txt"	property="GluewineDep"/>
+        <copy todir="${dir.lib}">
+
+            <!-- The build.xml file will read these names and will add these files to the lib - folder	-->
+            <filelist dir="${dir.external.lib}" files="${ExternalDep}"/>
+            <filelist dir="${dir.gluewine.lib}"	files="${GluewineDep}"/>
         </copy>
     </target>
-	
-	<!-- Here we make the zip-file which contains all of the content needed for the project -->
+
+    <!-- Here we make the zip-file which contains all of the content needed for the project -->
     <target name="packageExample" depends="prepareExample, build">
         <zip destfile="${example.name}.zip">
             <fileset dir="." includes="lib/**/*"/>

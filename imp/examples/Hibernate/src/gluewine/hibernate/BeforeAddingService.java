@@ -2,7 +2,7 @@ package gluewine.hibernate;
 
 //import gluewine.entities.Car;
 
-import org.gluewine.persistence.QueryPreProcessor;
+import org.gluewine.persistence_jpa.QueryPreProcessor;
 import org.hibernate.Criteria;
 //import org.hibernate.criterion.Restrictions;
 

@@ -6,7 +6,9 @@ gluewine/org.gluewine.gxo-0.1.jar
 gluewine/org.gluewine.gxo.client-0.1.jar
 gluewine/org.gluewine.gxo.server-0.1.jar
 gluewine/org.gluewine.log4j-0.1.jar
-hibernate/org.gluewine.persistence-0.1.jar
+gluewine/org.gluewine.persistence-0.1.jar
+gluewine/org.gluewine.persistence.jpa-0.1.jar
+hibernate/org.gluewine.persistence.jpa.hibernate-0.1.jar
 gluewine/org.gluewine.sessions-0.1.jar
 gluewine/org.gluewine.sysmgm-0.1.jar
 gluewine/org.gluewine.utils-0.1.jar

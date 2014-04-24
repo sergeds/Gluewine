@@ -10,7 +10,7 @@ import org.gluewine.console.CLICommand;
 import org.gluewine.console.CommandContext;
 import org.gluewine.console.CommandProvider;
 import org.gluewine.core.Glue;
-import org.gluewine.persistence.SessionProvider;
+import org.gluewine.persistence_jpa_hibernate.HibernateSessionProvider;
 import org.gluewine.persistence.TransactionCallback;
 import org.gluewine.persistence.Transactional;
 import org.hibernate.Criteria;
@@ -19,7 +19,7 @@ import org.hibernate.criterion.Restrictions;
 public class CarService implements CommandProvider
 {
     @Glue
-    private SessionProvider provider;
+    private HibernateSessionProvider provider;
 
 
     /*
