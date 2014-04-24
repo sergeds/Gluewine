@@ -12,14 +12,13 @@ import org.gluewine.core.Glue;
 
 public class DirectoryAnnotations implements CommandProvider
 {
-	@Glue(properties = "test.properties")
+    @Glue(properties = "test.properties")
     private Properties props;
 
     public void _testDA(CommandContext cc)
     {
-    	cc.println("This is a test-command");
-        
-    }   
+        cc.println("This is a test-command");
+    }
 
 
     @Override

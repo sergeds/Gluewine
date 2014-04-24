@@ -27,7 +27,7 @@ public class ColorService implements CommandProvider
     @Transactional
     public void _color_list(CommandContext cc)
     {
-    	//We need to get all the colors that are in the database
+        //We need to get all the colors that are in the database
         List<Color> colors = provider.getSession().getAll(Color.class);
         cc.tableHeader("Id", "Name", "RGB");
 
@@ -46,9 +46,9 @@ public class ColorService implements CommandProvider
     @Transactional
     public void _color_add(final CommandContext cc)
     {
-        String name = cc.getOption("-name");        
+        String name = cc.getOption("-name");
         int rgb = Integer.parseInt(cc.getOption("-rgb"));
-        
+
         Color newColor = new Color();
         newColor.setName(name);
         newColor.setRgb(rgb);
@@ -56,7 +56,7 @@ public class ColorService implements CommandProvider
         provider.getSession().add(newColor);
         provider.commitCurrentSession();
     }
-    
+
     /*
      * The method color_search.
      * With this method we can search for a color on the criteria 'name'.
@@ -73,7 +73,7 @@ public class ColorService implements CommandProvider
         filterline.setValue(text);
         filter.setLimit(10);
         filter.addFilterLine(filterline);
-        
+
         List <Color> l = provider.getSession().getFiltered(Color.class, filter);
 
         cc.tableHeader("Id", "Name", "RGB");
@@ -95,7 +95,7 @@ public class ColorService implements CommandProvider
     {
         long id = Long.parseLong(cc.getOption("-id"));
         Color color = (Color) provider.getSession().get(Color.class, id);
-        
+
         if (color != null) {
             provider.getSession().delete(color);
             provider.commitCurrentSession();
@@ -103,7 +103,7 @@ public class ColorService implements CommandProvider
         else
             cc.println("There is no color with id " + id);
     }
-    
+
     /*
      * The method color_change.
      * With this method we can update a color.
@@ -111,21 +111,21 @@ public class ColorService implements CommandProvider
      */
     @Transactional
     public void _color_change(CommandContext cc) {
-    	long id = Long.parseLong(cc.getOption("-id"));
-    	String name = cc.getOption("-name");
-    	int rgb = Integer.parseInt(cc.getOption("-rgb"));
-    	
-    	
-    	Color color = (Color) provider.getSession().get(Color.class, id);    	
-    	
-    	if (color != null) {
-    		color.setName(name);
-    		color.setRgb(rgb);
-    		provider.getSession().update(color);
-    		provider.commitCurrentSession();
-    	}
-    	else
-    		cc.println("There is no color with id " + id);
+        long id = Long.parseLong(cc.getOption("-id"));
+        String name = cc.getOption("-name");
+        int rgb = Integer.parseInt(cc.getOption("-rgb"));
+
+
+        Color color = (Color) provider.getSession().get(Color.class, id);
+
+        if (color != null) {
+            color.setName(name);
+            color.setRgb(rgb);
+            provider.getSession().update(color);
+            provider.commitCurrentSession();
+        }
+        else
+            cc.println("There is no color with id " + id);
     }
 
     /*
@@ -135,33 +135,33 @@ public class ColorService implements CommandProvider
     @Override
     public List<CLICommand> getCommands()
     {
-    	List<CLICommand> l = new ArrayList<>();
-        
+        List<CLICommand> l = new ArrayList<>();
+
         //adding a color
         CLICommand cmd_add_color = new CLICommand("color_add", "Adds a color");
         cmd_add_color.addOption("-name", "Name of the color", true, true);
         cmd_add_color.addOption("-rgb", "RGB-values of the color", true, true);
         l.add(cmd_add_color);
-        
+
         //delete a color
         CLICommand cmd_color_delete = new CLICommand("color_delete", "Deletes a color");
         cmd_color_delete.addOption("-id", "The id of the color you want to delete", true, true);
         l.add(cmd_color_delete);
-        
+
         //list all the colors in the db
         CLICommand cmd_color_list = new CLICommand("color_list", "Lists the colors");
         l.add(cmd_color_list);
-        
+
         //search a color
         CLICommand cmd_color_search = new CLICommand("color_search", "Searches a color on criteria 'name'");
         cmd_color_search.addOption("-text", "%criteria%", true, true);
-        l.add(cmd_color_search);    
-        
+        l.add(cmd_color_search);
+
         //change a color
         CLICommand cmd_color_change = new CLICommand("color_change", "Changes/updates a color");
         cmd_color_change.addOption("-id", "The id of the color you want to change", true, true);
         cmd_color_change.addOption("-name", "The new name", true, true);
-        cmd_color_change.addOption("-rgb", "The new rgb-value", true, true);       
+        cmd_color_change.addOption("-rgb", "The new rgb-value", true, true);
         l.add(cmd_color_change);
 
         return l;
