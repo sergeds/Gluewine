@@ -4,7 +4,7 @@
 
     <target name="examples" depends="osgi.package" description="Builds the examples">
         <mkdir dir="${dir.dist}/examples"/>
-        <foreach target="singleexample" param="buildfile" parallel="true">
+        <foreach target="singleexample" param="buildfile" parallel="false">
             <path id="examples">
                 <fileset dir="examples">
                     <include name="**/build.xml"/>
