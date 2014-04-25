@@ -21,7 +21,7 @@
         <javac srcdir="${dir.src}" destdir="${dir.build}" includeantruntime="false" encoding="utf8">
             <classpath refid="classpath"/>
         </javac>
-        <jar jarfile="${dir.lib}/example/${example.name}.jar" manifest="${dir.src}/gluewine/${example.name}/manifest.mf" basedir="${dir.build}"/>
+        <jar jarfile="${dir.lib}/example/${example.name}.jar" manifest="${dir.src}/gluewine/hibernate/manifest.mf" basedir="${dir.build}"/>
     </target>
 
     <!-- Here we add al the jar-files to our lib folder. -->
