@@ -1,0 +1,16 @@
+gluewine/org.gluewine.authentication-0.1.jar
+gluewine/org.gluewine.cglib-0.1.jar
+gluewine/org.gluewine.console-0.1.jar
+gluewine/org.gluewine.core-0.1.jar
+gluewine/org.gluewine.gxo-0.1.jar
+gluewine/org.gluewine.gxo.client-0.1.jar
+gluewine/org.gluewine.gxo.server-0.1.jar
+gluewine/org.gluewine.log4j-0.1.jar
+gluewine/org.gluewine.persistence-0.1.jar
+gluewine/org.gluewine.persistence.jpa-0.1.jar
+hibernate/org.gluewine.persistence.jpa.hibernate-0.1.jar
+gluewine/org.gluewine.sessions-0.1.jar
+gluewine/org.gluewine.sysmgm-0.1.jar
+gluewine/org.gluewine.utils-0.1.jar
+hibernate/org.gluewine.gxo.hibernate-0.1.jar
+org.gluewine.launcher-0.1.jar
