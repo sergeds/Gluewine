@@ -32,14 +32,10 @@
     <target name="prepareExample">
         <mkdir dir="${dir.lib}"/>
 
-        <!-- These are the files which contain all the names of the jar-files needed to build the project-->
-        <loadfile srcFile="ExternalDep.txt"	property="ExternalDep"/>
-        <loadfile srcFile="GluewineDep.txt"	property="GluewineDep"/>
         <copy todir="${dir.lib}">
-
             <!-- The build.xml file will read these names and will add these files to the lib - folder	-->
-            <filelist dir="${dir.external.lib}" files="${ExternalDep}"/>
-            <filelist dir="${dir.gluewine.lib}"	files="${GluewineDep}"/>
+            <fileset dir="${dir.external.lib}" includesfile="ExternalDep.txt"/>
+            <fileset dir="${dir.gluewine.lib}"	includesfile="GluewineDep.txt"/>
         </copy>
     </target>
 
