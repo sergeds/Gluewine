@@ -47,30 +47,23 @@ import org.hibernate.jdbc.Work;
 public class HibernateTransactionalSessionImpl implements HibernateTransactionalSession
 {
     // ===========================================================================
-    /**
-     * The session to delegate to.
-     */
+    /** The session to delegate to. */
     private Session delegate = null;
 
-    /**
-     * The registered PostProcessors.
-     */
+    /** The registered PostProcessors. */
     private Set<QueryPostProcessor> postProcessors = new HashSet<QueryPostProcessor>();
 
-    /**
-     * The registered PreProcessors.
-     */
+    /** The registered PreProcessors. */
     private Set<QueryPreProcessor> preProcessors = new HashSet<QueryPreProcessor>();
 
-    /**
-     * The LIFO stack of registered callback objects.
-     */
+    /** The LIFO stack of registered callback objects. */
     private Stack<TransactionCallback> callbacks = new Stack<TransactionCallback>();
 
-    /**
-     * The reference counter.
-     */
+    /** The reference counter. */
     private int referenceCount = 0;
+
+    /** Context Counter. Session may only be closed when this counter reaches 0. */
+    private int contextCount = 0;
 
     // ===========================================================================
     /**
@@ -98,11 +91,29 @@ public class HibernateTransactionalSessionImpl implements HibernateTransactional
 
     // ===========================================================================
     /**
+     * Increases the context reference count by 1.
+     */
+    void increaseContextCount()
+    {
+        contextCount++;
+    }
+
+    // ===========================================================================
+    /**
      * Decreases the reference count by 1.
      */
     void decreaseReferenceCount()
     {
         referenceCount--;
+    }
+
+    // ===========================================================================
+    /**
+     * Decreases the context reference count by 1.
+     */
+    void decreaseContextCount()
+    {
+        contextCount--;
     }
 
     // ===========================================================================
@@ -114,6 +125,17 @@ public class HibernateTransactionalSessionImpl implements HibernateTransactional
     int getReferenceCount()
     {
         return referenceCount;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the context reference count.
+     *
+     * @return The context reference count.
+     */
+    int getContextCount()
+    {
+        return contextCount;
     }
 
     // ===========================================================================

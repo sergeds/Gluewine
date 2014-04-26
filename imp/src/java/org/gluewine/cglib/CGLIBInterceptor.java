@@ -25,7 +25,9 @@ import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 
 import org.gluewine.core.AspectProvider;
+import org.gluewine.core.ContextInitializer;
 import org.gluewine.core.glue.Interceptor;
+import org.gluewine.utils.AnnotationUtility;
 
 /**
  * The invocation handler that allows to add AOP services to the registered
@@ -62,9 +64,11 @@ public class CGLIBInterceptor implements MethodInterceptor
     @Override
     public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable
     {
-        boolean firstInChain = interceptor.registerFirstInChain();
+        ContextInitializer ci = AnnotationUtility.getAnnotation(ContextInitializer.class, method, obj);
+
+        boolean firstInChain = interceptor.registerFirstInChain(ci != null);
         Stack<AspectProvider> stack = new Stack<AspectProvider>();
-        interceptor.invokeBefore(stack, obj, method, args, firstInChain);
+        interceptor.invokeBefore(stack, obj, method, args, firstInChain, ci != null);
 
         try
         {
