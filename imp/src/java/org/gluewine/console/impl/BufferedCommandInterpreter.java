@@ -72,15 +72,30 @@ public class BufferedCommandInterpreter implements CommandContext
      */
     private Table table = null;
 
+    /** Whether the output is routed or not. */
+    private boolean outputRouted = false;
+
+    /** Whether the command was entered from batch mode. */
+    private boolean batch = false;
+
+    /** Whether the option values were entered interactively. */
+    private boolean interactive = false;
+
     // ===========================================================================
     /**
      * Creates an instance.
      *
      * @param params The command parameters.
+     * @param outputRouted Whether the output is routed or not.
+     * @param batch Whether the command was entered from batch mode.
+     * @param interactive Whether the option values were entered interactively.
      */
-    BufferedCommandInterpreter(String params)
+    BufferedCommandInterpreter(String params, boolean outputRouted, boolean batch, boolean interactive)
     {
         this.parameters = params;
+        this.outputRouted = outputRouted;
+        this.batch = batch;
+        this.interactive = interactive;
         if (parameters != null)  split = parameters.split(" ");
         else
         {
@@ -325,5 +340,32 @@ public class BufferedCommandInterpreter implements CommandContext
     public void tableSeparator()
     {
         tableRow("@@-@@");
+    }
+
+    // ===========================================================================
+    /**
+     * @return If true, indicates that the output is routed to a file.
+     */
+    public boolean isOutputRouted()
+    {
+        return outputRouted;
+    }
+
+    // ===========================================================================
+    /**
+     * @return If true, the command was entered from a batch file.
+     */
+    public boolean isBatch()
+    {
+        return batch;
+    }
+
+    // ===========================================================================
+    /**
+     * @return If true, the option values were entered interactively.
+     */
+    public boolean isInteractive()
+    {
+        return interactive;
     }
 }

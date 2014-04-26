@@ -18,6 +18,7 @@
  ***************************************************************************/
 package org.gluewine.console;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
@@ -28,9 +29,12 @@ import java.util.TreeSet;
  * @author fks/Serge de Schaetzen
  *
  */
-public class CLICommand
+public class CLICommand implements Serializable
 {
     // ===========================================================================
+    /** The serial uid. */
+    private static final long serialVersionUID = -2924341734848907885L;
+
     /**
      * The name of the command.
      * <br>(without leading underscore '_')

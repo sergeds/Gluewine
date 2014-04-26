@@ -53,6 +53,15 @@ public class TestCommandInterpreter
      */
     private BufferedCommandInterpreter interpreter = null;
 
+    /** Wheter the output is router. */
+    private boolean routed = false;
+
+    /** Whether the command is in batch mode. */
+    private boolean batch = false;
+
+    /** Whether the options are entered interactively. */
+    private boolean interactive = false;
+
     // ===========================================================================
     /**
      * Creates an instance.
@@ -101,7 +110,7 @@ public class TestCommandInterpreter
 
             try
             {
-                interpreter = new BufferedCommandInterpreter(params);
+                interpreter = new BufferedCommandInterpreter(params, routed, batch, interactive);
                 Set<CLIOption> options = cmd.getOptions();
                 if (!options.isEmpty())
                 {
@@ -142,5 +151,32 @@ public class TestCommandInterpreter
         }
 
         return hasOutput;
+    }
+
+    // ===========================================================================
+    /**
+     * @param routed the routed to set
+     */
+    public void setRouted(boolean routed)
+    {
+        this.routed = routed;
+    }
+
+    // ===========================================================================
+    /**
+     * @param batch the batch to set
+     */
+    public void setBatch(boolean batch)
+    {
+        this.batch = batch;
+    }
+
+    // ===========================================================================
+    /**
+     * @param interactive the interactive to set
+     */
+    public void setInteractive(boolean interactive)
+    {
+        this.interactive = interactive;
     }
 }

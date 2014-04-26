@@ -35,11 +35,11 @@ public interface ConsoleServer
      * String.
      *
      * @param command The command to execute.
-     * @return The output.
+     * @return The response.
      * @throws Throwable If the command failed, or the console could not
      * be contacted.
      */
-    String executeCommand(String command) throws Throwable;
+    Response executeCommand(Request command) throws Throwable;
 
     // ===========================================================================
     /**

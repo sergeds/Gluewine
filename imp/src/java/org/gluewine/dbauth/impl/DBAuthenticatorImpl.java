@@ -217,12 +217,12 @@ public class DBAuthenticatorImpl implements DBAuthenticator, CommandProvider
 
         cmd = new CLICommand("dbauth_add", "Adds a password to a user.");
         cmd.addOption(new CLIOption("-user", "userid", true, true));
-        cmd.addOption(new CLIOption("-pw", "password", true, true));
+        cmd.addOption(new CLIOption("-pw", "password", true, true, '\0'));
         commands.add(cmd);
 
         cmd = new CLICommand("dbauth_set", "Sets the password of a user.");
         cmd.addOption(new CLIOption("-user", "userid", true, true));
-        cmd.addOption(new CLIOption("-pw", "password", true, true));
+        cmd.addOption(new CLIOption("-pw", "password", true, true, '\0'));
         commands.add(cmd);
 
         cmd = new CLICommand("dbauth_del", "Sets the password of a user.");

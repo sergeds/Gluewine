@@ -26,6 +26,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.net.ConnectException;
 import java.net.InetAddress;
@@ -42,8 +44,14 @@ import jline.console.history.FileHistory;
 
 import org.gluewine.authentication.AuthenticationAbortedException;
 import org.gluewine.console.AnsiCodes;
+import org.gluewine.console.CLICommand;
+import org.gluewine.console.CLIOption;
 import org.gluewine.console.ConsoleServer;
+import org.gluewine.console.FailedResponse;
+import org.gluewine.console.Request;
+import org.gluewine.console.Response;
 import org.gluewine.console.SyntaxException;
+import org.gluewine.console.SyntaxResponse;
 import org.gluewine.gxo_client.GxoClient;
 
 /**
@@ -130,9 +138,11 @@ public final class ConsoleClient implements Runnable, Completer, AnsiCodes
      * Executes the list of commands.
      *
      * @param dirContext The current directory context. May be null.
+     * @param batch Indicates whether the commands are comming from a batch file.
+     * @param interactive Indicates that the command options were entered interactively.
      * @param cmds The commands to execute.
      */
-    private void executeCommands(File dirContext, String ... cmds)
+    private void executeCommands(File dirContext, boolean batch, boolean interactive, String ... cmds)
     {
         for (int i = 0; i < cmds.length; i++)
         {
@@ -147,7 +157,13 @@ public final class ConsoleClient implements Runnable, Completer, AnsiCodes
                 }
 
                 else if (cmd.equals("cls") || cmd.equals("clear"))
+                {
+                    reader.println(CLS);
+                    reader.print(HOME);
+                    for (int l = 0; l < 8; l++)
+                        reader.println("                                                                                                      ");
                     reader.println(CLS + HOME);
+                }
 
                 else if (cmd.startsWith(">"))
                 {
@@ -182,20 +198,32 @@ public final class ConsoleClient implements Runnable, Completer, AnsiCodes
                     if (dirContext != null) f = new File(dirContext, cmd.substring(4).trim());
                     else f = new File(cmd.substring(4).trim());
 
-                    executeCommands(f.getParentFile(), loadExecutionFile(f));
+                    executeCommands(f.getParentFile(), true, false, loadExecutionFile(f));
                 }
 
                 else
                 {
-                    String output = server.executeCommand(cmd);
-
-                    if (outputRouted)
+                    Request req = new Request();
+                    req.setBatch(batch);
+                    req.setCommand(cmd);
+                    req.setOutputRouted(outputRouted);
+                    Response output = server.executeCommand(req);
+                    if (output instanceof FailedResponse)
                     {
-                        writer.write(output);
-                        writer.newLine();
-                        writer.flush();
+                        FailedResponse r = (FailedResponse) output;
+                        StringWriter w = new StringWriter();
+                        PrintWriter pw = new PrintWriter(w);
+                        r.getException().printStackTrace(pw);
+                        printOut("\u001b[31;1m" + w.getBuffer().toString() + "\u001b[0m");
                     }
-                    else reader.println(output);
+                    else if (output instanceof SyntaxResponse)
+                    {
+                        SyntaxResponse sr = (SyntaxResponse) output;
+                        printOut("\u001b[31;1m" + sr.getOuput() + "\u001b[0m");
+                        if (!sr.isInteractive() && !sr.isBatch() && !sr.isOutputRouted())
+                            askCommandOptionsInteractively(sr.getCommand());
+                    }
+                    else printOut(output.getOuput());
                 }
             }
             catch (ConnectException e)
@@ -223,6 +251,85 @@ public final class ConsoleClient implements Runnable, Completer, AnsiCodes
                 e.printStackTrace();
             }
         }
+    }
+
+    // ===========================================================================
+    /**
+     * Asks for the command options interactively.
+     *
+     * @param command The command to process.
+     * @throws IOException Thrown if an error occurs reading from the screen.
+     */
+    private void askCommandOptionsInteractively(CLICommand command) throws IOException
+    {
+        List<CLIOption> options = new ArrayList<CLIOption>();
+        for (CLIOption opt : command.getOptions())
+        {
+            if (opt.isRequired()) options.add(0, opt);
+            else options.add(opt);
+        }
+
+        StringBuffer b = new StringBuffer(command.getName()).append(" ");
+        for (int i = 0; i < options.size(); i++)
+        {
+            askOption(b, options.get(i));
+            if (i < options.size() - 1)
+                b.append(" ");
+        }
+
+        executeCommands(null, false, true, b.toString());
+    }
+
+    // ===========================================================================
+    /**
+     * Asks for the given option, and updates the stringbuffer with the value entered.
+     *
+     * @param b The buffer to update.
+     * @param opt The option to process.
+     * @throws IOException Thrown if an error occurs reading from the screen.
+     */
+    private void askOption(StringBuffer b, CLIOption opt) throws IOException
+    {
+        if (opt.isRequired())
+        {
+            if (opt.needsValue())
+            {
+                String val = reader.readLine(opt.getName() + " (" + opt.getDescription() + "): ", opt.getMask());
+                b.append(opt.getName()).append(" ").append(val);
+            }
+            else b.append(opt.getName());
+        }
+        else
+        {
+            if (opt.needsValue())
+            {
+                String val = reader.readLine("[" + opt.getName() + " (" + opt.getDescription() + ")]: ", opt.getMask());
+                if (val.trim().length() > 0) b.append(opt.getName()).append(" ").append(val);
+            }
+            else
+            {
+                String val = reader.readLine("[ Use " + opt.getName() + " (" + opt.getDescription() + ") Y|N ]");
+                if ("y".equalsIgnoreCase(val.trim())) b.append(opt.getName());
+            }
+        }
+    }
+
+    // ===========================================================================
+    /**
+     * Outputs the given string.
+     *
+     * @param s The string to output.
+     * @throws Throwable If an error occurs.
+     */
+    private void printOut(String s) throws Throwable
+    {
+        if (outputRouted)
+        {
+            writer.write(s);
+            writer.newLine();
+            writer.flush();
+        }
+        else reader.println(s);
     }
 
     // ===========================================================================
@@ -257,7 +364,7 @@ public final class ConsoleClient implements Runnable, Completer, AnsiCodes
 
                     String line = reader.readLine(prompt);
                     if (line == null) line = "";
-                    executeCommands(null, line);
+                    executeCommands(null, false, false, line);
                 }
                 catch (AuthenticationAbortedException e)
                 {
