@@ -4,5 +4,5 @@ Created-By: Serge de Schaetzen
 Gluewine-Name: org.gluewine.persistence
 Gluewine-Services: org.gluewine.persistence_jpa_hibernate.impl.SessionAspectProvider, org.gluewine.persistence_jpa_hibernate.impl.SessionProviderImpl
 Gluewine-Entities: org.gluewine.persistence_jpa_hibernate.impl.SQLStatement
-Jar-Version: 0.1
+Jar-Version: 0.2
 Group: hibernate
