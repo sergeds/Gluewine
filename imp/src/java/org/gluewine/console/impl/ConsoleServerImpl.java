@@ -36,7 +36,11 @@ import org.gluewine.console.CLIOption;
 import org.gluewine.console.CommandContext;
 import org.gluewine.console.CommandProvider;
 import org.gluewine.console.ConsoleServer;
+import org.gluewine.console.FailedResponse;
+import org.gluewine.console.Request;
+import org.gluewine.console.Response;
 import org.gluewine.console.SyntaxException;
+import org.gluewine.console.SyntaxResponse;
 import org.gluewine.core.Glue;
 import org.gluewine.core.Repository;
 import org.gluewine.core.RepositoryListener;
@@ -125,8 +129,9 @@ public class ConsoleServerImpl implements ConsoleServer, CommandProvider,  Repos
 
     // ===========================================================================
     @Override
-    public String executeCommand(String command) throws Throwable
+    public Response executeCommand(Request req) throws Throwable
     {
+        String command = req.getCommand();
         int i = command.indexOf(' ');
         String params = null;
         if (i > 0)
@@ -152,53 +157,52 @@ public class ConsoleServerImpl implements ConsoleServer, CommandProvider,  Repos
                 else command = alias;
             }
 
-            BufferedCommandInterpreter ci = new BufferedCommandInterpreter(params);
-            if (cmd != null)
+            BufferedCommandInterpreter ci = new BufferedCommandInterpreter(params, req.isOutputRouted(), req.isBatch(), req.isInteractive());
+            Response response = null;
+            try
             {
-                try
+                Set<CLIOption> options = cmd.getOptions();
+                if (!options.isEmpty())
                 {
-                    Set<CLIOption> options = cmd.getOptions();
-                    if (!options.isEmpty())
+                    StringBuilder syntax = new StringBuilder(cmd.getName());
+                    Map<String, boolean[]> opts = new HashMap<String, boolean[]>();
+                    for (CLIOption opt : options)
                     {
-                        StringBuilder syntax = new StringBuilder(cmd.getName());
-                        Map<String, boolean[]> opts = new HashMap<String, boolean[]>();
-                        for (CLIOption opt : options)
-                        {
-                            boolean[] bool = new boolean[] {opt.isRequired(), opt.needsValue()};
-                            opts.put(opt.getName(), bool);
+                        boolean[] bool = new boolean[] {opt.isRequired(), opt.needsValue()};
+                        opts.put(opt.getName(), bool);
 
-                            syntax.append(" ");
-                            if (!opt.isRequired()) syntax.append("[");
-                            syntax.append(opt.getName());
+                        syntax.append(" ");
+                        if (!opt.isRequired()) syntax.append("[");
+                        syntax.append(opt.getName());
 
-                            if (opt.needsValue())
-                                syntax.append(" <").append(opt.getDescription()).append(">");
+                        if (opt.needsValue())
+                            syntax.append(" <").append(opt.getDescription()).append(">");
 
-                            if (!opt.isRequired()) syntax.append("]");
-                        }
-
-                        ci.parseOptions(opts, syntax.toString());
+                        if (!opt.isRequired()) syntax.append("]");
                     }
 
-                    Method m = prov.getClass().getMethod("_" + command, CommandContext.class);
-                    m.invoke(prov, new Object[] {ci});
+                    ci.parseOptions(opts, syntax.toString());
                 }
-                catch (Throwable e)
-                {
-                    if (e instanceof InvocationTargetException)
-                        e = ((InvocationTargetException) e).getCause();
 
-                    if (e instanceof SyntaxException)
-                    {
-                        ci.println(e.getMessage());
-                    }
-                    else
-                        throw e;
-                }
+                Method m = prov.getClass().getMethod("_" + command, CommandContext.class);
+                m.invoke(prov, new Object[] {ci});
+                response = new Response(ci.getOutput(), req.isOutputRouted(), req.isBatch(), req.isInteractive());
             }
-            return ci.getOutput();
+            catch (SyntaxException e)
+            {
+                response = new SyntaxResponse(e.getMessage(), cmd, req.isOutputRouted(), req.isBatch(), req.isInteractive());
+            }
+            catch (Throwable e)
+            {
+                System.out.println("Other Exception");
+                if (e instanceof InvocationTargetException)
+                    e = ((InvocationTargetException) e).getCause();
+
+                response = new FailedResponse(e, req.isOutputRouted(), req.isBatch(), req.isInteractive());
+            }
+            return response;
         }
-        else return "Unknown command !";
+        else return new Response("Unknown command !", req.isOutputRouted(), req.isBatch(), req.isInteractive());
     }
 
     // ===========================================================================

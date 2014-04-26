@@ -18,15 +18,20 @@
  ***************************************************************************/
 package org.gluewine.console;
 
+import java.io.Serializable;
+
 /**
  * Defines a command option.
  *
  * @author fks/Serge de Schaetzen
  *
  */
-public class CLIOption implements Comparable<CLIOption>
+public class CLIOption implements Comparable<CLIOption>, Serializable
 {
     // ===========================================================================
+    /** The serial uid. */
+    private static final long serialVersionUID = 1184866477977169136L;
+
     /**
      * The option name.
      */
@@ -47,6 +52,9 @@ public class CLIOption implements Comparable<CLIOption>
      */
     private boolean value = true;
 
+    /** The mask to use if any. */
+    private Character mask = null;
+
     // ===========================================================================
     /**
      * Creates an instance.
@@ -58,10 +66,26 @@ public class CLIOption implements Comparable<CLIOption>
      */
     public CLIOption(String name, String description, boolean required, boolean needsValue)
     {
+        this(name,  description, required, needsValue, null);
+    }
+
+    // ===========================================================================
+    /**
+     * Creates an instance.
+     *
+     * @param name The name of the option.
+     * @param description The description of the option.
+     * @param required Whether the option is required or optional.
+     * @param needsValue Whether the option needs a value.
+     * @param mask The mask to use. (may be null)
+     */
+    public CLIOption(String name, String description, boolean required, boolean needsValue, Character mask)
+    {
         this.name = name;
         this.description = description;
         this.required = required;
         this.value = needsValue;
+        this.mask = mask;
     }
 
     // ===========================================================================
@@ -129,5 +153,16 @@ public class CLIOption implements Comparable<CLIOption>
     public int compareTo(CLIOption o)
     {
         return getName().compareTo(o.getName());
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the mask to use.
+     *
+     * @return The mask to use.
+     */
+    public Character getMask()
+    {
+        return mask;
     }
 }
