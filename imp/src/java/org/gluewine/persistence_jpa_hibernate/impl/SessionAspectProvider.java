@@ -50,6 +50,7 @@ import org.gluewine.console.CLICommand;
 import org.gluewine.console.CommandContext;
 import org.gluewine.console.CommandProvider;
 import org.gluewine.core.AspectProvider;
+import org.gluewine.core.ContextInitializer;
 import org.gluewine.core.Glue;
 import org.gluewine.core.Repository;
 import org.gluewine.core.RepositoryListener;
@@ -78,6 +79,7 @@ import org.hibernate.service.ServiceRegistryBuilder;
  * @author fks/Serge de Schaetzen
  *
  */
+@ContextInitializer
 public class SessionAspectProvider implements AspectProvider, CommandProvider, CodeSourceListener
 {
     // ===========================================================================
@@ -332,8 +334,28 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
     @Override
     public void beforeInvocation(Object o, Method m, Object[] params) throws Throwable
     {
-        if (m.isAnnotationPresent(Transactional.class))
-            before(true);
+        if (m.isAnnotationPresent(ContextInitializer.class)) initializeSession();
+        if (m.isAnnotationPresent(Transactional.class)) before(true);
+    }
+
+    // ===========================================================================
+    /**
+     * Initializes the session due to a ContextInitializer annotated method.
+     */
+    private void initializeSession()
+    {
+        HibernateTransactionalSessionImpl session = provider.getBoundSession();
+        if (session == null)
+        {
+            synchronized (factoryLocker)
+            {
+                Session hibernateSession = factory.openSession();
+                hibernateSession.beginTransaction();
+                session = new HibernateTransactionalSessionImpl(hibernateSession, preProcessors, postProcessors);
+                provider.bindSession(session);
+                session.increaseContextCount();
+            }
+        }
     }
 
     // ===========================================================================
@@ -365,7 +387,11 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
     public void afterSuccess(Object o, Method m, Object[] params, Object result)
     {
         if (m.isAnnotationPresent(Transactional.class))
+        {
+            HibernateTransactionalSessionImpl session = provider.getBoundSession();
+            session.decreaseReferenceCount();
             afterSuccess();
+        }
     }
 
     // ===========================================================================
@@ -376,10 +402,8 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
     void afterSuccess()
     {
         HibernateTransactionalSessionImpl session = provider.getBoundSession();
-        session.decreaseReferenceCount();
         if (session.getReferenceCount() == 0)
         {
-            provider.unbindSession();
             try
             {
                 session.getHibernateSession().getTransaction().commit();
@@ -392,7 +416,6 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
                 session.getHibernateSession().getTransaction().rollback();
                 notifyRolledback(session.getRegisteredCallbacks());
             }
-            session.getHibernateSession().close();
         }
     }
 
@@ -401,7 +424,11 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
     public void afterFailure(Object o, Method m, Object[] params, Throwable e)
     {
         if (m.isAnnotationPresent(Transactional.class))
+        {
+            HibernateTransactionalSessionImpl session = provider.getBoundSession();
+            session.decreaseReferenceCount();
             afterFailure();
+        }
     }
 
     // ===========================================================================
@@ -434,10 +461,8 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
     void afterFailure()
     {
         HibernateTransactionalSessionImpl session = provider.getBoundSession();
-        session.decreaseReferenceCount();
         if (session.getReferenceCount() == 0)
         {
-            provider.unbindSession();
             try
             {
                 session.getHibernateSession().getTransaction().rollback();
@@ -448,7 +473,6 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
                 ErrorLogger.log(getClass(), t);
                 logger.error("An error occurred during a rolling back a transaction, " + t.getMessage());
             }
-            session.getHibernateSession().close();
         }
     }
 
@@ -456,7 +480,20 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
     @Override
     public void after(Object o, Method m, Object[] params)
     {
-        // Not used.
+        // The provider can be null during a shutdown event !
+        if (provider != null)
+        {
+            HibernateTransactionalSessionImpl session = provider.getBoundSession();
+            if (session != null)
+            {
+                if (m.isAnnotationPresent(ContextInitializer.class)) session.decreaseContextCount();
+                if (session.getContextCount() == 0 && session.getReferenceCount() == 0)
+                {
+                    provider.unbindSession();
+                    session.getHibernateSession().close();
+                }
+            }
+        }
     }
 
     // ===========================================================================

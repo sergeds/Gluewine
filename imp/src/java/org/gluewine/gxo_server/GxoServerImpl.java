@@ -36,6 +36,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.log4j.Logger;
+import org.gluewine.core.ContextInitializer;
 import org.gluewine.core.Glue;
 import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.RunOnActivate;
@@ -328,7 +329,8 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
      * @param bean The bean to process.
      * @throws IOException Thrown if an error occurs writing back to the caller.
      */
-    private void processExecBean(OutputStreamWriter out, Map<String, Object> instantiated, ExecBean bean) throws IOException
+    @ContextInitializer
+    public void processExecBean(OutputStreamWriter out, Map<String, Object> instantiated, ExecBean bean) throws IOException
     {
         try
         {
@@ -359,7 +361,8 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
      * @param bean The bean to process.
      * @throws IOException Thrown if an error occurs writing back to the caller.
      */
-    private void processInitBean(OutputStreamWriter out, Map<String, Object> instantiated, InitBean bean) throws IOException
+    @ContextInitializer
+    public void processInitBean(OutputStreamWriter out, Map<String, Object> instantiated, InitBean bean) throws IOException
     {
         try
         {

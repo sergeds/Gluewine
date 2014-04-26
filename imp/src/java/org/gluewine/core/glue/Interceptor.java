@@ -27,6 +27,7 @@ import java.util.Stack;
 
 import org.apache.log4j.Logger;
 import org.gluewine.core.AspectProvider;
+import org.gluewine.core.ContextInitializer;
 import org.gluewine.core.InterceptChainStartOnly;
 import org.gluewine.core.RepositoryListener;
 
@@ -49,15 +50,14 @@ import org.gluewine.core.RepositoryListener;
 public class Interceptor implements RepositoryListener<AspectProvider>
 {
     // ===========================================================================
-    /**
-     * List p of registerd providers.
-     */
+    /** List p of registerd providers. */
     private List<AspectProvider> providers = new ArrayList<AspectProvider>();
 
-    /**
-     * List of providers that will only be invoked at the start of a command chain.
-     */
+    /** List of providers that will only be invoked at the start of a command chain. */
     private List<AspectProvider> chainStartProviders = new ArrayList<AspectProvider>();
+
+    /** List of providers that are invoked to initize the stack context. */
+    private List<AspectProvider> contextProviders = new ArrayList<AspectProvider>();
 
     /**
      * Set containing the thread chains.
@@ -79,18 +79,16 @@ public class Interceptor implements RepositoryListener<AspectProvider>
 
     // ===========================================================================
     /**
-     * Checks if this call is the first one in the stack of this thread.
+     * Checks if this call is the first one in the stack of this thread. If so,
+     * true is returned and the thread is registered if the register flag is set.
      *
+     * @param register If true the current thread is registered at the end of the call.
      * @return True if this method call is the first one in the chain.
      */
-    public boolean registerFirstInChain()
+    public boolean registerFirstInChain(boolean register)
     {
-        boolean firstInChain = false;
-        if (!chainThreads.contains(Thread.currentThread()))
-        {
-            firstInChain = true;
-            chainThreads.add(Thread.currentThread());
-        }
+        boolean firstInChain = !chainThreads.contains(Thread.currentThread());
+        if (firstInChain && register) chainThreads.add(Thread.currentThread());
         return firstInChain;
     }
 
@@ -116,14 +114,19 @@ public class Interceptor implements RepositoryListener<AspectProvider>
      * @param m The method that is being executed.
      * @param params The method parameters.
      * @param firstInChain True if this method is the first in the stacktrace for the current thread.
+     * @param initializeContext If true only the providers registered as ContextInitializers will be used.
      */
-    public void invokeBefore(Stack<AspectProvider> stack, Object o, Method m, Object[] params, boolean firstInChain)
+    public void invokeBefore(Stack<AspectProvider> stack, Object o, Method m, Object[] params, boolean firstInChain, boolean initializeContext)
     {
         try
         {
             List<AspectProvider> tempProviders = new ArrayList<AspectProvider>();
-            if (firstInChain) tempProviders.addAll(chainStartProviders);
-            tempProviders.addAll(providers);
+            if (initializeContext) tempProviders.addAll(contextProviders);
+            else
+            {
+                if (firstInChain) tempProviders.addAll(chainStartProviders);
+                tempProviders.addAll(providers);
+            }
 
             for (AspectProvider p : tempProviders)
             {
@@ -206,6 +209,9 @@ public class Interceptor implements RepositoryListener<AspectProvider>
         if (!providers.contains(provider))
         {
             logger.debug("Registering AspectProvider " + provider.getClass().getName());
+            if (provider.getClass().getAnnotation(ContextInitializer.class) != null)
+                contextProviders.add(provider);
+
             if (provider.getClass().getAnnotation(InterceptChainStartOnly.class) != null)
                 chainStartProviders.add(provider);
             else
