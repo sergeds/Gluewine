@@ -294,8 +294,8 @@ public final class ConsoleClient implements Runnable, Completer, AnsiCodes
         {
             if (opt.needsValue())
             {
-                String val = reader.readLine(opt.getName() + " (" + opt.getDescription() + "): ", opt.getMask());
-                b.append(opt.getName()).append(" ").append(val);
+                String val = reader.readLine("\u001b[35;1m " + opt.getName() + " (" + opt.getDescription() + "): \u001b[0m", opt.getMask());
+                b.append(" " + opt.getName()).append(" ").append(val);
             }
             else b.append(opt.getName());
         }
@@ -303,12 +303,12 @@ public final class ConsoleClient implements Runnable, Completer, AnsiCodes
         {
             if (opt.needsValue())
             {
-                String val = reader.readLine("[" + opt.getName() + " (" + opt.getDescription() + ")]: ", opt.getMask());
+                String val = reader.readLine("\u001b[33;1m [" + opt.getName() + " (" + opt.getDescription() + ")]: \u001b[0m", opt.getMask());
                 if (val.trim().length() > 0) b.append(opt.getName()).append(" ").append(val);
             }
             else
             {
-                String val = reader.readLine("[ Use " + opt.getName() + " (" + opt.getDescription() + ") Y|N ]");
+                String val = reader.readLine("\u001b[33;1m [ Use " + opt.getName() + " (" + opt.getDescription() + ") Y|N ] \u001b[0m");
                 if ("y".equalsIgnoreCase(val.trim())) b.append(opt.getName());
             }
         }
