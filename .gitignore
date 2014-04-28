@@ -10,3 +10,4 @@
 /imp/examples/*/lib
 /imp/examples/*/build
 /imp/examples/*/*.zip
+/imp/examples/*/log
