@@ -15,7 +15,7 @@ import org.gluewine.persistence_jpa_hibernate.HibernateSessionProvider;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
-import Gluewine.entities.User;
+import gluewine.entities.User;
 
 public class UserService {
 	@Glue
