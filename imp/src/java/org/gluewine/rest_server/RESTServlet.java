@@ -40,8 +40,8 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.log4j.Logger;
 import org.gluewine.authentication.AuthenticationException;
 import org.gluewine.core.RepositoryListener;
+import org.gluewine.core.ContextInitializer;
 import org.gluewine.jetty.GluewineServlet;
-import org.gluewine.persistence.Transactional;
 import org.gluewine.rest.REST;
 import org.gluewine.rest.RESTID;
 import org.gluewine.rest.RESTMethod;
@@ -378,7 +378,7 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
      * @return The serialized result.
      * @throws IOException If the method failed execution.
      */
-    @Transactional
+    @ContextInitializer
     public String executeMethod(RESTMethod rm, Object[] params, RESTSerializer serializer) throws IOException
     {
         Object result = executeMethod(rm, params);
@@ -410,7 +410,7 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
      * @return The result of the method invocation.
      * @throws IOException If an error occurs.
      */
-    @Transactional
+    @ContextInitializer
     public Object executeMethod(RESTMethod method, Object[] params) throws IOException
     {
         try
