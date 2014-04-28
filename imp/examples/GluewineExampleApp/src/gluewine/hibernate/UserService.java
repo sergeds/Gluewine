@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.gluewine.console.CLICommand;
 import org.gluewine.console.CommandContext;
+import org.gluewine.console.CommandProvider;
 import org.gluewine.core.Glue;
 import org.gluewine.persistence.TransactionCallback;
 import org.gluewine.persistence.Transactional;
@@ -15,9 +16,10 @@ import org.gluewine.persistence_jpa_hibernate.HibernateSessionProvider;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
-import Gluewine.entities.User;
+import gluewine.entities.User;
 
-public class UserService {
+public class UserService implements CommandProvider
+{
 	@Glue
     private HibernateSessionProvider provider;
 
