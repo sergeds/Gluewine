@@ -35,7 +35,7 @@ public class ContactService implements CommandProvider
 
         for (Contact contact : contacts)
         {
-            cc.tableRow(Long.toString(contact.getId()), contact.getFirstname() , contact.getLastname(), contact.getPhoneNumber(), contact.getEmail();
+            cc.tableRow(Long.toString(contact.getId()), contact.getFirstname() , contact.getLastname(), Integer.toString(contact.getPhoneNumber()), contact.getEmail());
         }
 
         cc.printTable();
@@ -50,17 +50,18 @@ public class ContactService implements CommandProvider
     {
         String newFirstName = cc.getOption("-firstname");
         String newLastName = cc.getOption("-lastname");
-        String newPhone= cc.getOption("-phone");
+        int newPhone= Integer.parseInt(cc.getOption("-phone"));
         String newEmail= cc.getOption("-email");
 
         Contact newContact = new Contact();
         newContact.setFirstname(newFirstName);
-        newCar.setLastname(newLastName);
-        newCar.setPhoneNumber(newPhone);
-        newCar.setEmail(newEmail);
+        newContact.setLastname(newLastName);
+        newContact.setPhoneNumber(newPhone);
+        newContact.setEmail(newEmail);
 
-        provider.getSession().add(newCar);
+        provider.getSession().add(newContact);
         provider.commitCurrentSession();
+    }
         
 
     /*
@@ -85,7 +86,7 @@ public class ContactService implements CommandProvider
 
         for (Contact contact : contactList)
         {
-            cc.tableRow(Long.toString(contact.getId()), contact.getFirstname(), contact.getLastname(), contact.getPhoneNumber(), contact.getEmail();
+            cc.tableRow(Long.toString(contact.getId()), contact.getFirstname(), contact.getLastname(), Integer.toString(contact.getPhoneNumber()), contact.getEmail());
         }
 
         cc.printTable();

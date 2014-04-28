@@ -1,5 +1,0 @@
-2014-04-28 09:03:57,527 DEBUG org.gluewine.gxo_client.GxoClient - Sending EXEC request for org.gluewine.console.ConsoleServer:needsAuthentication
-2014-04-28 09:26:24,249 DEBUG org.gluewine.gxo_client.GxoClient - Sending EXEC request for org.gluewine.console.ConsoleServer:complete
-2014-04-28 09:26:33,239 DEBUG org.gluewine.gxo_client.GxoClient - Sending EXEC request for org.gluewine.console.ConsoleServer:complete
-2014-04-28 09:27:00,313 DEBUG org.gluewine.gxo_client.GxoClient - Sending EXEC request for org.gluewine.console.ConsoleServer:needsAuthentication
-2014-04-28 09:51:44,668 DEBUG org.gluewine.gxo_client.GxoClient - Sending EXEC request for org.gluewine.console.ConsoleServer:needsAuthentication
