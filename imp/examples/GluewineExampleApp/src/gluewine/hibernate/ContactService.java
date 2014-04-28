@@ -1,3 +1,5 @@
+package gluewine.hibernate;
+
 import java.util.ArrayList;
 import java.util.List;
 
