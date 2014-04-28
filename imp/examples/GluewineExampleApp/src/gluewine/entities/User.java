@@ -1,4 +1,4 @@
-package Gluewine.entities;
+package gluewine.entities;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;

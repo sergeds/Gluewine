@@ -1,4 +1,4 @@
-package Gluewine.hibernate;
+package gluewine.hibernate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,6 +8,9 @@ import org.gluewine.console.CommandContext;
 import org.gluewine.core.Glue;
 import org.gluewine.persistence.TransactionCallback;
 import org.gluewine.persistence.Transactional;
+import org.gluewine.persistence_jpa.Filter;
+import org.gluewine.persistence_jpa.FilterLine;
+import org.gluewine.persistence_jpa.FilterOperator;
 import org.gluewine.persistence_jpa_hibernate.HibernateSessionProvider;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
@@ -43,28 +46,31 @@ public class UserService {
      * With this method we can search for a user on criteria 'username'.
      */
     @Transactional
-    public void _car_search(CommandContext cc)
+    public void _user_search(CommandContext cc)
     {
         String text = cc.getOption("-text");
 
-        /*
-         * First we need to get a list of all the cars in the database.
-         * We will use this list to search cars.
-         * With criteria we are able to put restrictions on the list off cars.
-         */
-        /*
-        Criteria cr = provider.getSession().createCriteria(Car.class);
-        cr.add(Restrictions.or(Restrictions.ilike("brand", text), Restrictions.ilike("model", text)));
-        List<Car> carList = cr.list();
+        Filter filter = new Filter();
+        FilterLine filterline = new FilterLine();
+        filterline.setFieldName("username");
+        filterline.setOperator(FilterOperator.ICONTAINS);
+        filterline.setValue(text);
+        filter.setLimit(10);
+        filter.addFilterLine(filterline);
 
-        cc.tableHeader("Id", "Brand", "Model", "Color");
+        List <User> l = provider.getSession().getFiltered(User.class, filter);
 
-        for (Car car : carList)
-        {
-            cc.tableRow(Long.toString(car.getId()), car.getBrand(), car.getModel(), car.getColor().getName());
-        }
+        cc.tableHeader("Id", "Username", "Is admin");
+        for (User user : l) {
+    		cc.tableRow(Long.toString(user.getId()), user.getUsername(), Boolean.toString(user.getRole()));
+    	}
 
-        cc.printTable();*/
+        cc.printTable();
+    }
+    
+    @Transactional
+    public void _testing(CommandContext cc) {
+    	cc.tableHeader("testing");
     }
 
     
@@ -85,6 +91,9 @@ public class UserService {
         CLICommand cmd_user_search = new CLICommand("user_search", "Searches a user on criteria 'username'");
         cmd_user_search.addOption("-text", "%criteria%", true, true);
         l.add(cmd_user_search);
+        
+        CLICommand cmd_testing = new CLICommand("testing","testing description");
+        l.add(cmd_testing);
 
         return l;
     }
