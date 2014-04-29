@@ -29,7 +29,7 @@ public class ContactService implements CommandProvider
      * With this method we can print a list of all the contacts in the database
      */
     @Transactional
-    public void _Contact_list(CommandContext cc)
+    public void _contact_list(CommandContext cc)
     {
         //We need to get all the contacts that are in the database
         List<Contact> contacts = provider.getSession().getAll(Contact.class);
@@ -54,15 +54,27 @@ public class ContactService implements CommandProvider
         String newLastName = cc.getOption("-lastname");
         int newPhone= Integer.parseInt(cc.getOption("-phone"));
         String newEmail= cc.getOption("-email");
-
-        Contact newContact = new Contact();
-        newContact.setFirstname(newFirstName);
-        newContact.setLastname(newLastName);
-        newContact.setPhoneNumber(newPhone);
-        newContact.setEmail(newEmail);
-
-        provider.getSession().add(newContact);
-        provider.commitCurrentSession();
+        
+        int phoneLength = Integer.toString(newPhone).length();
+        cc.println("phonelenght: " + phoneLength);
+        
+        //A phone number must always contain 9 digits
+        if (phoneLength == 9) {
+        	Contact newContact = new Contact();
+	        newContact.setFirstname(newFirstName);
+	        newContact.setLastname(newLastName);
+	        newContact.setPhoneNumber(newPhone);
+	        newContact.setEmail(newEmail);
+	        
+	        provider.getSession().add(newContact);
+	        provider.commitCurrentSession();
+	        
+	        cc.println("The contact was added");
+        }
+        else {	        
+	        cc.println("The phonenumber has to contain 9 numbers, try again");
+        	cc.println("The contact was not added");
+        }        
     }
         
 
@@ -122,9 +134,9 @@ public class ContactService implements CommandProvider
 
         //adding a car
         CLICommand cmd_contact_add = new CLICommand("contact_add", "Adds a contact");
-        cmd_contact_add.addOption("-firstName", "first name of the contact", true, true);
-        cmd_contact_add.addOption("-lastName", "last name of the contact", true, true);
-        cmd_contact_add.addOption("-phoneNumber", "phonenumber of the contact", true, true);
+        cmd_contact_add.addOption("-firstname", "first name of the contact", true, true);
+        cmd_contact_add.addOption("-lastname", "last name of the contact", true, true);
+        cmd_contact_add.addOption("-phone", "phonenumber of the contact", true, true);
         cmd_contact_add.addOption("-email", "email of the contact", true, true);
         l.add(cmd_contact_add);
 
