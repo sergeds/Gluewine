@@ -22,7 +22,7 @@ public class Contact
 	private String Lastname;
 	 
 	@Column(name = "PhoneNumber")
-	private int PhoneNumber;
+	private String PhoneNumber;
 	 
 	@Column(name = "Email")
 	private String Email;
@@ -51,11 +51,11 @@ public class Contact
 		Lastname = lastname;
 	}
 
-	public int getPhoneNumber() {
+	public String getPhoneNumber() {
 		return PhoneNumber;
 	}
 
-	public void setPhoneNumber(int phoneNumber) {
+	public void setPhoneNumber(String phoneNumber) {
 		PhoneNumber = phoneNumber;
 	}
 

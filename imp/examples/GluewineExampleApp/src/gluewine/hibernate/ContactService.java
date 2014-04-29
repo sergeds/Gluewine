@@ -37,7 +37,7 @@ public class ContactService implements CommandProvider
 
         for (Contact contact : contacts)
         {
-            cc.tableRow(Long.toString(contact.getId()), contact.getFirstname() , contact.getLastname(), Integer.toString(contact.getPhoneNumber()), contact.getEmail());
+            cc.tableRow(Long.toString(contact.getId()), contact.getFirstname() , contact.getLastname(), contact.getPhoneNumber(), contact.getEmail());
         }
 
         cc.printTable();
@@ -52,10 +52,10 @@ public class ContactService implements CommandProvider
     {
         String newFirstName = cc.getOption("-firstname");
         String newLastName = cc.getOption("-lastname");
-        int newPhone= Integer.parseInt(cc.getOption("-phone"));
+        String newPhone= cc.getOption("-phone");
         String newEmail= cc.getOption("-email");
         
-        int phoneLength = Integer.toString(newPhone).length();
+        int phoneLength = newPhone.length();
         cc.println("phonelenght: " + phoneLength);
         
         //A phone number must always contain 9 digits
@@ -100,7 +100,7 @@ public class ContactService implements CommandProvider
 
         for (Contact contact : contactList)
         {
-            cc.tableRow(Long.toString(contact.getId()), contact.getFirstname(), contact.getLastname(), Integer.toString(contact.getPhoneNumber()), contact.getEmail());
+            cc.tableRow(Long.toString(contact.getId()), contact.getFirstname(), contact.getLastname(), contact.getPhoneNumber(), contact.getEmail());
         }
 
         cc.printTable();
