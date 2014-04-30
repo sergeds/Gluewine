@@ -6,7 +6,7 @@ import java.io.Serializable;
 
 import org.gluewine.persistence_jpa.QueryPostProcessor;
 
-public class PostProcessor.java implements QueryPostProcessor
+public class PostProcessor implements QueryPostProcessor
 {
     /*
      * (non-Javadoc)
