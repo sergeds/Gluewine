@@ -54,12 +54,25 @@ public class ContactService implements CommandProvider
         String newLastName = cc.getOption("-lastname");
         String newPhone= cc.getOption("-phone");
         String newEmail= cc.getOption("-email");
+                
+        /*
+         * The understanding regex only validates the following mobile phone number:
+         * 
+         * 0456564456
+         * 0495 258954
+         * 0894491 252
+         * 0894 491 252
+         * +32459258954
+         * +32 235 256 677
+         * +32456 456 465
+         * +32456 456456
+         * +32 456456 456
+         * +32 456456456
+         */
+        String regexPhone = "([0]|\\+32)\\W*([0-9][0-9][0-9])\\W*([0-9][0-9]{2})\\W*([0-9]{3})?";
+        String regexEmail = "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$";
         
-        int phoneLength = newPhone.length();
-        cc.println("phonelenght: " + phoneLength);
-        
-        //A phone number must always contain 9 digits
-        if (phoneLength == 9) {
+        if (newPhone.matches(regexPhone) && newEmail.matches(regexEmail)) {
         	Contact newContact = new Contact();
 	        newContact.setFirstname(newFirstName);
 	        newContact.setLastname(newLastName);
@@ -72,7 +85,10 @@ public class ContactService implements CommandProvider
 	        cc.println("The contact was added");
         }
         else {	        
-	        cc.println("The phonenumber has to contain 9 numbers, try again");
+        	if (!newPhone.matches(regexPhone))
+        		cc.println("The phone number has to be like: +32 123 456 789 or 0123 456 789");
+        	if (!newEmail.matches(regexEmail))
+        		cc.println("The e-mail has to be like: example@test.com");
         	cc.println("The contact was not added");
         }        
     }
