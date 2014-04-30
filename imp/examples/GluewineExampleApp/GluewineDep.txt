@@ -13,4 +13,6 @@ gluewine/org.gluewine.sessions-*.jar
 gluewine/org.gluewine.sysmgm-*.jar
 gluewine/org.gluewine.utils-*.jar
 hibernate/org.gluewine.gxo.hibernate-*.jar
+jetty/org.gluewine.gwt-*.jar
+jetty/org.gluewine.jetty-*.jar
 org.gluewine.launcher-*.jar
