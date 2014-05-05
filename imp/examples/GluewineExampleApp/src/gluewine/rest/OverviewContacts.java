@@ -32,6 +32,9 @@ public class OverviewContacts extends GluewineServlet {
     	resp.setContentType("text/html");
 		resp.getWriter().write(""
 				+ "<html>"
+					+ "<head>"
+						+ "<title>Contacts </title>"
+					+ "</head>"
         			+ "<body>"
         				+ "<h1>Contacts</h1>"
         					+ "<table border=\"1\">"

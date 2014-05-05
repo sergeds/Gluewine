@@ -92,15 +92,67 @@ public class login extends GluewineServlet {
         String username = req.getParameter("username");
         String password = req.getParameter("password");
         
-        List<User> users = provider.getSession().getAll(User.class);
+        resp.setContentType("text/html");
+		
         
+        
+        List<gluewine.entities.User> users = provider.getSession().getAll(User.class);
+        
+        if (users.isEmpty()) {
+        	resp.getWriter().write(""
+    				+ "<html>"
+    					+ "<head>"
+    						+ "<title>Login</title>"
+    					+ "</head>"
+            			+ "<body>"
+            				+ "<h1>Testing</h1>"
+            					+ "<p> I'm terribly sorry, but no users were found.</p>"
+    					+ "</body>"
+    				+ "</html>");
+        }
+        else {
+        	resp.getWriter().write(""
+    				+ "<html>"
+    					+ "<head>"
+    						+ "<title>Login</title>"
+    					+ "</head>"
+            			+ "<body>"
+            				+ "<h1>Testing</h1>"
+            					+ "<p> Dag " + username + "</p>");
+        	
+        	
+    		resp.getWriter().write(""
+    				    	+ "<h1>Users</h1>"
+            					+ "<table border=\"1\">"
+    	        					+ "<tr>"
+    									+ "<th> Id </th>"
+    									+ "<th> isAdmin </th>"
+    									+ "<th> username </th>"
+    								+ "</tr>");
+    		
+    		for (User user : users) {
+        		resp.getWriter().write(""
+        							+ "<tr>"
+        								+ "<td> " + user.getId() + "</td>"
+        								+ "<td> " + user.getUsername() + "</td>"
+        								+ "<td> " + user.getRole()+ "</td>"   								    							
+        							+ "</tr>");  
+    		}
+    		
+    		resp.getWriter().write(""
+    						+ "</table>"
+    					+ "</body>"
+            		+ "</html>");
+    	
+        }
+        
+        /*
         for(User user : users)
         {
-        	if( user.getUsername() == username)
+        	if( user.getUsername().equals(username))
         	{
-        		if (user.getPassword() == password)
-        		{
-        			resp.setContentType("text/html");
+        		if (user.getPassword().equals(password))
+        		{        			
         	        StringBuilder b = new StringBuilder("<HTML><HEAD>");
         	        b.append("<TITLE>Gluewine framework</TITLE>");
         	        b.append("</HEAD>");
@@ -125,7 +177,7 @@ public class login extends GluewineServlet {
         	        }
         		}
         	} else resp.sendError(HttpServletResponse.SC_CONFLICT, "wrong username of password");
-        }
+        }*/
         
     }
 }
