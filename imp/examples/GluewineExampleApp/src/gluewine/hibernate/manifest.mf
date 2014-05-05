@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Ant-Version: Apache Ant 1.6.5
 Created-By: Serge de Schaetzen
-Gluewine-Services: gluewine.hibernate.UserService,gluewine.hibernate.ContactService,gluewine.hibernate.PostProcessor,gluewine.hibernate.PreProcessor,gluewine.rest.login,gluewine.rest.OverviewContacts
+Gluewine-Services: gluewine.hibernate.UserService,gluewine.hibernate.ContactService,gluewine.hibernate.PostProcessor,gluewine.hibernate.PreProcessor,gluewine.rest.Login,gluewine.rest.OverviewContacts,gluewine.rest.AddContact,gluewine.rest.Adminpanel,gluewine.rest.DeleteContact,gluewine.rest.ModifyContact
 Gluewine-Entities: gluewine.entities.User,gluewine.entities.Contact
 Gluewine-Sql: true

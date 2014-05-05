@@ -32,10 +32,10 @@ public class UserService implements CommandProvider
     public void _user_list(CommandContext cc)
     {
     	//We need to get all the users that are in the database
-    	List<User> users = provider.getSession().getAll(User.class);
+    	List<gluewine.entities.User> users = provider.getSession().getAll(gluewine.entities.User.class);
     	cc.tableHeader("Id", "Username", "Is admin");
     	
-    	for (User user : users) {
+    	for (gluewine.entities.User user : users) {
     		cc.tableRow(Long.toString(user.getId()), user.getUsername(), Boolean.toString(user.getRole()));
     	}
 
@@ -60,22 +60,16 @@ public class UserService implements CommandProvider
         filter.setLimit(10);
         filter.addFilterLine(filterline);
 
-        List <User> l = provider.getSession().getFiltered(User.class, filter);
+        List <gluewine.entities.User> l = provider.getSession().getFiltered(gluewine.entities.User.class, filter);
 
         cc.tableHeader("Id", "Username", "Is admin");
-        for (User user : l) {
+        for (gluewine.entities.User user : l) {
     		cc.tableRow(Long.toString(user.getId()), user.getUsername(), Boolean.toString(user.getRole()));
     	}
 
         cc.printTable();
     }
-    
-    @Transactional
-    public void _testing(CommandContext cc) {
-    	cc.tableHeader("testing");
-    }
-
-    
+      
 
     /*
      * (non-Javadoc)
