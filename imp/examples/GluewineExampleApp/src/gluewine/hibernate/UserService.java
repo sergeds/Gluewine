@@ -69,7 +69,7 @@ public class UserService implements CommandProvider
 
         cc.printTable();
     }
-      
+     
 
     /*
      * (non-Javadoc)
@@ -88,9 +88,6 @@ public class UserService implements CommandProvider
         cmd_user_search.addOption("-text", "%criteria%", true, true);
         l.add(cmd_user_search);
         
-        CLICommand cmd_testing = new CLICommand("testing","testing description");
-        l.add(cmd_testing);
-
         return l;
     }
 }
