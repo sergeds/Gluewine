@@ -4,10 +4,13 @@ import java.io.IOException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.swing.JOptionPane;
 
 import org.gluewine.core.Glue;
 import org.gluewine.jetty.GluewineServlet;
 import org.gluewine.persistence_jpa_hibernate.HibernateSessionProvider;
+
+import gluewine.entities.Contact;
 
 
 public class AddContact extends GluewineServlet {
@@ -65,7 +68,35 @@ public class AddContact extends GluewineServlet {
 	
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException
     {
+        String newFirstname = req.getParameter("firstname");
+        String newLastname = req.getParameter("lastname");
+        String newEmail = req.getParameter("email");
+        String newPhone = req.getParameter("phone");
         
+        String regexPhone = "([0]|\\+32)\\W*([0-9][0-9][0-9])\\W*([0-9][0-9]{2})\\W*([0-9]{3})?";
+        String regexEmail = "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$";
+        
+        if (newPhone.matches(regexPhone) && newEmail.matches(regexEmail)) {
+        	Contact newContact = new Contact();
+	        newContact.setFirstname(newFirstname);
+	        newContact.setLastname(newLastname);
+	        newContact.setPhoneNumber(newPhone);
+	        newContact.setEmail(newEmail);
+	        
+	        provider.getSession().add(newContact);
+	        provider.commitCurrentSession();
+	        
+	        resp.sendRedirect("http://localhost:8000/addcontact/");
+	        
+        }
+        else {	        
+        	if (!newPhone.matches(regexPhone))
+        		JOptionPane.showMessageDialog(null, "The phone number has to be like: +32 123 456 789 or 0123 456 789", "error", JOptionPane.ERROR_MESSAGE);
+    			resp.sendRedirect("http://localhost:8000/addcontact/");
+        	if (!newEmail.matches(regexEmail))
+        		JOptionPane.showMessageDialog(null, "Incorrect email address", "error", JOptionPane.ERROR_MESSAGE);
+				resp.sendRedirect("http://localhost:8000/addcontact/");
+        }        
     }
 
 }
