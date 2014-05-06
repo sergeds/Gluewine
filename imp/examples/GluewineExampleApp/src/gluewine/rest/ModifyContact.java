@@ -32,7 +32,17 @@ public class ModifyContact extends GluewineServlet {
         		+ " </head>");
         b.append("	<body>");
         b.append("		<h1>Modify contact</h1>");
-        b.append("			<p> </p>");       
+        b.append("			<form action='ModifyContact' method='POST'>");
+        b.append("				<label for='firstname'>Firstname:</label>");
+        b.append("				<input type='text' name='firstname'/>");
+        b.append("				</br><label for='lastname'>Lastname:</label>");
+        b.append("				<input type='lastname' name='lastname'/>");
+        b.append("				</br><label for='email'>Email Adress</label>");
+        b.append("				<input type='text' name='email'/>");
+        b.append("				</br><label for= 'phone'>Phone:</label>");
+        b.append("				<input type='text' name='phone'/>");
+        b.append("				</br><input type='submit' value='modify contact' name='submit'/>");
+        b.append("				</form>");     
         b.append("	</body>");
         b.append("</html>");
         resp.setContentLength(b.length());
