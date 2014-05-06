@@ -26,10 +26,15 @@ public class DeleteContact extends GluewineServlet {
         resp.setContentType("text/html");
         
         StringBuilder b = new StringBuilder(""
-        		+"<html>"
-        		+ " <head> "
-        		+ "		<title> Delete Contact </title> "
-        		+ " </head>");
+        		+"<html>");
+        b.append(" 	<head> ");
+        b.append("		<title> Adminpanel </title> ");
+        b.append("		<link rel='stylesheet' type='text/css' href='style.css' />");
+        b.append("		<style type='text/css'>"
+        		+ "				a:link { color: #000000; text-decoration: none; }"
+        		+ "				.btn { border-bottom-left-radius:6px; text-indent:-1.08px; border:1px solid #dcdcdc; display:inline-block; color:#777777; font-family:arial; font-size:15px; font-weight:bold; font-style:normal; height:50px; line-height:50px; width:200px; text-decoration:none; text-align:center;}"
+        		+ "		</style>");        		
+        b.append("  </head>");
         b.append("	<body>");
         b.append("		<h1>Delete contact</h1>");
         b.append("			<p> </p>");       
