@@ -34,6 +34,10 @@ public class OverviewContacts extends GluewineServlet {
 				+ "<html>"
 					+ "<head>"
 						+ "<title>Contacts </title>"
+						+ "<style type='text/css'>"
+							+ "a:link { color: #000000; text-decoration: none; }"
+							+ ".btn { border-radius:6px; text-indent:-1.08px; border:1px solid #dcdcdc; display:inline-block; color:#777777; font-family:arial; font-size:15px; font-weight:bold; font-style:normal; height:50px; line-height:50px; width:200px; text-decoration:none; text-align:center;}"
+						+ "</style>"
 					+ "</head>"
         			+ "<body>"
         				+ "<h1>Contacts</h1>"
@@ -59,6 +63,10 @@ public class OverviewContacts extends GluewineServlet {
 		
 		resp.getWriter().write(""
 						+ "</table>"
+						+ "</br>"
+						+ "<a href='http://localhost:8000/adminpanel/'>"
+						+ "		<input type='button' value='<- Back' class='btn'/>"
+						+ "</a>"
 					+ "</body>"
         		+ "</html>");
 	}

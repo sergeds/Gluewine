@@ -28,23 +28,36 @@ public class AddContact extends GluewineServlet {
         resp.setContentType("text/html");
         
         StringBuilder b = new StringBuilder(""
-        		+"<html>"
-        		+ " <head> "
-        		+ "		<title> Add contact </title> "
-        		+ " </head>");
+        		+"<html>");
+        b.append(" 	<head> ");
+        b.append("		<title> Adminpanel </title> ");
+        b.append("		<link rel='stylesheet' type='text/css' href='style.css' />");
+        b.append("			<style type='text/css'>"
+        		+ "				a:link { color: #000000; text-decoration: none; }"
+        		+ "				.btn { border-radius:6px; text-indent:-1.08px; border:1px solid #dcdcdc; display:inline-block; color:#777777; font-family:arial; font-size:15px; font-weight:bold; font-style:normal; height:50px; line-height:50px; width:200px; text-decoration:none; text-align:center;}"
+        		+ "				.lbl { width:120px; display: block; float: left;}"
+        		+ "			</style>");        		
+        b.append("  	</head>");
         b.append("	<body>");
         b.append("		<h1>Add contact</h1>");
         b.append("			<form action='AddContact' method='POST'>");
-        b.append("				<label for='firstname'>Firstname:</label>");
+        b.append("				<label for='firstname' class='lbl'>Firstname:</label>");
         b.append("				<input type='text' name='firstname'/>");
-        b.append("				</br><label for='lastname'>Lastname:</label>");
+        b.append("				</br>");
+        b.append("				<label for='lastname' class='lbl'>Lastname:</label>");
         b.append("				<input type='lastname' name='lastname'/>");
-        b.append("				</br><label for='email'>Email Adress</label>");
+        b.append("				</br>");
+        b.append("				<label for='email' class='lbl'>Email Adress:</label>");
         b.append("				<input type='text' name='email'/>");
-        b.append("				</br><label for= 'phone'>Phone:</label>");
+        b.append("				</br>");
+        b.append("				<label for= 'phone' class='lbl'>Phone:</label>");
         b.append("				<input type='text' name='phone'/>");
-        b.append("				</br><input type='submit' value='Add contact' name='submit'/>");
-        b.append("				</form>");
+        b.append("				</br></br>");
+        b.append("				<a href='http://localhost:8000/adminpanel/'>");
+ 		b.append("					<input type='button' value='<- Back' class='btn'/>");
+ 		b.append("				</a>");
+        b.append("				<input type='submit' value='Add contact' name='submit' class='btn'/>");
+        b.append("			</form>");
         b.append("	</body>");
         b.append("</html>");
         resp.setContentLength(b.length());
@@ -86,8 +99,7 @@ public class AddContact extends GluewineServlet {
 	        provider.getSession().add(newContact);
 	        provider.commitCurrentSession();
 	        
-	        resp.sendRedirect("http://localhost:8000/addcontact/");
-	        
+	        resp.sendRedirect("http://localhost:8000/addcontact/");	        
         }
         else {	        
         	if (!newPhone.matches(regexPhone))
