@@ -1,9 +1,12 @@
 package gluewine.rest;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import gluewine.entities.Contact;
 
 import org.gluewine.core.Glue;
 import org.gluewine.jetty.GluewineServlet;
@@ -22,6 +25,7 @@ public class DeleteContact extends GluewineServlet {
 	
 	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
 	{
+		List<Contact> contacts = provider.getSession().getAll(Contact.class);
 		
         resp.setContentType("text/html");
         
@@ -37,7 +41,24 @@ public class DeleteContact extends GluewineServlet {
         b.append("  </head>");
         b.append("	<body>");
         b.append("		<h1>Delete contact</h1>");
-        b.append("			<p> </p>");       
+        b.append("			<table border=\"1\">");     
+        b.append("<tr>");   
+        b.append("<th> Id </th>"); 
+        b.append("<th> Firstname </th>"); 
+        b.append("<th> Lastname </th>"); 
+        b.append("<th> Email </th>"); 
+        b.append("<th> Phone number </th>"); 
+        b.append("</tr>"); 
+        for (Contact contact : contacts) {
+        	b.append("<tr>");
+        	b.append("<td> " + contact.getId() + "</td>");
+        	b.append("<td> " + contact.getFirstname() + "</td>");
+        	b.append("<td> " + contact.getLastname() + "</td>");
+        	b.append("<td> " + contact.getEmail() + "</td>");
+        	b.append("<td> " + contact.getPhoneNumber() + "</td>");
+        	b.append("</tr>");
+        }
+        b.append("</table>"); 
         b.append("	</body>");
         b.append("</html>");
         resp.setContentLength(b.length());
