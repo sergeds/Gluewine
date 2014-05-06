@@ -35,7 +35,7 @@ public class UserService implements CommandProvider
     	List<User> users = provider.getSession().getAll(User.class);
     	cc.tableHeader("Id", "Username", "Is admin");
     	
-    	for (User user : users) {
+    	for (gluewine.entities.User user : users) {
     		cc.tableRow(Long.toString(user.getId()), user.getUsername(), Boolean.toString(user.getRole()));
     	}
 
@@ -70,14 +70,7 @@ public class UserService implements CommandProvider
         cc.printTable();
     }
     
-    @Transactional
-    public void _testing(CommandContext cc) {
-    	cc.tableHeader("testing");
-    }
-
-    
-
-    /*
+     /*
      * (non-Javadoc)
      * @see org.gluewine.console.CommandProvider#getCommands()
      */
@@ -94,9 +87,6 @@ public class UserService implements CommandProvider
         cmd_user_search.addOption("-text", "%criteria%", true, true);
         l.add(cmd_user_search);
         
-        CLICommand cmd_testing = new CLICommand("testing","testing description");
-        l.add(cmd_testing);
-
         return l;
     }
 }
