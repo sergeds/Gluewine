@@ -15,10 +15,9 @@ public class PreProcessor implements QueryPreProcessor
     @Override
     public Criteria preProcess(Criteria criteria, Class<?> clazz)
     {
-    	System.out.print("testpreprocessor ");
         if (clazz.getName().equals(Contact.class.getName()))
         {
-        	System.out.print("testpreprocessor_contact ");
+        	System.out.println("testpreprocessor_contact ");
         	Field [] testing =  clazz.getFields();
         	
         	for (int i = 0 ; i < testing.length ; i++) {
@@ -28,7 +27,7 @@ public class PreProcessor implements QueryPreProcessor
         
         if (clazz.getName().equals(User.class.getName()))
         {
-        	System.out.print("testpreprocessor_user ");
+        	System.out.println("testpreprocessor_user ");
         	Field [] testing =  clazz.getFields();
         	
         	for (int i =0 ; i < testing.length ; i++) {

@@ -56,10 +56,10 @@ public class Login extends GluewineServlet {
  		b.append("				<input type='password' name='password' class='inpt'/>");
  		b.append("				<br/><br/>");
  		
- 		b.append("				<input type='submit' value='Login' name='submit' class='btn'/>");
  		b.append("				<a href='http://localhost:8000/contacts/'>");
  		b.append("					<input type='button' value='Skip login' class='btn'/>");
  		b.append("				</a>");
+ 		b.append("				<input type='submit' value='Login' name='submit' class='btn'/>");
  		b.append("			</form>");		
  		b.append("	</body>");
  		b.append("</html>");
@@ -110,10 +110,8 @@ public class Login extends GluewineServlet {
         else {
         	for (gluewine.entities.User user : users)
             {
-        		JOptionPane.showMessageDialog(null, "testing12", "error", JOptionPane.ERROR_MESSAGE);
             	if (user.getUsername().equals(username) && user.getPassword().equals(password)) 
             	{
-            		JOptionPane.showMessageDialog(null, "testing", "error", JOptionPane.ERROR_MESSAGE);
             		StringBuilder b = new StringBuilder(""
             				+ "<html>");
             		b.append("		<head>");
@@ -142,7 +140,6 @@ public class Login extends GluewineServlet {
 	            	}
             	}
             	else {
-            		JOptionPane.showMessageDialog(null, "wrong username or password", "error", JOptionPane.ERROR_MESSAGE);
             		resp.sendRedirect("http://localhost:8000/login/");
             	}
             }//end for
