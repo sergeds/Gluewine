@@ -1,6 +1,7 @@
 package gluewine.rest;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -9,6 +10,7 @@ import org.gluewine.core.Glue;
 import org.gluewine.jetty.GluewineServlet;
 import org.gluewine.persistence_jpa_hibernate.HibernateSessionProvider;
 
+import gluewine.entities.Contact;
 
 public class ModifyContact extends GluewineServlet {
 
@@ -22,7 +24,6 @@ public class ModifyContact extends GluewineServlet {
 	
 	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
 	{
-		
         resp.setContentType("text/html");
         
         StringBuilder b = new StringBuilder(""
