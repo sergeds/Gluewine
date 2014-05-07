@@ -63,6 +63,7 @@ public class DeleteContact extends GluewineServlet {
         b.append("<th> Lastname </th>"); 
         b.append("<th> Email </th>"); 
         b.append("<th> Phone number </th>"); 
+        b.append("<th> Delete </th>");
         b.append("</tr>"); 
         for (Contact contact : contacts) {
         	b.append("<tr>");
@@ -71,6 +72,7 @@ public class DeleteContact extends GluewineServlet {
         	b.append("<td> " + contact.getLastname() + "</td>");
         	b.append("<td> " + contact.getEmail() + "</td>");
         	b.append("<td> " + contact.getPhoneNumber() + "</td>");
+        	b.append("<td></td>");
         	b.append("</tr>");
         }
         b.append("</table>"); 
