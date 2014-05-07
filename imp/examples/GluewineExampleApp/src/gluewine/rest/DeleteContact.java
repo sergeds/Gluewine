@@ -58,6 +58,7 @@ public class DeleteContact extends GluewineServlet {
         b.append("				</br>");
         b.append("				</br>");
         b.append("				</br>");
+        b.append("			<form action='DeleteContact' method='POST'>");
         b.append("			<table border=\"1\">");     
         b.append("<tr>");   
         b.append("<th> Id </th>"); 
@@ -74,7 +75,7 @@ public class DeleteContact extends GluewineServlet {
         	b.append("<td> " + contact.getLastname() + "</td>");
         	b.append("<td> " + contact.getEmail() + "</td>");
         	b.append("<td> " + contact.getPhoneNumber() + "</td>");
-        	b.append("<td></td>");
+        	b.append("<td><center><input type='checkbox' name='delete' value='"+ contact.getId() +"'></center></td>");
         	b.append("</tr>");
         }
         b.append("</table>"); 
@@ -82,6 +83,7 @@ public class DeleteContact extends GluewineServlet {
         b.append("		<a href='http://localhost:8000/adminpanel/'>");
  		b.append("			<input type='button' value='<- Back' class='btn'/>");
  		b.append("		</a>");
+ 		b.append("		<input type='submit' value='Delete' class='btn'/>");
         b.append("	</body>");
         b.append("</html>");
         resp.setContentLength(b.length());
@@ -106,6 +108,19 @@ public class DeleteContact extends GluewineServlet {
 	@Transactional
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException
     {
+        String[] checkedContacts = req.getParameterValues("delete");
+        for(int i=0; i<checkedContacts.length; i++){
+        	
+        	long id = Long.parseLong(checkedContacts[i]);
+            Contact contact = (Contact) provider.getSession().get(Contact.class, id);
+            if (contact != null) {
+                provider.getSession().delete(contact);
+                provider.commitCurrentSession();
+            }
+            else
+               System.out.println("There is no contact with id " + id);
+        }
+        resp.sendRedirect("http://localhost:8000/deletecontact/");
         
     }
 
