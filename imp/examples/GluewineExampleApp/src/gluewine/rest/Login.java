@@ -41,24 +41,26 @@ public class Login extends GluewineServlet {
  		b.append("		<style type='text/css'>"
         		+ "				a:link { color: #000000; text-decoration: none}"
         		+ "				.btn { border-radius:6px; text-indent:-1.08px; border:1px solid #dcdcdc; display:inline-block; color:#777777; font-family:arial; font-size:15px; font-weight:bold; font-style:normal; height:50px; line-height:50px; width:120px; text-decoration:none; text-align:center;}"
+        		+ "				.lbl { width:120px; display: block; float: left;}"
+        		+ "				.inpt { width:250px; }"
+        		+ "				.h1 { width:100%; background-color:#a80321; height:20%; color:#ffffff; text-align:center; }"	
         		+ "		</style>");
  		b.append("	</head>");
  		b.append("	<body>");
-  		b.append("		<h1>Login</h1>");
+  		b.append("		<h1 class='h1'>Login</h1>");
   		b.append("			<form action='login' method='POST'>");
- 		b.append("				<label for='username'>Username:</label>");
- 		b.append("				<input type='text' name='username'/>");
- 		b.append("				</br>");
- 		b.append("				<label for='password'>Password:</label>");
- 		b.append("				<input type='password' name='password'/>");
- 		b.append("				</br></br>");
+ 		b.append("				<label for='username' class='lbl'>Username:</label>");
+ 		b.append("				<input type='text' name='username' class='inpt'/>");
+ 		b.append("				<br/>");
+ 		b.append("				<label for='password' class='lbl'>Password:</label>");
+ 		b.append("				<input type='password' name='password' class='inpt'/>");
+ 		b.append("				<br/><br/>");
  		
  		b.append("				<input type='submit' value='Login' name='submit' class='btn'/>");
  		b.append("				<a href='http://localhost:8000/contacts/'>");
  		b.append("					<input type='button' value='Skip login' class='btn'/>");
  		b.append("				</a>");
- 		b.append("			</form>");
- 		b.append("			</br>"); 		
+ 		b.append("			</form>");		
  		b.append("	</body>");
  		b.append("</html>");
 
