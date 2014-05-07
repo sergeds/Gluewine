@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.gluewine.core.Glue;
 import org.gluewine.jetty.GluewineServlet;
+import org.gluewine.persistence.Transactional;
 import org.gluewine.persistence_jpa_hibernate.HibernateSessionProvider;
 
 import gluewine.entities.Contact;
@@ -25,6 +26,7 @@ public class OverviewContacts extends GluewineServlet {
 	@Glue
     private HibernateSessionProvider provider;
 	
+	@Transactional
 	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
 	{
 		List<Contact> contacts = provider.getSession().getAll(Contact.class);
@@ -37,7 +39,7 @@ public class OverviewContacts extends GluewineServlet {
         b.append("		<title> Adminpanel </title> ");
         b.append("		<link rel='stylesheet' type='text/css' href='style.css' />");
         b.append("		<style type='text/css'>"
-        		+ "				.h1 { width:100%; background-color:#a80321; height:20%; color:#ffffff; text-align:center; }"	
+        		+ "				.h1 { width:100%; background-color:#a80321; height:20%; color:#ffffff; text-align:center; font-family:arial; }"	
         		+ "		</style>");        		
         b.append("  </head>");
         b.append("	<body>");
@@ -85,6 +87,7 @@ public class OverviewContacts extends GluewineServlet {
         }
 	}
 	
+	@Transactional
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException
     {
         

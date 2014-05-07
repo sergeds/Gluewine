@@ -10,6 +10,7 @@ import gluewine.entities.Contact;
 
 import org.gluewine.core.Glue;
 import org.gluewine.jetty.GluewineServlet;
+import org.gluewine.persistence.Transactional;
 import org.gluewine.persistence_jpa_hibernate.HibernateSessionProvider;
 
 
@@ -23,6 +24,7 @@ public class DeleteContact extends GluewineServlet {
 	@Glue
     private HibernateSessionProvider provider;
 	
+	@Transactional
 	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
 	{
 		List<Contact> contacts = provider.getSession().getAll(Contact.class);
@@ -101,6 +103,7 @@ public class DeleteContact extends GluewineServlet {
         }
 	}
 	
+	@Transactional
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException
     {
         
