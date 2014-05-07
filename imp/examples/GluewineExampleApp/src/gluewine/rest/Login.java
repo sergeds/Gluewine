@@ -29,7 +29,7 @@ public class Login extends GluewineServlet {
  	@Glue
     private HibernateSessionProvider provider;
 
- 	
+ 	@Transactional
  	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
  	{
  		resp.setContentType("text/html");
@@ -83,6 +83,7 @@ public class Login extends GluewineServlet {
  		}
 	}
  	
+ 	@Transactional
  	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException
     {
         String username = req.getParameter("username");

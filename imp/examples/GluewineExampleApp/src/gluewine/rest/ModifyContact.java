@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.gluewine.core.Glue;
 import org.gluewine.jetty.GluewineServlet;
+import org.gluewine.persistence.Transactional;
 import org.gluewine.persistence_jpa_hibernate.HibernateSessionProvider;
 
 import gluewine.entities.Contact;
@@ -22,6 +23,7 @@ public class ModifyContact extends GluewineServlet {
 	@Glue
     private HibernateSessionProvider provider;
 	
+	@Transactional
 	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
 	{
         resp.setContentType("text/html");
@@ -34,9 +36,9 @@ public class ModifyContact extends GluewineServlet {
         b.append("		<style type='text/css'>"
         		+ "				a:link { color: #000000; text-decoration: none; }"
         		+ "				.btn { border-radius:6px; text-indent:-1.08px; border:1px solid #dcdcdc; display:inline-block; color:#777777; font-family:arial; font-size:15px; font-weight:bold; font-style:normal; height:50px; line-height:50px; width:200px; text-decoration:none; text-align:center;}"
-        		+ "				.lbl { width:120px; display: block; float: left;}"
-        		+ "				.inpt { width:250px; }"
-        		+ "				.h1 { width:100%; background-color:#a80321; height:20%; color:#ffffff; text-align:center; }"	
+        		+ "				.lbl { width:120px; display: block; float: left; font-family:arial; }"
+        		+ "				.inpt { width:250px; font-family:arial; }"
+        		+ "				.h1 { width:100%; background-color:#a80321; height:20%; color:#ffffff; text-align:center; font-family:arial; }"	
         		+ "		</style>");        		
         b.append("  </head>");
         b.append("	<body>");
@@ -81,6 +83,7 @@ public class ModifyContact extends GluewineServlet {
         }
 	}
 	
+	@Transactional
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException
     {
         

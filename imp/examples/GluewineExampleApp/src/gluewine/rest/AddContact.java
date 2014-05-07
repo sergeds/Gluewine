@@ -8,6 +8,7 @@ import javax.swing.JOptionPane;
 
 import org.gluewine.core.Glue;
 import org.gluewine.jetty.GluewineServlet;
+import org.gluewine.persistence.Transactional;
 import org.gluewine.persistence_jpa_hibernate.HibernateSessionProvider;
 
 import gluewine.entities.Contact;
@@ -23,6 +24,7 @@ public class AddContact extends GluewineServlet {
 	@Glue
     private HibernateSessionProvider provider;
 	
+	@Transactional
 	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
 	{
         resp.setContentType("text/html");
@@ -81,6 +83,7 @@ public class AddContact extends GluewineServlet {
         }
 	}
 	
+	@Transactional
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException
     {
         String newFirstname = req.getParameter("firstname");
