@@ -37,11 +37,25 @@ public class DeleteContact extends GluewineServlet {
         b.append("			<style type='text/css'>"
         		+ "				a:link { color: #000000; text-decoration: none; }"
         		+ "				.btn { border-radius:6px; text-indent:-1.08px; border:1px solid #dcdcdc; display:inline-block; color:#777777; font-family:arial; font-size:15px; font-weight:bold; font-style:normal; height:50px; line-height:50px; width:200px; text-decoration:none; text-align:center;}"
+        		+ "				.button { border-radius:6px; text-indent:-1.08px; border:1px solid #dcdcdc; display:inline-block; color:#777777; font-family:arial; font-size:15px; font-weight:bold; font-style:normal; height:25px; line-height:25px; width:100px; text-decoration:none; text-align:center;}"
+        		+ "					.textbox { "
+        		+ "					background: #FFF url(http://html-generator.weebly.com/files/theme/input-text-9.png) no-repeat 4px 4px; "
+        		+ "					border: 1px solid #999; "
+        		+ "					outline:0; "
+        		+ "					padding-left: 25px;"
+        		+ "					height:25px; "
+        		+ "					width: 275px; "
+				+ "				}"
+        		+ "				.h1 { width:100%; background-color:#a80321; height:20%; color:#ffffff; text-align:center; }"
         		+ "			</style>");        		
         b.append("  	</head>");
         b.append("	<body>");
-        b.append("		<h1>Delete contact</h1>");
-<<<<<<< HEAD
+        b.append("		<h1 class='h1'>Delete contact</h1>");
+        b.append("		<input type='text name='search' class='textbox' /> ");
+        b.append("		<input type='button' name='btnSearch' value='Search' class='button' />");
+        b.append("				</br>");
+        b.append("				</br>");
+        b.append("				</br>");
         b.append("			<table border=\"1\">");     
         b.append("<tr>");   
         b.append("<th> Id </th>"); 
