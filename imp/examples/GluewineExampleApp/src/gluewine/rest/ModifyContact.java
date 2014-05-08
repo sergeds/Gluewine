@@ -26,6 +26,8 @@ public class ModifyContact extends GluewineServlet {
 	@Transactional
 	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
 	{
+		List<Contact> contacts = provider.getSession().getAll(Contact.class);
+		
         resp.setContentType("text/html");
         
         StringBuilder b = new StringBuilder(""
@@ -43,6 +45,32 @@ public class ModifyContact extends GluewineServlet {
         b.append("  </head>");
         b.append("	<body>");
         b.append("		<h1 class='h1'>Modify contact</h1>");
+        
+        b.append("			<form action='ModifyContact' method='POST'>");
+        b.append("			<table border=\"1\">");     
+        b.append("<tr>");   
+        b.append("<th> Id </th>"); 
+        b.append("<th> Firstname </th>"); 
+        b.append("<th> Lastname </th>"); 
+        b.append("<th> Email </th>"); 
+        b.append("<th> Phone number </th>"); 
+        b.append("<th> Modify </th>");
+        b.append("</tr>"); 
+        for (Contact contact : contacts) {
+        	b.append("<tr>");
+        	b.append("<td> " + contact.getId() + "</td>");
+        	b.append("<td> " + contact.getFirstname() + "</td>");
+        	b.append("<td> " + contact.getLastname() + "</td>");
+        	b.append("<td> " + contact.getEmail() + "</td>");
+        	b.append("<td> " + contact.getPhoneNumber() + "</td>");
+        	b.append("<td><center><input type='radio' name='modify' value='"+ contact.getId() +"'</center></td>");
+        	b.append("</tr>");
+        }
+        b.append("</table>"); 
+ 		b.append("		</form>");
+ 		b.append(" </br>");
+ 		
+        
         b.append("			<form action='ModifyContact' method='POST'>");
         b.append("				<label for='firstname' class='lbl'>Firstname:</label>");
         b.append("				<input type='text' name='firstname' class='inpt'/>");
@@ -86,6 +114,16 @@ public class ModifyContact extends GluewineServlet {
 	@Transactional
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException
     {
-        
+		String[] modifyContacts = req.getParameterValues("modify");
+        for(int i=0; i<modifyContacts.length; i++){
+        	
+        	long id = Long.parseLong(modifyContacts[i]);
+            Contact contact = (Contact) provider.getSession().get(Contact.class, id);
+            if (contact != null) {
+                System.out.println(""+ id);
+            }
+            else
+               System.out.println("There is no contact with id " + id);
+        }
     }
 }
