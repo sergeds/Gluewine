@@ -69,26 +69,11 @@ public class ModifyContact extends GluewineServlet {
         b.append("</table>"); 
  		b.append(" </br>");
  		
-        
-     //   b.append("			<form action='ModifyContact' method='POST'>");
-     //   b.append("				<label for='firstname' class='lbl'>Firstname:</label>");
-     //   b.append("				<input type='text' name='firstname' class='inpt'/>");
-     //   b.append("				</br>");
-     //   b.append("				<label for='lastname' class='lbl'>Lastname:</label>");
-     //   b.append("				<input type='lastname' name='lastname' class='inpt'/>");
-     //   b.append("				</br>");
-     //   b.append("				<label for='email' class='lbl'>Email Adress:</label>");
-     //   b.append("				<input type='text' name='email' class='inpt'/>");
-     //  b.append("				</br>");
-     //   b.append("				<label for= 'phone' class='lbl'>Phone:</label>");
-     //   b.append("				<input type='text' name='phone' class='inpt'/>");
-     //   b.append("				</br></br>");
-     //   b.append("				<a href='http://localhost:8000/adminpanel/'>");
- 	 //	b.append("					<input type='button' value='<- Back' class='btn'/>");
- 	 //	b.append("				</a>");
+        b.append("				<a href='http://localhost:8000/adminpanel/'>");
+ 	 	b.append("					<input type='button' value='<- Back' class='btn'/>");
+ 	 	b.append("				</a>");
         b.append("				<input type='submit' value='Modify contact' name='submit' class='btn'/>");
- 		b.append("		</form>");
-     //   b.append("			</form>");   
+ 		b.append("		</form>"); 
         
         b.append("	</body>");
         b.append("</html>");
@@ -120,6 +105,69 @@ public class ModifyContact extends GluewineServlet {
             Contact contact = (Contact) provider.getSession().get(Contact.class, id);
             if (contact != null) {
                 System.out.println(""+ id);
+                
+                List<Contact> contacts = provider.getSession().getAll(Contact.class);
+                resp.setContentType("text/html");
+                
+                StringBuilder b = new StringBuilder(""
+                		+"<html>");
+                b.append(" 	<head> ");
+                b.append("		<title> Adminpanel </title> ");
+                b.append("		<link rel='stylesheet' type='text/css' href='style.css' />");
+                b.append("			<style type='text/css'>"
+                		+ "				a:link { color: #000000; text-decoration: none; }"
+                		+ "				.btn { border-radius:6px; text-indent:-1.08px; border:1px solid #dcdcdc; display:inline-block; color:#777777; font-family:arial; font-size:15px; font-weight:bold; font-style:normal; height:50px; line-height:50px; width:200px; text-decoration:none; text-align:center;}"
+                		+ "				.lbl { width:120px; display: block; float: left;}"
+                		+ "				.inpt { width:250px; }"
+                		+ "				.h1 { width:100%; background-color:#a80321; height:20%; color:#ffffff; text-align:center; }"	
+                		+ "			</style>");        		
+                b.append("  	</head>");
+                b.append("	<body>");
+                b.append("		<h1 class='h1'>Modify contact</h1>");
+                b.append("			<form action='ModifyContact' method='POST'>");
+                		for (Contact contac : contacts) 
+                			{
+                			 if(contac.getId() == id)
+                			 {
+                		
+				                   b.append("				<label for='firstname' class='lbl'>Firstname:</label>");
+				                   b.append("				<input type='text' name='firstname' value='"+ contac.getFirstname() +"' class='inpt'/>" );
+				                   b.append("				</br>");
+				                   b.append("				<label for='lastname' class='lbl'>Lastname:</label>");
+				                   b.append("				<input type='lastname' name='lastname' value='"+ contac.getLastname() +"' class='inpt'/>");
+				                   b.append("				</br>");
+				                   b.append("				<label for='email' class='lbl'>Email Adress:</label>");
+				                   b.append("				<input type='text' name='email' value='"+ contac.getEmail() +"' class='inpt'/>");
+				                   b.append("				</br>");
+				                   b.append("				<label for= 'phone' class='lbl'>Phone:</label>");
+				                   b.append("				<input type='text' name='phone' value='"+ contac.getPhoneNumber() +"' class='inpt'/>");
+				                   b.append("				</br></br>");
+				                   b.append("				<a href='http://localhost:8000/modifycontact/'>");
+				                   b.append("					<input type='button' value='<- Back' class='btn'/>");
+				                   b.append("				</a>");
+				                   b.append("				<input type='submit' value='Modify contact' name='submit' class='btn'/>");
+				                   b.append("		</form>");
+                			 }
+                			}
+                   b.append("	</body>");
+                   b.append("</html>");
+                   resp.setContentLength(b.length());
+                   try
+                   {
+                       resp.getWriter().println(b.toString());
+                   }
+                   catch (IOException e)
+                   {
+                       e.printStackTrace();
+                       try
+                       {
+                           resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Server Error");
+                       }
+                       catch (IOException e1)
+                       {
+                           e1.printStackTrace();
+                       }
+                   }
             }
             else
                System.out.println("There is no contact with id " + id);
