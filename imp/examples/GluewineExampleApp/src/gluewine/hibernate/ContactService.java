@@ -23,7 +23,6 @@ public class ContactService implements CommandProvider
 	@Glue
     private HibernateSessionProvider provider;
 
-
     /*
      *The method contact_list.
      * With this method we can print a list of all the contacts in the database
@@ -56,7 +55,7 @@ public class ContactService implements CommandProvider
         String newEmail= cc.getOption("-email");
                 
         /*
-         * The understanding regex only validates the following mobile phone number:
+         * The regexPhone only validates the following mobile phone number:
          * 
          * 0456564456
          * 0495 258954
@@ -72,7 +71,9 @@ public class ContactService implements CommandProvider
         String regexPhone = "([0]|\\+32)\\W*([0-9][0-9][0-9])\\W*([0-9][0-9]{2})\\W*([0-9]{3})?";
         String regexEmail = "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$";
         
-        if (newPhone.matches(regexPhone) && newEmail.matches(regexEmail)) {
+        //When the regex matches, we can add the new contact.
+        if (newPhone.matches(regexPhone) && newEmail.matches(regexEmail)) 
+        {
         	Contact newContact = new Contact();
 	        newContact.setFirstname(newFirstName);
 	        newContact.setLastname(newLastName);
@@ -84,7 +85,8 @@ public class ContactService implements CommandProvider
 	        
 	        cc.println("The contact was added");
         }
-        else {	        
+        else 
+        {	        
         	if (!newPhone.matches(regexPhone))
         		cc.println("The phone number has to be like: +32 123 456 789 or 0123 456 789");
         	if (!newEmail.matches(regexEmail))
@@ -105,7 +107,7 @@ public class ContactService implements CommandProvider
 
         /*
          * First we need to get a list of all the contacts in the database.
-         * We will use this list to search cars.
+         * We will use this list to search contacts.
          * With criteria we are able to put restrictions on the list off contacts.
          */
         Criteria cr = provider.getSession().createCriteria(Contact.class);
@@ -131,7 +133,9 @@ public class ContactService implements CommandProvider
     {
         long id = Long.parseLong(cc.getOption("-id"));
         Contact contact = (Contact) provider.getSession().get(Contact.class, id);
-        if (contact != null) {
+        
+        if (contact != null) 
+        {
             provider.getSession().delete(contact);
             provider.commitCurrentSession();
         }
@@ -140,15 +144,14 @@ public class ContactService implements CommandProvider
     }
 
     /*
-     * (non-Javadoc)
-     * @see org.gluewine.console.CommandProvider#getCommands()
+     * In the method getCommands, we add our own commands by adding and returning the CLICommandlist.
      */
     @Override
     public List<CLICommand> getCommands()
     {
         List<CLICommand> l = new ArrayList<>();
 
-        //adding a car
+        //adding a contact
         CLICommand cmd_contact_add = new CLICommand("contact_add", "Adds a contact");
         cmd_contact_add.addOption("-firstname", "first name of the contact", true, true);
         cmd_contact_add.addOption("-lastname", "last name of the contact", true, true);
@@ -156,16 +159,16 @@ public class ContactService implements CommandProvider
         cmd_contact_add.addOption("-email", "email of the contact", true, true);
         l.add(cmd_contact_add);
 
-        //delete a car
+        //delete a contact
         CLICommand cmd_contact_delete = new CLICommand("contact_delete", "Deletes a contact");
         cmd_contact_delete.addOption("-id", "The id of the contact you want to delete", true, true);
         l.add(cmd_contact_delete);
 
-        //list all the cars in the db
+        //list all the contacts in the db
         CLICommand cmd_contact_list = new CLICommand("contact_list", "Lists the contacts");
         l.add(cmd_contact_list);
 
-        //search a car
+        //search a contact
         CLICommand cmd_contact_search = new CLICommand("contact_search", "Searches a contact on criteria 'firstName' and 'lastName'");
         cmd_contact_search.addOption("-text", "%criteria%", true, true);
         l.add(cmd_contact_search);

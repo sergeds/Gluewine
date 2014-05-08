@@ -16,6 +16,11 @@ import gluewine.entities.Contact;
 
 public class AddContact extends GluewineServlet {
 
+	/*
+	 * We call on this method in the browser by adressing the following link:
+	 * 
+	 * http://localhost:8000/addcontact/
+	 */
 	@Override
 	public String getContextPath() {
 		return "addcontact";
@@ -65,9 +70,10 @@ public class AddContact extends GluewineServlet {
         b.append("	</body>");
         b.append("</html>");
         resp.setContentLength(b.length());
+        
         try
         {
-            resp.getWriter().println(b.toString());
+            resp.getWriter().println(b.toString()); //print b
         }
         catch (IOException e)
         {
@@ -94,7 +100,8 @@ public class AddContact extends GluewineServlet {
         String regexPhone = "([0]|\\+32)\\W*([0-9][0-9][0-9])\\W*([0-9][0-9]{2})\\W*([0-9]{3})?";
         String regexEmail = "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$";
         
-        if (newPhone.matches(regexPhone) && newEmail.matches(regexEmail)) {
+        if (newPhone.matches(regexPhone) && newEmail.matches(regexEmail)) 
+        {
         	Contact newContact = new Contact();
 	        newContact.setFirstname(newFirstname);
 	        newContact.setLastname(newLastname);
@@ -106,14 +113,15 @@ public class AddContact extends GluewineServlet {
 	        
 	        resp.sendRedirect("http://localhost:8000/addcontact/");	        
         }
-        else {	        
-        	if (!newPhone.matches(regexPhone))
+        else 
+        {	        
+        	if (!newPhone.matches(regexPhone))         	
         		JOptionPane.showMessageDialog(null, "The phone number has to be like: +32 123 456 789 or 0123 456 789", "error", JOptionPane.ERROR_MESSAGE);
-    			resp.sendRedirect("http://localhost:8000/addcontact/");
+    			        	
         	if (!newEmail.matches(regexEmail))
         		JOptionPane.showMessageDialog(null, "Incorrect email address", "error", JOptionPane.ERROR_MESSAGE);
-				resp.sendRedirect("http://localhost:8000/addcontact/");
+			
+        	resp.sendRedirect("http://localhost:8000/addcontact/");        	
         }        
     }
-
 }

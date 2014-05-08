@@ -23,6 +23,8 @@ public class User {
 	 
 	@Column(name = "isAdmin")
 	private Boolean isAdmin;
+	
+	public User() {	}
 
 	public long getId() {
 		return id;

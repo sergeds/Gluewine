@@ -8,18 +8,11 @@ import org.gluewine.persistence_jpa.QueryPostProcessor;
 
 public class PostProcessor implements QueryPostProcessor
 {
-    /*
-     * (non-Javadoc)
-     * @see org.gluewine.persistence.QueryPostProcessor#deleted(java.io.Serializable, java.lang.Object)
-     *
-     * After an object is deleted, this function will be called on.
-     */
+    //After an object is deleted, this function will be called on.
     @Override
     public void deleted(Serializable id, Object o)
     {
-        /*
-         * By using instanceof, we are able to give more detailed comments.
-         */
+        //By using instanceof, we are able to give more detailed comments.
         if (o instanceof Contact)
         {
             System.out.println("Contact " + id + " has been deleted");
@@ -31,12 +24,7 @@ public class PostProcessor implements QueryPostProcessor
     {
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.gluewine.persistence.QueryPostProcessor#added(java.io.Serializable, java.lang.Object)
-     *
-     * After an object is added, this function will be called on.
-     */
+    //After an object is added, this function will be called on.
     @Override
     public void added(Serializable id, Object o)
     {
@@ -46,12 +34,7 @@ public class PostProcessor implements QueryPostProcessor
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.gluewine.persistence.QueryPostProcessor#addedOrUpdated(java.io.Serializable, java.lang.Object)
-     *
-     * After an object is added or updated, this function will be called on.
-     */
+    //After an object is added or updated, this function will be called on.
     @Override
     public void addedOrUpdated(Serializable id, Object o)
     {
@@ -61,12 +44,7 @@ public class PostProcessor implements QueryPostProcessor
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.gluewine.persistence.QueryPostProcessor#updated(java.io.Serializable, java.lang.Object)
-     *
-     * After an object is updated, this function will be called on.
-     */
+    //After an object is updated, this function will be called on.
     @Override
     public void updated(Serializable id, Object o)
     {

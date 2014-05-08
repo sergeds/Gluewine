@@ -23,7 +23,6 @@ public class UserService implements CommandProvider
 	@Glue
     private HibernateSessionProvider provider;
 
-
     /*
      *The method user_list.
      * With this method we can print a list of all the users in the database
@@ -35,13 +34,12 @@ public class UserService implements CommandProvider
     	List<gluewine.entities.User> users = provider.getSession().getAll(gluewine.entities.User.class);
     	cc.tableHeader("Id", "Username", "Is admin");
     	
-    	for (gluewine.entities.User user : users) {
+    	for (gluewine.entities.User user : users) 
+    	{
     		cc.tableRow(Long.toString(user.getId()), user.getUsername(), Boolean.toString(user.getRole()));
     	}
-
         cc.printTable();
     }
-
     
     /*
      * The metohd user_search.
@@ -63,27 +61,25 @@ public class UserService implements CommandProvider
         List <gluewine.entities.User> l = provider.getSession().getFiltered(gluewine.entities.User.class, filter);
 
         cc.tableHeader("Id", "Username", "Is admin");
-        for (gluewine.entities.User user : l) {
+        for (gluewine.entities.User user : l) 
+        {
     		cc.tableRow(Long.toString(user.getId()), user.getUsername(), Boolean.toString(user.getRole()));
     	}
-
         cc.printTable();
     }
      
-
     /*
-     * (non-Javadoc)
-     * @see org.gluewine.console.CommandProvider#getCommands()
+     * In the method getCommands, we add our own commands by adding and returning the CLICommandlist.
      */
     public List<CLICommand> getCommands()
     {
         List<CLICommand> l = new ArrayList<>();
 
-        //list all the users in the db
+        //List all the users in the db
         CLICommand cmd_user_list = new CLICommand("user_list", "Lists the users");
         l.add(cmd_user_list);
 
-        //search a car
+        //Search a user
         CLICommand cmd_user_search = new CLICommand("user_search", "Searches a user on criteria 'username'");
         cmd_user_search.addOption("-text", "%criteria%", true, true);
         l.add(cmd_user_search);

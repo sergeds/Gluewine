@@ -1,7 +1,5 @@
 package gluewine.hibernate;
 
-//import gluewine.entities.Car;
-
 import org.gluewine.persistence_jpa.QueryPreProcessor;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
@@ -17,24 +15,14 @@ public class PreProcessor implements QueryPreProcessor
     {
         if (clazz.getName().equals(Contact.class.getName()))
         {
-        	System.out.println("testpreprocessor_contact ");
-        	Field [] testing =  clazz.getFields();
-        	
-        	for (int i = 0 ; i < testing.length ; i++) {
-        		System.out.print(" " + testing[i]);
-        	}
+        	System.out.println("testpreprocessor_contact ");        	
         }
         
         if (clazz.getName().equals(User.class.getName()))
         {
         	System.out.println("testpreprocessor_user ");
-        	Field [] testing =  clazz.getFields();
-        	
-        	for (int i =0 ; i < testing.length ; i++) {
-        		System.out.print(" " + testing[i]);
-        	}
         }
-    	
+        
         return criteria;
     }
 }

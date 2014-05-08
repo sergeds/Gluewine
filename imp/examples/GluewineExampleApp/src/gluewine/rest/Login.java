@@ -29,7 +29,7 @@ public class Login extends GluewineServlet {
  	@Glue
     private HibernateSessionProvider provider;
 
- 	@Transactional
+ 	
  	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
  	{
  		resp.setContentType("text/html");
@@ -108,10 +108,17 @@ public class Login extends GluewineServlet {
         			+ "</html>");
         }
         else {
+        	/* With this boolean we know when the user is found.
+        	 * When the user is not found, we redirect to the loginpage
+        	 */
+        	Boolean userFound = false;
+        	
         	for (gluewine.entities.User user : users)
-            {
+            {        		
             	if (user.getUsername().equals(username) && user.getPassword().equals(password)) 
             	{
+            		userFound = true;
+            		
             		StringBuilder b = new StringBuilder(""
             				+ "<html>");
             		b.append("		<head>");
@@ -139,10 +146,11 @@ public class Login extends GluewineServlet {
 	            		}
 	            	}
             	}
-            	else {
-            		resp.sendRedirect("http://localhost:8000/login/");
-            	}
             }//end for
+        	
+        	if (!userFound) {
+        		resp.sendRedirect("http://localhost:8000/login/");
+        	}
         }// end else users.isEmpty()   
     }//end doPost
 }
