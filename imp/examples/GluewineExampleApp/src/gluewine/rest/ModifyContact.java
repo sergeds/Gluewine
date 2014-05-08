@@ -67,28 +67,28 @@ public class ModifyContact extends GluewineServlet {
         	b.append("</tr>");
         }
         b.append("</table>"); 
- 		b.append("		</form>");
  		b.append(" </br>");
  		
         
-        b.append("			<form action='ModifyContact' method='POST'>");
-        b.append("				<label for='firstname' class='lbl'>Firstname:</label>");
-        b.append("				<input type='text' name='firstname' class='inpt'/>");
-        b.append("				</br>");
-        b.append("				<label for='lastname' class='lbl'>Lastname:</label>");
-        b.append("				<input type='lastname' name='lastname' class='inpt'/>");
-        b.append("				</br>");
-        b.append("				<label for='email' class='lbl'>Email Adress:</label>");
-        b.append("				<input type='text' name='email' class='inpt'/>");
-        b.append("				</br>");
-        b.append("				<label for= 'phone' class='lbl'>Phone:</label>");
-        b.append("				<input type='text' name='phone' class='inpt'/>");
-        b.append("				</br></br>");
-        b.append("				<a href='http://localhost:8000/adminpanel/'>");
- 		b.append("					<input type='button' value='<- Back' class='btn'/>");
- 		b.append("				</a>");
+     //   b.append("			<form action='ModifyContact' method='POST'>");
+     //   b.append("				<label for='firstname' class='lbl'>Firstname:</label>");
+     //   b.append("				<input type='text' name='firstname' class='inpt'/>");
+     //   b.append("				</br>");
+     //   b.append("				<label for='lastname' class='lbl'>Lastname:</label>");
+     //   b.append("				<input type='lastname' name='lastname' class='inpt'/>");
+     //   b.append("				</br>");
+     //   b.append("				<label for='email' class='lbl'>Email Adress:</label>");
+     //   b.append("				<input type='text' name='email' class='inpt'/>");
+     //  b.append("				</br>");
+     //   b.append("				<label for= 'phone' class='lbl'>Phone:</label>");
+     //   b.append("				<input type='text' name='phone' class='inpt'/>");
+     //   b.append("				</br></br>");
+     //   b.append("				<a href='http://localhost:8000/adminpanel/'>");
+ 	 //	b.append("					<input type='button' value='<- Back' class='btn'/>");
+ 	 //	b.append("				</a>");
         b.append("				<input type='submit' value='Modify contact' name='submit' class='btn'/>");
-        b.append("			</form>");   
+ 		b.append("		</form>");
+     //   b.append("			</form>");   
         
         b.append("	</body>");
         b.append("</html>");
@@ -114,16 +114,15 @@ public class ModifyContact extends GluewineServlet {
 	@Transactional
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException
     {
-		String[] modifyContacts = req.getParameterValues("modify");
-        for(int i=0; i<modifyContacts.length; i++){
+		String modifyContact = req.getParameter("modify");
         	
-        	long id = Long.parseLong(modifyContacts[i]);
+        	long id = Long.parseLong(modifyContact);
             Contact contact = (Contact) provider.getSession().get(Contact.class, id);
             if (contact != null) {
                 System.out.println(""+ id);
             }
             else
                System.out.println("There is no contact with id " + id);
-        }
+        
     }
 }
