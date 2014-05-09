@@ -22,9 +22,9 @@ public class ModifyAnswer extends GluewineServlet {
     private HibernateSessionProvider provider;
 	
 	@Transactional
-	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException
+	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
     {
-		
+		/*
 		String newFirstname = req.getParameter("firstname");
         String newLastname = req.getParameter("lastname");
         String newEmail = req.getParameter("email");
@@ -32,6 +32,12 @@ public class ModifyAnswer extends GluewineServlet {
         
         String id1 = req.getParameter("id");
 		long id = Long.parseLong(id1);
+		*/
+		String newFirstname = "ttttt";
+		String newLastname = "ssssss";
+		String newEmail = "sss_ttt@hotmail.com";
+		String newPhone = "0495258954";
+		long id = 23;
 		
         Contact contact = (Contact) provider.getSession().get(Contact.class, id);
         
@@ -40,11 +46,16 @@ public class ModifyAnswer extends GluewineServlet {
         	contact.setLastname(newLastname);
         	contact.setPhoneNumber(newPhone);
         	contact.setEmail(newEmail);
-        provider.getSession().update(contact);
-        provider.commitCurrentSession();
-    }
-    else
-        System.out.println("There is no contact with id " + id);
+        	provider.getSession().update(contact);
+        	provider.commitCurrentSession();
+        }
+        else
+        	System.out.println("There is no contact with id " + id);
 
-}
+    }
+	
+	@Transactional
+	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException
+    {
+    }
 }
