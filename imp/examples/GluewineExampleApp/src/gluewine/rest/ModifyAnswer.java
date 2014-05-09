@@ -7,7 +7,7 @@ import org.gluewine.core.Glue;
 import org.gluewine.jetty.GluewineServlet;
 import org.gluewine.persistence.Transactional;
 import org.gluewine.persistence_jpa_hibernate.HibernateSessionProvider;
-
+import gluewine.entities.Contact;
 
 
 public class ModifyAnswer extends GluewineServlet {
@@ -28,5 +28,19 @@ public class ModifyAnswer extends GluewineServlet {
         String newLastname = req.getParameter("lastname");
         String newEmail = req.getParameter("email");
         String newPhone = req.getParameter("phone");
+        String id1 = req.getParameter("id");
+		long id = Long.parseLong(id1);
+        Contact contact = (Contact) provider.getSession().get(Contact.class, id);
+        if (contact != null) {
+        	contact.setFirstname(newFirstname);
+        	contact.setLastname(newLastname);
+        	contact.setPhoneNumber(newPhone);
+        	contact.setEmail(newEmail);
+        provider.getSession().update(contact);
+        provider.commitCurrentSession();
+    }
+    else
+        System.out.println("There is no contact with id " + id);
+
 }
 }
