@@ -28,9 +28,12 @@ public class ModifyAnswer extends GluewineServlet {
         String newLastname = req.getParameter("lastname");
         String newEmail = req.getParameter("email");
         String newPhone = req.getParameter("phone");
+        
         String id1 = req.getParameter("id");
 		long id = Long.parseLong(id1);
+		
         Contact contact = (Contact) provider.getSession().get(Contact.class, id);
+        
         if (contact != null) {
         	contact.setFirstname(newFirstname);
         	contact.setLastname(newLastname);

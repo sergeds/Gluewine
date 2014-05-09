@@ -1,6 +1,7 @@
 package gluewine.rest;
 
 import java.io.IOException;
+import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -12,7 +13,6 @@ import org.gluewine.persistence.Transactional;
 import org.gluewine.persistence_jpa_hibernate.HibernateSessionProvider;
 
 import gluewine.entities.Contact;
-
 
 public class AddContact extends GluewineServlet {
 
@@ -29,26 +29,23 @@ public class AddContact extends GluewineServlet {
 	@Glue
     private HibernateSessionProvider provider;
 	
+	@Glue(properties = "html.properties")
+    private Properties html_prop;
+	
 	@Transactional
 	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
 	{
         resp.setContentType("text/html");
         
-        StringBuilder b = new StringBuilder(""
-        		+"<html>");
-        b.append(" 	<head> ");
-        b.append("		<title> Adminpanel </title> ");
-        b.append("		<link rel='stylesheet' type='text/css' href='style.css' />");
-        b.append("			<style type='text/css'>"
-        		+ "				a:link { color: #000000; text-decoration: none; }"
-        		+ "				.btn { border-radius:6px; text-indent:-1.08px; border:1px solid #dcdcdc; display:inline-block; color:#777777; font-family:arial; font-size:15px; font-weight:bold; font-style:normal; height:50px; line-height:50px; width:200px; text-decoration:none; text-align:center;}"
-        		+ "				.lbl { width:120px; display: block; float: left;}"
-        		+ "				.inpt { width:250px; }"
-        		+ "				.h1 { width:100%; background-color:#a80321; height:20%; color:#ffffff; text-align:center; }"	
-        		+ "			</style>");        		
-        b.append("  	</head>");
-        b.append("	<body>");
-        b.append("		<h1 class='h1'>Add contact</h1>");
+        StringBuilder b = new StringBuilder();
+        
+        b.append(html_prop.getProperty("beginDoc"));
+        b.append("Add contact"); //title in head
+        b.append(html_prop.getProperty("head"));
+        b.append(html_prop.getProperty("beginHeader"));
+        b.append("Add contact"); //header h1
+        b.append(html_prop.getProperty("endHeader"));
+        
         b.append("			<form action='AddContact' method='POST'>");
         b.append("				<label for='firstname' class='lbl'>Firstname:</label>");
         b.append("				<input type='text' name='firstname' class='inpt'/>");
@@ -62,13 +59,11 @@ public class AddContact extends GluewineServlet {
         b.append("				<label for= 'phone' class='lbl'>Phone:</label>");
         b.append("				<input type='text' name='phone' class='inpt'/>");
         b.append("				</br></br>");
-        b.append("				<a href='http://localhost:8000/adminpanel/'>");
- 		b.append("					<input type='button' value='<- Back' class='btn'/>");
- 		b.append("				</a>");
+        b.append(				html_prop.getProperty("btn_back"));
         b.append("				<input type='submit' value='Add contact' name='submit' class='btn'/>");
         b.append("			</form>");
-        b.append("	</body>");
-        b.append("</html>");
+        
+        b.append(html_prop.getProperty("endDoc"));
         resp.setContentLength(b.length());
         
         try

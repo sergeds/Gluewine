@@ -2,6 +2,7 @@ package gluewine.rest;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -13,7 +14,6 @@ import org.gluewine.persistence_jpa_hibernate.HibernateSessionProvider;
 
 import gluewine.entities.Contact;
 
-
 public class Adminpanel extends GluewineServlet {
 
 	@Override
@@ -24,6 +24,9 @@ public class Adminpanel extends GluewineServlet {
 	@Glue
     private HibernateSessionProvider provider;
 	
+	@Glue(properties = "html.properties")
+    private Properties html_prop;
+	
 	@Transactional
 	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
 	{
@@ -31,28 +34,18 @@ public class Adminpanel extends GluewineServlet {
 		
         resp.setContentType("text/html");
         
-        StringBuilder b = new StringBuilder(""
-        		+"<html>");
-        b.append(" 	<head> ");
-        b.append("		<title> Adminpanel </title> ");
-        b.append("		<style type='text/css'>"
-        		+ "				a:link { color: #000000; text-decoration: none; }"
-        		+ "				.btn { border-radius:6px; text-indent:-1.08px; border:1px solid #dcdcdc; display:inline-block; color:#777777; font-family:arial; font-size:15px; font-weight:bold; font-style:normal; height:50px; line-height:50px; width:200px; text-decoration:none; text-align:center;}"
-        		+ "				.h1 { width:100%; background-color:#a80321; height:20%; color:#ffffff; text-align:center; font-family:arial; font-size:30px;}"	
-        		+ "		</style>");        		
-        b.append("  </head>");
-        b.append("	<body>");
-        b.append("		<h1 class='h1'>Adminpanel</h1>");
+        StringBuilder b = new StringBuilder();
         
+        b.append(html_prop.getProperty("beginDoc"));
+        b.append("Adminpanel"); //title in head
+        b.append(html_prop.getProperty("head"));
+        b.append(html_prop.getProperty("beginHeader"));
+        b.append("Adminpanel"); //header h1
+        b.append(html_prop.getProperty("endHeader"));
+        
+               
         //table contacts
-        b.append("		<table border='1'>");
-        b.append("			<tr>");
-        b.append("				<th> ID </th>");
-        b.append("				<th> Firstname </th>");
-        b.append("				<th> Lastname </th>");
-        b.append("				<th> Email </th>");
-        b.append("				<th> Phone number </th>");
-        b.append("			</tr>");
+        b.append(html_prop.getProperty("tableHeaderContacts"));
         
         for (Contact contact : contacts) {
         	b.append("		<tr>");
@@ -63,22 +56,14 @@ public class Adminpanel extends GluewineServlet {
     		b.append("			<td> " + contact.getPhoneNumber() + "</td>");
     		b.append("		</tr>"); 
         }
-        b.append("		</table>");
+        b.append(html_prop.getProperty("tableEnd"));
         
-        b.append("			<br/><br/>");
-        b.append("			<a href='http://localhost:8000/addcontact/'>");
-        b.append("				<input type='button' value='Add contact' class='btn'/>");
-        b.append("			</a>");
-        b.append("			<br/><br/>");
-        b.append("			<a href='http://localhost:8000/deletecontact/'>");
-        b.append("				<input type='button' value='Delete contact' class='btn'/>");
-        b.append("			</a>");
-        b.append("			<br/><br/>");
-        b.append("			<a href='http://localhost:8000/modifycontact/'>");
-        b.append("				<input type='button' value='Modify contact' class='btn'/>");
-        b.append("			</a>");       
-        b.append("	</body>");
-        b.append("</html>");
+        b.append(html_prop.getProperty("btn_addcontact"));
+        b.append(html_prop.getProperty("btn_deletecontact"));
+        b.append(html_prop.getProperty("btn_modifycontact"));
+              
+        b.append(html_prop.getProperty("endDoc"));
+        
         resp.setContentLength(b.length());
         try
         {
@@ -100,8 +85,6 @@ public class Adminpanel extends GluewineServlet {
 	
 	@Transactional
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException
-    {
-        
+    {        
     }
-
 }

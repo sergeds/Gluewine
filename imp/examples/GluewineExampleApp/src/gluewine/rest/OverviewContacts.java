@@ -3,6 +3,7 @@ package gluewine.rest;
 import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -14,8 +15,6 @@ import org.gluewine.persistence_jpa_hibernate.HibernateSessionProvider;
 
 import gluewine.entities.Contact;
 
-
-
 public class OverviewContacts extends GluewineServlet {
 
 	@Override
@@ -26,6 +25,9 @@ public class OverviewContacts extends GluewineServlet {
 	@Glue
     private HibernateSessionProvider provider;
 	
+	@Glue(properties = "html.properties")
+    private Properties html_prop;
+	
 	@Transactional
 	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
 	{
@@ -33,27 +35,17 @@ public class OverviewContacts extends GluewineServlet {
     	
 		resp.setContentType("text/html");
         
-        StringBuilder b = new StringBuilder(""
-        		+"<html>");
-        b.append(" 	<head> ");
-        b.append("		<title> Adminpanel </title> ");
-        b.append("		<link rel='stylesheet' type='text/css' href='style.css' />");
-        b.append("		<style type='text/css'>"
-        		+ "				.h1 { width:100%; background-color:#a80321; height:20%; color:#ffffff; text-align:center; font-family:arial; }"	
-        		+ "		</style>");        		
-        b.append("  </head>");
-        b.append("	<body>");
-        b.append("		<h1 class='h1'> Contacts </h1>");
+		StringBuilder b = new StringBuilder();
+        
+        b.append(html_prop.getProperty("beginDoc"));
+        b.append("Contacts"); //title in head
+        b.append(html_prop.getProperty("head"));
+        b.append(html_prop.getProperty("beginHeader"));
+        b.append("Contacts"); //header h1
+        b.append(html_prop.getProperty("endHeader"));
         
         //table contacts
-        b.append("		<table border='1'>");
-        b.append("			<tr>");
-        b.append("				<th> ID </th>");
-        b.append("				<th> Firstname </th>");
-        b.append("				<th> Lastname </th>");
-        b.append("				<th> Email </th>");
-        b.append("				<th> Phone number </th>");
-        b.append("			</tr>");
+        b.append(html_prop.getProperty("tableHeaderContacts"));
         
         for (Contact contact : contacts) {
         	b.append("		<tr>");
@@ -64,9 +56,9 @@ public class OverviewContacts extends GluewineServlet {
     		b.append("			<td> " + contact.getPhoneNumber() + "</td>");
     		b.append("		</tr>"); 
         }
-        b.append("		</table>");
-        b.append("	</body>");
-        b.append("</html>");
+        b.append(html_prop.getProperty("tableEnd"));
+        
+        b.append(html_prop.getProperty("endDoc"));
         
         resp.setContentLength(b.length());
         try
@@ -89,9 +81,6 @@ public class OverviewContacts extends GluewineServlet {
 	
 	@Transactional
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException
-    {
-        
+    {        
     }
-	
-
 }
