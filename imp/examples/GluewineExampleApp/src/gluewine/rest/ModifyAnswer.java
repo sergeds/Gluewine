@@ -15,7 +15,7 @@ public class ModifyAnswer extends GluewineServlet {
 	
 	@Override
 	public String getContextPath() {
-		return "ModifyAnswer";
+		return "modifyanswer";
 	}
 	
 	@Glue
