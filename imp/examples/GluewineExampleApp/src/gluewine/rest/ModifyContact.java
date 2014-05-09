@@ -124,7 +124,7 @@ public class ModifyContact extends GluewineServlet {
                 b.append("  	</head>");
                 b.append("	<body>");
                 b.append("		<h1 class='h1'>Modify contact</h1>");
-                b.append("			<form action='ModifyContact' method='POST'>");
+                b.append("			<form action='ModifyAnswer' method='POST'>");
                 		for (Contact contac : contacts) 
                 			{
                 			 if(contac.getId() == id)
