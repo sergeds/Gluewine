@@ -18,11 +18,16 @@
  ***************************************************************************/
 package org.gluewine.jetty;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Date;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.gluewine.utils.Base64;
+import org.gluewine.utils.ErrorLogger;
 
 /**
  * The default servlet.
@@ -62,12 +67,11 @@ public class DefaultServlet extends GluewineServlet
         resp.setDateHeader("Date", now);
         resp.setDateHeader("Expires", now);
 
+
         resp.setContentType("text/html");
         StringBuilder b = new StringBuilder("<HTML><HEAD>");
-        b.append("<TITLE>Gluewine framework</TITLE>");
-        b.append("</HEAD>");
         //
-        b.append("<H1>Welcome to the Gluewine framework.</H1>");
+        b.append("<H1 style='display:inline-block; vertical-align:middle'><img src='data:image/png;charset=utf-8;base64,").append(loadLogoAsBase64String()).append("'> </H1>");
         b.append("<p>We're sorry but the context you tried to reach does not seem to exist!");
         b.append("<br>Here's the list of available contexts:");
         b.append("<ul>");
@@ -100,6 +104,31 @@ public class DefaultServlet extends GluewineServlet
                 e1.printStackTrace();
             }
         }
+    }
+
+    // ===========================================================================
+    /**
+     * Loads the logo image as a resource, and returns its base64 String representation.
+     *
+     * @return The image.
+     */
+    private String loadLogoAsBase64String()
+    {
+        InputStream in = getClass().getResourceAsStream("/logoGluewine.png");
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        int read = 0;
+        try
+        {
+            while ((read = in.read()) > -1)
+                out.write(read);
+            in.close();
+        }
+        catch (Throwable e)
+        {
+            ErrorLogger.log(getClass(), e);
+        }
+
+        return Base64.encode(out.toByteArray());
     }
 
     // ===========================================================================
