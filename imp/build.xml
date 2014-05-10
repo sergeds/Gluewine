@@ -24,6 +24,7 @@
     	<copy file="${dir.src.osgi}/org/gluewine/persistence_jpa/SortLine.java" todir="${dir.bundle.extra}/org/gluewine/persistence/org/gluewine/persistence_jpa" />
     	<copy file="${dir.src.osgi}/org/gluewine/persistence_jpa/FilterOperator.java" todir="${dir.bundle.extra}/org/gluewine/persistence/org/gluewine/persistence_jpa" />
     	<copy file="${dir.src.osgi}/org/gluewine/sessions/SessionExpiredException.java" todir="${dir.bundle.extra}/org/gluewine/sessions/org/gluewine/sessions" />
+    	<copy file="${dir.src.osgi}/../../../logoGluewine.png" todir="${dir.bundle.extra}/org/gluewine/jetty" />
     	<copy file="${dir.src.osgi}/org/gluewine/sessions/Sessions.gwt.xml" todir="${dir.bundle.extra}/org/gluewine/sessions/org/gluewine/" />
     </target>
 
