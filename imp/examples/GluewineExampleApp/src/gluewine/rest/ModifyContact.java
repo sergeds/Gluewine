@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 
-import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -43,30 +42,37 @@ public class ModifyContact extends GluewineServlet {
         b.append(html_prop.getProperty("beginHeader"));
         b.append("Modify contact"); //header h1
         b.append(html_prop.getProperty("endHeader"));
-        
-        b.append("	<form action='ModifyContact' method='POST'>");
-        
+                
         //table contacts
         b.append(html_prop.getProperty("tableHeaderModContacts"));
         
         for (Contact contact : contacts) {
         	b.append("<tr>");
-        	b.append("<td> " + contact.getId() + "</td>");
-        	b.append("<td> " + contact.getFirstname() + "</td>");
-        	b.append("<td> " + contact.getLastname() + "</td>");
-        	b.append("<td> " + contact.getEmail() + "</td>");
-        	b.append("<td> " + contact.getPhoneNumber() + "</td>");
-        	b.append("<td><center><input type='radio' name='modify' value='"+ contact.getId() +"'</center></td>");
+        	b.append("	<form action='ModifyContact' method='POST'>");
+        	b.append("	<td>");
+        	b.append("			<input type='text' name='id' value='" + contact.getId() + "'/>");
+        	b.append("	</td>");
+        	b.append("	<td>");
+        	b.append("			<input type='text' name='firstname' value='"+ contact.getFirstname() +"'/>" );
+        	b.append("	</td>");
+        	b.append("	<td>");
+        	b.append("			<input type='lastname' name='lastname' value='"+ contact.getLastname() +"'/>");
+        	b.append("	</td>");
+        	b.append("	<td>");
+        	b.append("			<input type='text' name='email' value='"+ contact.getEmail() +"'/>");
+        	b.append("	</td>");
+        	b.append("	<td>");
+        	b.append("			<input type='text' name='phone' value='"+ contact.getPhoneNumber() +"'/>");
+        	b.append("	</td>");
+        	b.append("	<td>");
+        	b.append("			<input type='submit' value='Modify contact' name='modifyContact' class='searchButton'/>");
+        	b.append(	"</td>");
+        	b.append("	</form>"); 
         	b.append("</tr>");
         }
-        b.append(html_prop.getProperty("tableEnd"));
-        
- 		b.append(" </br>");
- 		
- 		b.append(				html_prop.getProperty("btn_back"));
-        b.append("				<input type='submit' value='Modify contact' name='submit' class='btn'/>");
- 		b.append("		</form>"); 
-        
+        b.append(html_prop.getProperty("tableEnd"));        
+ 		b.append(" </br>"); 		
+ 		b.append(				html_prop.getProperty("btn_back"));        
  		b.append(html_prop.getProperty("endDoc"));
  		
         resp.setContentLength(b.length());
@@ -91,88 +97,33 @@ public class ModifyContact extends GluewineServlet {
 	@Transactional
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException
     {
-		String modifyContact = req.getParameter("modify");
-        	
-        long id = Long.parseLong(modifyContact);
+		String id1 = req.getParameter("id");
+		System.out.println("test " + id1);
+		
+		String firstname = req.getParameter("firstname");
+        String lastname = req.getParameter("lastname");
+        String email = req.getParameter("email");
+        String phone = req.getParameter("phone");
+        
+        long id = Long.parseLong(id1);      
         
         Contact contact = (Contact) provider.getSession().get(Contact.class, id);
-        
-        //EDIT
-        if (contact != null) {
-        	System.out.println(""+ id);
-        	
-        	String firstname = contact.getFirstname();
-        	String lastname = contact.getLastname();
-        	String email = contact.getEmail();
-        	String phone = contact.getPhoneNumber();
-        	
-        	//making sure we have the contactdata in the new servlet modifyanswer
-        	req.setAttribute("id", id);
-        	req.setAttribute("firstname", firstname);
-        	req.setAttribute("lastname", lastname);
-        	req.setAttribute("email", email);
-        	req.setAttribute("phone", phone);
-        	RequestDispatcher dis = req.getRequestDispatcher("/modifyanswer");
-        	try {
-        		dis.forward(req, resp);
-        	}
-        	catch (Exception e) {
-        		System.out.println(e.getCause());
-        	}
-        	
-        	resp.setContentType("text/html");
-            
-            StringBuilder b = new StringBuilder();
                 
-            b.append(html_prop.getProperty("beginDoc"));
-            b.append("Modify contact"); //title in head
-            b.append(html_prop.getProperty("head"));
-            b.append(html_prop.getProperty("beginHeader"));
-            b.append("Modify contact"); //header h1
-            b.append(html_prop.getProperty("endHeader"));
-            
-            //form contact
-            b.append("			<form action='/modifyanswer' method='POST'>");
-            b.append("				<label for='id' class='lbl'> Id: </label>");
-    		b.append("				<input type='text' name='id' value='" + id + "' class='inpt' disabled='true'/>");
-    		b.append("				</br>");
-    		b.append("				<label for='firstname' class='lbl'>Firstname:</label>");
-		    b.append("				<input type='text' name='firstname' value='"+ firstname +"' class='inpt'/>" );
-		    b.append("				</br>");
-		    b.append("				<label for='lastname' class='lbl'>Lastname:</label>");
-		    b.append("				<input type='lastname' name='lastname' value='"+ lastname +"' class='inpt'/>");
-		    b.append("				</br>");
-		    b.append("				<label for='email' class='lbl'>Email Adress:</label>");
-		    b.append("				<input type='text' name='email' value='"+ email +"' class='inpt'/>");
-		    b.append("				</br>");
-		    b.append("				<label for= 'phone' class='lbl'>Phone:</label>");
-		    b.append("				<input type='text' name='phone' value='"+ phone +"' class='inpt'/>");
-		    b.append("				</br></br>");
-		    b.append(				html_prop.getProperty("btn_back"));
-		    b.append("				<input type='submit' value='Modify contact' name='submit' class='btn'/>");
-		    b.append("		</form>");
-		    
-		    b.append(html_prop.getProperty("endDoc"));
-            
-            resp.setContentLength(b.length());
-            try
-            {
-            	resp.getWriter().println(b.toString());
-            }
-            catch (IOException e)
-            {
-            	e.printStackTrace();
-                try
-                {
-                	resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Server Error");
-                }
-                catch (IOException e1)
-                {
-                	e1.printStackTrace();
-                }
-            }
+        
+        if (contact != null) {
+        	
+        	contact.setFirstname(firstname);
+        	contact.setLastname(lastname);
+        	contact.setPhoneNumber(phone);
+        	contact.setEmail(email);
+        	
+        	provider.getSession().update(contact);
+        	provider.commitCurrentSession();
         }
-        else
-            System.out.println("There is no contact with id " + id);
+        else {
+        	System.out.println("There is no contact with id " + id);
+        }
+        
+        resp.sendRedirect("http://localhost:8000/modifycontact/"); 
     }
 }
