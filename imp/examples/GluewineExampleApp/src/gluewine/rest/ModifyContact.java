@@ -7,7 +7,6 @@ import java.util.Properties;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import org.gluewine.core.Glue;
 import org.gluewine.jetty.GluewineServlet;
@@ -108,19 +107,19 @@ public class ModifyContact extends GluewineServlet {
         	String phone = contact.getPhoneNumber();
         	
         	//making sure we have the contactdata in the new servlet modifyanswer
-        	req.getSession().setAttribute("id", id);
-        	req.getSession().setAttribute("firstname", firstname);
-        	req.getSession().setAttribute("lastname", lastname);
-        	req.getSession().setAttribute("email", email);
-        	req.getSession().setAttribute("phone", phone);
+        	req.setAttribute("id", id);
+        	req.setAttribute("firstname", firstname);
+        	req.setAttribute("lastname", lastname);
+        	req.setAttribute("email", email);
+        	req.setAttribute("phone", phone);
+        	RequestDispatcher dis = req.getRequestDispatcher("/modifyanswer");
+        	try {
+        		dis.forward(req, resp);
+        	}
+        	catch (Exception e) {
+        		System.out.println(e.getCause());
+        	}
         	
-        	/*HttpSession session = req.getSession();          	
-        	session.setAttribute("id", id);
-        	session.setAttribute("firstname", firstname);
-        	session.setAttribute("lastname", lastname);
-        	session.setAttribute("email", email);
-        	session.setAttribute("phone", phone);*/
-        	        	
         	resp.setContentType("text/html");
             
             StringBuilder b = new StringBuilder();
