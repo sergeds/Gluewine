@@ -1,0 +1,5 @@
+xstream/xstream-1.4.4.jar
+support/jline-2.11-SNAPSHOT.jar
+xstream/xpp3_min-1.1.4c.jar
+support/log4j-1.2.15.jar
+support/cglib-nodep-2.2.3.jar
