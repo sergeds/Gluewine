@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 
+import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.gluewine.core.Glue;
 import org.gluewine.jetty.GluewineServlet;
@@ -100,6 +102,25 @@ public class ModifyContact extends GluewineServlet {
         if (contact != null) {
         	System.out.println(""+ id);
         	
+        	String firstname = contact.getFirstname();
+        	String lastname = contact.getLastname();
+        	String email = contact.getEmail();
+        	String phone = contact.getPhoneNumber();
+        	
+        	//making sure we have the contactdata in the new servlet modifyanswer
+        	req.getSession().setAttribute("id", id);
+        	req.getSession().setAttribute("firstname", firstname);
+        	req.getSession().setAttribute("lastname", lastname);
+        	req.getSession().setAttribute("email", email);
+        	req.getSession().setAttribute("phone", phone);
+        	
+        	/*HttpSession session = req.getSession();          	
+        	session.setAttribute("id", id);
+        	session.setAttribute("firstname", firstname);
+        	session.setAttribute("lastname", lastname);
+        	session.setAttribute("email", email);
+        	session.setAttribute("phone", phone);*/
+        	        	
         	resp.setContentType("text/html");
             
             StringBuilder b = new StringBuilder();
@@ -117,16 +138,16 @@ public class ModifyContact extends GluewineServlet {
     		b.append("				<input type='text' name='id' value='" + id + "' class='inpt' disabled='true'/>");
     		b.append("				</br>");
     		b.append("				<label for='firstname' class='lbl'>Firstname:</label>");
-		    b.append("				<input type='text' name='firstname' value='"+ contact.getFirstname() +"' class='inpt'/>" );
+		    b.append("				<input type='text' name='firstname' value='"+ firstname +"' class='inpt'/>" );
 		    b.append("				</br>");
 		    b.append("				<label for='lastname' class='lbl'>Lastname:</label>");
-		    b.append("				<input type='lastname' name='lastname' value='"+ contact.getLastname() +"' class='inpt'/>");
+		    b.append("				<input type='lastname' name='lastname' value='"+ lastname +"' class='inpt'/>");
 		    b.append("				</br>");
 		    b.append("				<label for='email' class='lbl'>Email Adress:</label>");
-		    b.append("				<input type='text' name='email' value='"+ contact.getEmail() +"' class='inpt'/>");
+		    b.append("				<input type='text' name='email' value='"+ email +"' class='inpt'/>");
 		    b.append("				</br>");
 		    b.append("				<label for= 'phone' class='lbl'>Phone:</label>");
-		    b.append("				<input type='text' name='phone' value='"+ contact.getPhoneNumber() +"' class='inpt'/>");
+		    b.append("				<input type='text' name='phone' value='"+ phone +"' class='inpt'/>");
 		    b.append("				</br></br>");
 		    b.append(				html_prop.getProperty("btn_back"));
 		    b.append("				<input type='submit' value='Modify contact' name='submit' class='btn'/>");
