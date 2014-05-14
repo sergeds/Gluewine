@@ -55,9 +55,9 @@ public class Commands implements CommandProvider
         cmd.addOption("-t", "Prints the table: name", false, false);
 
         //This option is required, so the user will have to add this option to the command.
+        //however it doesn't need a value, just adding -a is enough for this command
         cmd.addOption("-a", "Nothing yet", true, false);
 
         return l;
     }
-
 }
