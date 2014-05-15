@@ -1,4 +1,4 @@
-package gluewine.rest;
+package gluewine.servlet;
 
 import java.io.IOException;
 import java.util.Properties;

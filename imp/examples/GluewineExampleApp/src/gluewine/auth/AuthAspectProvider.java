@@ -14,7 +14,7 @@ import org.gluewine.core.Glue;
 import org.gluewine.persistence.Transactional;
 import org.gluewine.persistence_jpa_hibernate.HibernateSessionProvider;
 
-import gluewine.rest.Login;
+import gluewine.servlet.Login;
 import gluewine.entities.User;
 
 
