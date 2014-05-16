@@ -91,7 +91,7 @@ public class VaadinTestUi extends GluewineVaadinUI
 
         for (String fieldName : fieldNames)
         {
-            if (RECNO.equals(fieldName))
+            if (!RECNO.equals(fieldName))
             {
                 TextField field = new TextField(fieldName);
                 editorLayout.addComponent(field);
