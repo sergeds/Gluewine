@@ -18,6 +18,9 @@
  ***************************************************************************/
 package org.gluewine.jetty;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.servlet.http.HttpServlet;
 
 /**
@@ -42,4 +45,16 @@ public abstract class GluewineServlet extends HttpServlet
      * @return The context path.
      */
     public abstract String getContextPath();
+
+    // ===========================================================================
+    /**
+     * Returns an empty map of properties. Subclasses should override this method
+     * if properties need to be assigned at initialization time.
+     *
+     * @return The map of properties.
+     */
+    public Map<String, String> getInitParameters()
+    {
+        return new HashMap<String, String>();
+    }
 }

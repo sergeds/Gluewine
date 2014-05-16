@@ -32,6 +32,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 
+import javax.servlet.Servlet;
 import javax.servlet.ServletContextListener;
 
 import org.apache.log4j.Logger;
@@ -71,7 +72,7 @@ import org.gluewine.utils.ErrorLogger;
  * @author fks/Serge de Schaetzen
  *
  */
-public class GluewineJettyLauncher implements RepositoryListener<GluewineServlet>, CommandProvider
+public class GluewineJettyLauncher implements RepositoryListener<GluewineServlet>, CommandProvider, GluewineServletProperties
 {
     // ===========================================================================
     /**
@@ -424,10 +425,15 @@ public class GluewineJettyLauncher implements RepositoryListener<GluewineServlet
     }
 
     // ===========================================================================
-    @Override
-    public void registered(GluewineServlet t)
+    /**
+     * Registers a servlet with the given context path.
+     *
+     * @param ctx The context path.
+     * @param servlet The servlet to register.
+     * @param initParameters Initialization parameters to add to the servlet holder. (may be null)
+     */
+    public void register(String ctx, Servlet servlet, Map<String, String> initParameters)
     {
-        String ctx = t.getContextPath();
         if (!ctx.startsWith("/")) ctx = "/" + ctx;
         int i = ctx.indexOf('/', 1);
         String path = "/*";
@@ -446,13 +452,39 @@ public class GluewineJettyLauncher implements RepositoryListener<GluewineServlet
             if (logger.isDebugEnabled()) logger.debug("Creating handler for context " + ctx);
             handler = new ServletContextHandler(ServletContextHandler.SESSIONS);
             handler.setContextPath(ctx);
+            if (initParameters.containsKey(RESOURCE_BASE)) handler.setResourceBase(initParameters.get(RESOURCE_BASE));
             handlers.put(ctx, handler);
             contexts.addHandler(handler);
         }
 
         if (logger.isDebugEnabled()) logger.debug("Adding path: " + path + " to context " + ctx);
-        ServletHolder holder = new ServletHolder(t);
+        ServletHolder holder = new ServletHolder((Servlet) servlet);
+        if (initParameters != null) holder.setInitParameters(initParameters);
+
         handler.addServlet(holder, path);
+    }
+
+    // ===========================================================================
+    /**
+     * Unregisters the context specified.
+     *
+     * @param ctx The context to unregister.
+     */
+    public void unregister(String ctx)
+    {
+        if (!ctx.startsWith("/")) ctx = "/" + ctx;
+        int i = ctx.indexOf('/', 1);
+        if (i > 1) ctx = ctx.substring(0, i);
+        Handler h = handlers.remove(ctx);
+        if (h != null) contexts.removeHandler(h);
+    }
+
+    // ===========================================================================
+    @Override
+    public void registered(GluewineServlet t)
+    {
+        String ctx = t.getContextPath();
+        register(ctx, t, t.getInitParameters());
     }
 
     // ===========================================================================
@@ -460,10 +492,6 @@ public class GluewineJettyLauncher implements RepositoryListener<GluewineServlet
     public void unregistered(GluewineServlet t)
     {
         String ctx = t.getContextPath();
-        if (!ctx.startsWith("/")) ctx = "/" + ctx;
-        int i = ctx.indexOf('/', 1);
-        if (i > 1) ctx = ctx.substring(0, i);
-        Handler h = handlers.remove(ctx);
-        if (h != null) contexts.removeHandler(h);
+        unregister(ctx);
     }
 }
