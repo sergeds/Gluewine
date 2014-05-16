@@ -74,9 +74,8 @@ public class DefaultServlet extends GluewineServlet implements GluewineServletPr
 
         resp.setContentType("text/html");
         StringBuilder b = new StringBuilder("<HTML><HEAD>");
-        //
-       // b.append("<H1 style='display:inline-block; vertical-align:middle'><img src='data:image/png;charset=utf-8;base64,").append(loadLogoAsBase64String()).append("'> </H1>");
-        b.append("<H1 style='display:inline-block; vertical-align:middle'><img src='gluewineLogo.png'> </H1>");
+
+        b.append("<H1 style='display:inline-block; vertical-align:middle'><img src='data:image/png;charset=utf-8;base64,").append(loadLogoAsBase64String()).append("'> </H1>");
         b.append("<p>We're sorry but the context you tried to reach does not seem to exist!");
         b.append("<br>Here's the list of available contexts:");
         b.append("<ul>");
