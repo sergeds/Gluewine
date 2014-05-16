@@ -19,13 +19,17 @@
 package org.gluewine.jetty;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.gluewine.launcher.Launcher;
 import org.gluewine.utils.Base64;
 import org.gluewine.utils.ErrorLogger;
 
@@ -35,7 +39,7 @@ import org.gluewine.utils.ErrorLogger;
  * @author fks/Serge de Schaetzen
  *
  */
-public class DefaultServlet extends GluewineServlet
+public class DefaultServlet extends GluewineServlet implements GluewineServletProperties
 {
     // ===========================================================================
     /**
@@ -70,7 +74,7 @@ public class DefaultServlet extends GluewineServlet
 
         resp.setContentType("text/html");
         StringBuilder b = new StringBuilder("<HTML><HEAD>");
-        //
+
         b.append("<H1 style='display:inline-block; vertical-align:middle'><img src='data:image/png;charset=utf-8;base64,").append(loadLogoAsBase64String()).append("'> </H1>");
         b.append("<p>We're sorry but the context you tried to reach does not seem to exist!");
         b.append("<br>Here's the list of available contexts:");
@@ -104,6 +108,15 @@ public class DefaultServlet extends GluewineServlet
                 e1.printStackTrace();
             }
         }
+    }
+
+    // ===========================================================================
+    @Override
+    public Map<String, String> getInitParameters()
+    {
+        Map<String, String> params = new HashMap<String, String>();
+        params.put(RESOURCE_BASE, new File(Launcher.getInstance().getConfigDirectory(), "jetty/default").getAbsolutePath());
+        return params;
     }
 
     // ===========================================================================
