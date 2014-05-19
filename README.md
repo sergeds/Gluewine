@@ -10,4 +10,5 @@ When you start working with Gluewine, you will notice there are also lots of oth
 
 
 In the code of Gluewine, you can find some examples in the Gluewine/imp/examples folder. In our wiki-page on Github you can find an explanation about these examples. 
+We made an example application to help you understand the usage of Gluewine. With the documantatie on wiki we will help you understand the different aspects of this application. This page can be found here: https://github.com/Gluewine/Gluewine/wiki/Example-application---Contactmanagement. On this page will also be a link where you can download the package with the code for the example application.
 If something isn't clear of if you have any questions, feel free to subscribe to our mailinglist on our webiste: www.gluewine.org/Community.html
