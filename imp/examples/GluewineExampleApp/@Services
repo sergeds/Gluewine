@@ -9,4 +9,3 @@ gluewine.servlet.Adminpanel
 gluewine.servlet.DeleteContact
 gluewine.servlet.ModifyContact
 gluewine.auth.AuthAspectProvider
-gluewine.rest.TestRest

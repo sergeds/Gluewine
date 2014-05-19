@@ -18,6 +18,10 @@
     <target name="build" description="Build example">
         <mkdir dir="${dir.build}"/>
         <mkdir dir="${dir.lib}/example"/>
+        
+        <!-- Here we add all the directory annotation files -->
+        <copy file="@Services" todir="${dir.lib}/example"/>
+        
         <javac srcdir="${dir.src}" destdir="${dir.build}" includeantruntime="false" encoding="utf8">
             <classpath refid="classpath"/>
         </javac>

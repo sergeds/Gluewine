@@ -32,57 +32,10 @@ public class AuthAspectProvider implements AspectProvider{
 	public void beforeInvocation(Object o, Method m, Object[] params) throws Throwable
 	{
 		//We only need to check the user when the login-servlet is called
-		if (o instanceof Login) {
+		if (o instanceof Login)
 			System.out.println("(Login)About to Invoke --" + m.getName());
-			
-			/*
-			 * Because all the methodes that are called on in the Login-class will be invoked,
-			 * we need to check if the method doPost is called on, 
-			 * because this is where the user logs on.
-			 */
-			if (m.getName().equals("doPost")) {
 				
-				/*Object is an array with all the parameters of the method that is invoked
-				 * In this case, the parameters are: HttpServletRequest and HttpServletResponse
-				 */
-				Object objRequest = params[0];
-				Object objResponse = params[1];
-				
-				HttpServletRequest req = (HttpServletRequest) objRequest;
-				HttpServletResponse resp = (HttpServletResponse) objResponse;
-				
-				String username = req.getParameter("username");
-		        String password = req.getParameter("password");
-		        
-		        //CONTROL MOET NOG WEG!
-		        System.out.println("username: " + username + "  pasword: " + password);
-		        
-		        List<gluewine.entities.User> users = provider.getSession().getAll(gluewine.entities.User.class);
-		        
-		        //We check if the userlist is empty, just in case something went worng in the database
-			    if (users.isEmpty()) 
-			    {
-			    	System.out.println("The userlist is empty");
-			    }
-			    else {
-				    for (gluewine.entities.User user : users)
-				    {				    	
-				    	if (user.getUsername().equals(username) && user.getPassword().equals(password)) 
-		            	{
-				    		//System.out.println("userrole: " + user.getRole());
-				    		
-						    if (user.getRole()) { //true => user is admin		            	
-						    	resp.sendRedirect("http://localhost:8000/adminpanel/");
-						    }
-						    else {
-						    	resp.sendRedirect("http://localhost:8000/contacts/");
-						    }
-		            	}//end if - check username & passwd
-				    }// end for
-			    }// end else - userlist not empty       	
-			}//end if - method doPost
-		}//end if - instanceof Login		
-	}//end method beforeInvocation
+	}
 	
 	@Override
 	public void afterSuccess(Object o, Method m, Object[] params, Object result)

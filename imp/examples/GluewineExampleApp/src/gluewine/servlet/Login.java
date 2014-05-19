@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.Properties;
 
 import gluewine.entities.User;
+import gluewine.entities.LoginSession;
 
 import org.gluewine.core.Glue;
 import org.gluewine.persistence_jpa.Filter;
@@ -28,7 +29,10 @@ public class Login extends GluewineServlet {
  	}
  	
  	@Glue
-    private HibernateSessionProvider provider;
+    private HibernateSessionProvider userProvider;
+ 	
+ 	@Glue
+ 	private HibernateSessionProvider sessionProvider;
  	
  	@Glue(properties = "html.properties")
     private Properties html_prop;
@@ -83,72 +87,65 @@ public class Login extends GluewineServlet {
  	
  	@Transactional
  	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException
-    {
-        String username = req.getParameter("username");
+    {		
+ 		String username = req.getParameter("username");
         String password = req.getParameter("password");
         
-        resp.setContentType("text/html");
+        List<gluewine.entities.User> users = userProvider.getSession().getAll(gluewine.entities.User.class);
         
-        List<gluewine.entities.User> users = provider.getSession().getAll(gluewine.entities.User.class);
-
-        
-        if (users.isEmpty()) 
-        {
-        	resp.getWriter().write(""
-        			+ "<html>"
-        			+ "		<head>"
-        			+ "			<title>Login</title>"
-        			+ "		</head>"
-        			+ "		<body>"
-        			+ "			<h1>Testing</h1>"
-        			+ "				<p> I'm terribly sorry, but no users were found.</p>"
-        			+ "		</body>"
-        			+ "</html>");
-        }
-        else {
-        	/* With this boolean we know when the user is found.
-        	 * When the user is not found, we redirect to the loginpage
-        	 */
+        //We check if the userlist is empty, just in case something went worng in the database
+	    if (users.isEmpty()) 
+	    {
+	    	resp.setContentType("text/html");
+	 		StringBuilder b = new StringBuilder();
+	 		
+	    	b.append(html_prop.getProperty("beginDoc"));
+	    	b.append(html_prop.getProperty("head"));
+	    	b.append(html_prop.getProperty("no_users"));
+	    	b.append(html_prop.getProperty("btn_login_back"));
+	    	b.append(html_prop.getProperty("endDoc"));
+	    	resp.setContentLength(b.length());
+	 		resp.getWriter().println(b.toString());
+	    }
+	    else {
+	    	//With this boolean we know when the user is found.
+        	//When the user is not found, we redirect to the loginpage        	 
         	Boolean userFound = false;
         	
-        	for (gluewine.entities.User user : users)
-            {        		
-            	if (user.getUsername().equals(username) && user.getPassword().equals(password)) 
+		    for (gluewine.entities.User user : users)
+		    {				    	
+		    	if (user.getUsername().equals(username) && user.getPassword().equals(password)) 
             	{
-            		userFound = true;
-            		
-            		StringBuilder b = new StringBuilder(""
-            				+ "<html>");
-            		b.append("		<head>");
-            		b.append("			<title> Gluewine framework </title>");
-            		b.append("		</head>");
-            		b.append("		<body>");
-            		b.append("			<p>Welcome, " + username + " </p>");
-            		b.append("		</body>");
-            		b.append("</html>");
-            		resp.setContentLength(b.length());
-            	
-	            	try {
-	            		resp.getWriter().println(b.toString());
-	            	}
-	            	catch(IOException e)
-	            	{
-	            		e.printStackTrace();
-	            		
-	            		try {
-	            			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Server Error");
-	            		}
-	            		catch (IOException e1)
-	            		{
-	            			e1.printStackTrace();
-	            		}
-	            	}
+		    		//user toevoegen aan de sessie
+		    		//addUserSession(username, user.getRole());
+		    		
+				    if (user.getRole()) { //true => user is admin		            	
+				    	resp.sendRedirect("http://localhost:8000/adminpanel/");
+				    }
+				    else {
+				    	resp.sendRedirect("http://localhost:8000/contacts/");
+				    }
             	}
-            }//end for
-        	
-        	if (!userFound) {
-        		resp.sendRedirect("http://localhost:8000/login/");
+		    }
+		    
+		    if (!userFound) {
+		    	//JOptionPane.showMessageDialog(null, "Wrong login or password", "error", JOptionPane.ERROR_MESSAGE);
+		    	resp.sendRedirect("http://localhost:8000/login/");
         	}
-        }// end else users.isEmpty()   
-    }//end doPost
+	    }
+    }
+ 	
+ 	/*
+ 	@Transactional
+ 	private void addUserSession(String username, Boolean isAdmin) {
+ 		LoginSession newSession = new LoginSession();
+ 		
+ 		//A user logged in, we save the username, the role and put the isActive value on true
+ 		newSession.setUsername(username);
+ 		newSession.setIsAdmin(isAdmin);
+ 		newSession.setIsActive(true);
+        
+ 		sessionProvider.getSession().add(newSession);
+ 		sessionProvider.commitCurrentSession();
+ 	}*/
 }
