@@ -44,8 +44,10 @@ public class OverviewContacts extends GluewineServlet {
         b.append("Contacts"); //header h1
         b.append(html_prop.getProperty("endHeader"));
         
+        b.append(html_prop.getProperty("btn_logout"));
         //table contacts
         b.append(html_prop.getProperty("tableHeaderContacts"));
+        
         
         for (Contact contact : contacts) {
         	b.append("		<tr>");
@@ -56,8 +58,7 @@ public class OverviewContacts extends GluewineServlet {
     		b.append("			<td> " + contact.getPhoneNumber() + "</td>");
     		b.append("		</tr>"); 
         }
-        b.append(html_prop.getProperty("tableEnd"));
-        
+        b.append(html_prop.getProperty("tableEnd"));       
         b.append(html_prop.getProperty("endDoc"));
         
         resp.setContentLength(b.length());

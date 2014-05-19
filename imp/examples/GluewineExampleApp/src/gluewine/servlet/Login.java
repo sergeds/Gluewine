@@ -9,6 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Date;
 import java.util.Properties;
+import java.util.Calendar;
+
+import java.text.*;
 
 import gluewine.entities.User;
 import gluewine.entities.LoginSession;
@@ -29,10 +32,7 @@ public class Login extends GluewineServlet {
  	}
  	
  	@Glue
-    private HibernateSessionProvider userProvider;
- 	
- 	@Glue
- 	private HibernateSessionProvider sessionProvider;
+    private HibernateSessionProvider provider;
  	
  	@Glue(properties = "html.properties")
     private Properties html_prop;
@@ -59,7 +59,6 @@ public class Login extends GluewineServlet {
  		b.append("				<br/><br/>");
  		
  		b.append("				<a href='http://localhost:8000/contacts/'>");
- 		b.append("					<input type='button' value='Skip login' class='btnLogin'/>");
  		b.append("				</a>");
  		b.append("				<input type='submit' value='Login' name='submit' class='btnLogin'/>");
  		b.append("			</form>");		
@@ -91,7 +90,7 @@ public class Login extends GluewineServlet {
  		String username = req.getParameter("username");
         String password = req.getParameter("password");
         
-        List<gluewine.entities.User> users = userProvider.getSession().getAll(gluewine.entities.User.class);
+        List<gluewine.entities.User> users = provider.getSession().getAll(gluewine.entities.User.class);
         
         //We check if the userlist is empty, just in case something went worng in the database
 	    if (users.isEmpty()) 
@@ -116,8 +115,10 @@ public class Login extends GluewineServlet {
 		    {				    	
 		    	if (user.getUsername().equals(username) && user.getPassword().equals(password)) 
             	{
+		    		userFound = true;
 		    		//user toevoegen aan de sessie
-		    		//addUserSession(username, user.getRole());
+		    		
+		    		addUserSession(username, user.getRole());
 		    		
 				    if (user.getRole()) { //true => user is admin		            	
 				    	resp.sendRedirect("http://localhost:8000/adminpanel/");
@@ -135,17 +136,19 @@ public class Login extends GluewineServlet {
 	    }
     }
  	
- 	/*
+ 	
  	@Transactional
  	private void addUserSession(String username, Boolean isAdmin) {
  		LoginSession newSession = new LoginSession();
+ 		String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HH:mm").format(Calendar.getInstance().getTime());
  		
  		//A user logged in, we save the username, the role and put the isActive value on true
  		newSession.setUsername(username);
  		newSession.setIsAdmin(isAdmin);
  		newSession.setIsActive(true);
+ 		newSession.setLoginTime(timeStamp);
         
- 		sessionProvider.getSession().add(newSession);
- 		sessionProvider.commitCurrentSession();
- 	}*/
+ 		provider.getSession().add(newSession);
+ 		provider.commitCurrentSession();
+ 	}
 }

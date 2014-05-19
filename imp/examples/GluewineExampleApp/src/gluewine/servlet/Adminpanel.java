@@ -42,7 +42,7 @@ public class Adminpanel extends GluewineServlet {
         b.append(html_prop.getProperty("beginHeader"));
         b.append("Adminpanel"); //header h1
         b.append(html_prop.getProperty("endHeader"));
-        
+        b.append(html_prop.getProperty("btn_logout"));
                
         //table contacts
         b.append(html_prop.getProperty("tableHeaderContacts"));

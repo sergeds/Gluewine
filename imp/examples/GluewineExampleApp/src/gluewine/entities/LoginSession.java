@@ -24,6 +24,12 @@ public class LoginSession
 	@Column(name="isActive")
 	private Boolean isActive; //true when the user is logged in, false when the session is over	
 	
+	@Column(name="loginTime")
+	private String loginTime;
+	
+	@Column(name="logoutTime")
+	private String logoutTime;
+	
 	public long getId(){
 		return id;
 	}
@@ -54,5 +60,21 @@ public class LoginSession
 	
 	public void setIsActive(Boolean isActive) {
 		this.isActive = isActive;
+	}
+	
+	public String getLoginTime(){
+		return loginTime;
+	}
+	
+	public void setLoginTime(String loginTime) {
+		this.loginTime = loginTime;
+	}
+	
+	public String getLogoutTime() {
+		return logoutTime;
+	}
+	
+	public void setLogoutTime(String logoutTime) {
+		this.logoutTime = logoutTime;
 	}
 }

@@ -20,15 +20,11 @@ import gluewine.entities.User;
 
 public class AuthAspectProvider implements AspectProvider{
 
-	@Glue
-    private HibernateSessionProvider provider;
-		
 	/*
 	 * When the users logs in, we check in the beforeInvocation-method if he is an admin or a simple user.
 	 * Based on this, we redirect him to either the homepage, or the adminpannel.
 	 */
 	@Override
-	@Transactional
 	public void beforeInvocation(Object o, Method m, Object[] params) throws Throwable
 	{
 		//We only need to check the user when the login-servlet is called
