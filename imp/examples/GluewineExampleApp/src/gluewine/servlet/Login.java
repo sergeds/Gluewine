@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Date;
 import java.util.Properties;
 import java.util.Calendar;
-
 import java.text.*;
 
 import gluewine.entities.User;
@@ -34,11 +33,15 @@ public class Login extends GluewineServlet {
  	@Glue
     private HibernateSessionProvider provider;
  	
+ 	@Glue
+ 	private HibernateSessionProvider loginSessionProvider;
+ 	
  	@Glue(properties = "html.properties")
     private Properties html_prop;
  	
  	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
  	{
+ 		
  		resp.setContentType("text/html");
 
  		StringBuilder b = new StringBuilder();
@@ -87,6 +90,9 @@ public class Login extends GluewineServlet {
  	@Transactional
  	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException
     {		
+ 		//with this method, we set all the users that were active (logged on) and forgot to logout, to non-active
+ 		setAllSessionsFalse();
+ 		
  		String username = req.getParameter("username");
         String password = req.getParameter("password");
         
@@ -149,6 +155,29 @@ public class Login extends GluewineServlet {
  		newSession.setLoginTime(timeStamp);
         
  		provider.getSession().add(newSession);
+ 		
+ 		System.out.println("test");
  		provider.commitCurrentSession();
+ 	}
+ 	
+ 	
+ 	@Transactional
+ 	private void setAllSessionsFalse() {
+ 		
+ 		List<LoginSession> sessions = loginSessionProvider.getSession().getAll(LoginSession.class);
+		
+		LoginSession activeSession = new LoginSession();
+		 
+		for (LoginSession session : sessions) {
+			if (session.getIsActive()) 
+			{
+				activeSession = session;
+				
+				activeSession.setIsActive(false);
+				
+				loginSessionProvider.getSession().update(activeSession);
+				loginSessionProvider.commitCurrentSession();
+			}
+		}
  	}
 }
