@@ -5,8 +5,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
 @Entity
-public class Color
-{
+public class Color {
+	
     @Id
     @GeneratedValue
     private long id = 0;

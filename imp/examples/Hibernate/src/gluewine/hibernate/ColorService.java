@@ -15,8 +15,8 @@ import org.gluewine.persistence_jpa.FilterOperator;
 import org.gluewine.persistence_jpa_hibernate.HibernateSessionProvider;
 import org.gluewine.persistence.Transactional;
 
-public class ColorService implements CommandProvider
-{
+public class ColorService implements CommandProvider {
+	
     @Glue
     private HibernateSessionProvider provider;
 
@@ -115,7 +115,6 @@ public class ColorService implements CommandProvider
         String name = cc.getOption("-name");
         int rgb = Integer.parseInt(cc.getOption("-rgb"));
 
-
         Color color = (Color) provider.getSession().get(Color.class, id);
 
         if (color != null) {
@@ -128,10 +127,6 @@ public class ColorService implements CommandProvider
             cc.println("There is no color with id " + id);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.gluewine.console.CommandProvider#getCommands()
-     */
     @Override
     public List<CLICommand> getCommands()
     {

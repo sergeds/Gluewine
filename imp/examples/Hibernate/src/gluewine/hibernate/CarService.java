@@ -16,11 +16,10 @@ import org.gluewine.persistence.Transactional;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
-public class CarService implements CommandProvider
-{
+public class CarService implements CommandProvider {
+	
     @Glue
     private HibernateSessionProvider provider;
-
 
     /*
      *The method car_list.
@@ -56,7 +55,6 @@ public class CarService implements CommandProvider
         newCar.setBrand(newBrand);
         newCar.setModel(newModel);
 
-
         //Check if the chosen color is available
         Color color = (Color) provider.getSession().get(Color.class, newColor);
 
@@ -67,10 +65,8 @@ public class CarService implements CommandProvider
             //Before we add the car, we check if everthing went the way it should have.
             provider.getSession(new TransactionCallback() {
                 /*
-                 * @see org.gluewine.persistence.TransactionCallback#transactionRolledBack()
-                 *
-                 * Something went wrong with the transaction, the database was rolled back meaning the car
-                 * wasn't added.
+                 * Something went wrong with the transaction, 
+                 * the database was rolled back meaning the car wasn't added.
                  */
                 @Override
                 public void transactionRolledBack()
@@ -135,10 +131,6 @@ public class CarService implements CommandProvider
             cc.println("There is no car with id " + id);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.gluewine.console.CommandProvider#getCommands()
-     */
     @Override
     public List<CLICommand> getCommands()
     {
