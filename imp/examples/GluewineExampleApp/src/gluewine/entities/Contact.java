@@ -9,8 +9,7 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "Contact")
-public class Contact
-{
+public class Contact {
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id = 0;
@@ -31,39 +30,48 @@ public class Contact
 		return id;
 	}
 
-	public void setId(long id) {
+	public void setId(long id) 
+	{
 		this.id = id;
 	}
 
-	public String getFirstname() {
+	public String getFirstname() 
+	{
 		return Firstname;
 	}
 
-	public void setFirstname(String firstname) {
+	public void setFirstname(String firstname) 
+	{
 		Firstname = firstname;
 	}
 
-	public String getLastname() {
+	public String getLastname() 
+	{
 		return Lastname;
 	}
 
-	public void setLastname(String lastname) {
+	public void setLastname(String lastname) 
+	{
 		Lastname = lastname;
 	}
 
-	public String getPhoneNumber() {
+	public String getPhoneNumber() 
+	{
 		return PhoneNumber;
 	}
 
-	public void setPhoneNumber(String phoneNumber) {
+	public void setPhoneNumber(String phoneNumber) 
+	{
 		PhoneNumber = phoneNumber;
 	}
 
-	public String getEmail() {
+	public String getEmail() 
+	{
 		return Email;
 	}
 
-	public void setEmail(String email) {
+	public void setEmail(String email) 
+	{
 		Email = email;
 	}	
 }

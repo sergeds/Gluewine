@@ -16,13 +16,13 @@ import gluewine.entities.Contact;
 
 public class AddContact extends GluewineServlet {
 
-	/*
-	 * We call on this method in the browser by adressing the following link:
-	 * 
-	 * http://localhost:8000/addcontact/
+	
+	/* We call on this method in the browser by adressing the following link: 
+	 * http://localhost:portnumber/addcontact/
 	 */
 	@Override
-	public String getContextPath() {
+	public String getContextPath() 
+	{
 		return "addcontact";
 	}
 	
@@ -68,7 +68,7 @@ public class AddContact extends GluewineServlet {
         
         try
         {
-            resp.getWriter().println(b.toString()); //print b
+            resp.getWriter().println(b.toString());
         }
         catch (IOException e)
         {
@@ -98,6 +98,7 @@ public class AddContact extends GluewineServlet {
         if (newPhone.matches(regexPhone) && newEmail.matches(regexEmail)) 
         {
         	Contact newContact = new Contact();
+        	
 	        newContact.setFirstname(newFirstname);
 	        newContact.setLastname(newLastname);
 	        newContact.setPhoneNumber(newPhone);

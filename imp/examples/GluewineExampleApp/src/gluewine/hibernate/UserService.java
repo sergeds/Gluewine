@@ -18,8 +18,8 @@ import org.hibernate.criterion.Restrictions;
 
 import gluewine.entities.User;
 
-public class UserService implements CommandProvider
-{
+public class UserService implements CommandProvider {
+	
 	@Glue
     private HibernateSessionProvider provider;
 
@@ -61,6 +61,7 @@ public class UserService implements CommandProvider
         List <gluewine.entities.User> l = provider.getSession().getFiltered(gluewine.entities.User.class, filter);
 
         cc.tableHeader("Id", "Username", "Is admin");
+        
         for (gluewine.entities.User user : l) 
         {
     		cc.tableRow(Long.toString(user.getId()), user.getUsername(), Boolean.toString(user.getRole()));

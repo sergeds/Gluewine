@@ -15,9 +15,13 @@ import org.gluewine.persistence_jpa_hibernate.HibernateSessionProvider;
 import gluewine.entities.Contact;
 
 public class ModifyContact extends GluewineServlet {
-
+	
+	/* We call on this method in the browser by adressing the following link: 
+	 * http://localhost:portnumber/modifycontact/
+	 */
 	@Override
-	public String getContextPath() {
+	public String getContextPath() 
+	{
 		return "modifycontact";
 	}
 	
@@ -70,6 +74,7 @@ public class ModifyContact extends GluewineServlet {
         	b.append("	</form>"); 
         	b.append("</tr>");
         }
+        
         b.append(html_prop.getProperty("tableEnd"));        
  		b.append(" </br>"); 		
  		b.append(				html_prop.getProperty("btn_back"));        
@@ -98,7 +103,6 @@ public class ModifyContact extends GluewineServlet {
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException
     {
 		String id1 = req.getParameter("id");
-		System.out.println("test " + id1);
 		
 		String firstname = req.getParameter("firstname");
         String lastname = req.getParameter("lastname");
@@ -120,9 +124,8 @@ public class ModifyContact extends GluewineServlet {
         	provider.getSession().update(contact);
         	provider.commitCurrentSession();
         }
-        else {
+        else 
         	System.out.println("There is no contact with id " + id);
-        }
         
         resp.sendRedirect("http://localhost:8000/modifycontact/"); 
     }

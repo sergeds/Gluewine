@@ -17,8 +17,7 @@ import org.gluewine.persistence_jpa_hibernate.HibernateSessionProvider;
 import gluewine.servlet.Login;
 import gluewine.entities.User;
 
-
-public class AuthAspectProvider implements AspectProvider{
+public class AuthAspectProvider implements AspectProvider {
 
 	@Override
 	public void beforeInvocation(Object o, Method m, Object[] params) throws Throwable

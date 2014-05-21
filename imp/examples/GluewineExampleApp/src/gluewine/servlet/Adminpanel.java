@@ -16,8 +16,12 @@ import gluewine.entities.Contact;
 
 public class Adminpanel extends GluewineServlet {
 
+	/* We call on this method in the browser by adressing the following link: 
+	 * http://localhost:portnumber/adminpanel/
+	 */
 	@Override
-	public String getContextPath() {
+	public String getContextPath() 
+	{
 		return "adminpanel";
 	}
 	

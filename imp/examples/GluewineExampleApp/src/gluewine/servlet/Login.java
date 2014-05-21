@@ -25,6 +25,9 @@ import org.gluewine.jetty.GluewineServlet;
 
 public class Login extends GluewineServlet {
 	
+	/* We call on this method in the browser by adressing the following link: 
+	 * http://localhost:portnumber/login/
+	 */
 	@Override
  	public String getContextPath() {
  		return "login";
@@ -126,26 +129,25 @@ public class Login extends GluewineServlet {
 		    		
 		    		addUserSession(username, user.getRole());
 		    		
-				    if (user.getRole()) { //true => user is admin		            	
-				    	resp.sendRedirect("http://localhost:8000/adminpanel/");
-				    }
-				    else {
-				    	resp.sendRedirect("http://localhost:8000/contacts/");
-				    }
+				    if (user.getRole())  //true => user is admin		            	
+				    	resp.sendRedirect("http://localhost:8000/adminpanel/");				    
+				    else 
+				    	resp.sendRedirect("http://localhost:8000/contacts/");				    
             	}
 		    }
 		    
-		    if (!userFound) {
-		    	//JOptionPane.showMessageDialog(null, "Wrong login or password", "error", JOptionPane.ERROR_MESSAGE);
-		    	resp.sendRedirect("http://localhost:8000/login/");
-        	}
+		    if (!userFound)
+		    	resp.sendRedirect("http://localhost:8000/login/");        	
 	    }
     }
  	
  	
  	@Transactional
- 	private void addUserSession(String username, Boolean isAdmin) {
+ 	private void addUserSession(String username, Boolean isAdmin) 
+ 	{
  		LoginSession newSession = new LoginSession();
+ 		
+ 		//we use the timeStamp to add to the database when the user logs out
  		String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HH:mm").format(Calendar.getInstance().getTime());
  		
  		//A user logged in, we save the username, the role and put the isActive value on true
@@ -162,13 +164,14 @@ public class Login extends GluewineServlet {
  	
  	
  	@Transactional
- 	private void setAllSessionsFalse() {
- 		
+ 	private void setAllSessionsFalse() 
+ 	{ 		
  		List<LoginSession> sessions = loginSessionProvider.getSession().getAll(LoginSession.class);
 		
 		LoginSession activeSession = new LoginSession();
 		 
-		for (LoginSession session : sessions) {
+		for (LoginSession session : sessions) 
+		{
 			if (session.getIsActive()) 
 			{
 				activeSession = session;

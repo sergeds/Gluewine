@@ -18,8 +18,8 @@ import org.hibernate.criterion.Restrictions;
 
 import gluewine.entities.Contact;
 
-public class ContactService implements CommandProvider
-{
+public class ContactService implements CommandProvider {
+	
 	@Glue
     private HibernateSessionProvider provider;
 
@@ -91,11 +91,11 @@ public class ContactService implements CommandProvider
         		cc.println("The phone number has to be like: +32 123 456 789 or 0123 456 789");
         	if (!newEmail.matches(regexEmail))
         		cc.println("The e-mail has to be like: example@test.com");
+        	
         	cc.println("The contact was not added");
         }        
     }
         
-
     /*
      * The metohd contact_search.
      * With this method we can search for a contact on criteria 'firstName' and 'lastName'.
@@ -111,7 +111,7 @@ public class ContactService implements CommandProvider
          * With criteria we are able to put restrictions on the list off contacts.
          */
         Criteria cr = provider.getSession().createCriteria(Contact.class);
-        cr.add(Restrictions.or(Restrictions.ilike("firstname", text), Restrictions.ilike("lastname", text)));
+        cr.add(Restrictions.or(Restrictions.ilike("Firstname", text), Restrictions.ilike("Lastname", text)));
         List<Contact> contactList = cr.list();
 
         cc.tableHeader("Id", "firstName", "lastName", "phoneNumber", "Email");

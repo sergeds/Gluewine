@@ -15,9 +15,13 @@ import org.gluewine.persistence.Transactional;
 import org.gluewine.persistence_jpa_hibernate.HibernateSessionProvider;
 
 public class DeleteContact extends GluewineServlet {
-
+	
+	/* We call on this method in the browser by adressing the following link: 
+	 * http://localhost:portnumber/deletecontact/
+	 */
 	@Override
-	public String getContextPath() {
+	public String getContextPath() 
+	{
 		return "deletecontact";
 	}
 	

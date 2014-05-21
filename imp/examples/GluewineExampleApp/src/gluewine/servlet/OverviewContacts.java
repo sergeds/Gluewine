@@ -17,8 +17,12 @@ import gluewine.entities.Contact;
 
 public class OverviewContacts extends GluewineServlet {
 
+	/* We call on this method in the browser by adressing the following link: 
+	 * http://localhost:portnumber/contacts/
+	 */
 	@Override
-	public String getContextPath() {
+	public String getContextPath() 
+	{
 		return "contacts";
 	}
 	
@@ -45,9 +49,9 @@ public class OverviewContacts extends GluewineServlet {
         b.append(html_prop.getProperty("endHeader"));
         
         b.append(html_prop.getProperty("btn_logout"));
-        //table contacts
-        b.append(html_prop.getProperty("tableHeaderContacts"));
         
+        //table contacts
+        b.append(html_prop.getProperty("tableHeaderContacts"));     
         
         for (Contact contact : contacts) {
         	b.append("		<tr>");
@@ -82,6 +86,7 @@ public class OverviewContacts extends GluewineServlet {
 	
 	@Transactional
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException
-    {        
+    {  
+		
     }
 }
