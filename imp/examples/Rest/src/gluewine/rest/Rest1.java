@@ -5,11 +5,12 @@ import java.util.HashMap;
 import org.gluewine.rest.REST;
 import org.gluewine.rest.RESTID;
 
-public class Rest1
-{
+public class Rest1 {
+	
     private HashMap<String, Car> cars;
 
-    public Rest1(){
+    public Rest1()
+    {
         cars = new HashMap<String, Car>();
 
         cars.put("nano", new Car(1,"Nano","TATA",165000));
@@ -33,8 +34,10 @@ public class Rest1
      * It is possible to get the return value in an xml-format, the default format used is Json.
      * To change this, we only need to adjust the link we address.
      *
-     * When there are no parameters present, we use the following link: localhost:portnumber/REST/getCars?format=xml
-     * When there are parameters present we use: localhost:portnumber/REST/getCarName?name=myName&format=xml
+     * When there are no parameters present, we use the following link: 
+     * 		localhost:portnumber/REST/getCars?format=xml
+     * When there are parameters present we use: 
+     * 		localhost:portnumber/REST/getCarName?name=myName&format=xml
      */
 
     /*
@@ -51,7 +54,7 @@ public class Rest1
     /*
      * To use this method in the browser, we will need to address the following link:
      *
-     * http://localhost:portnumber/REST/getname?name=tavera
+     * http://localhost:portnumber/REST/getCarName?name=tavera
      */
     @REST(path = "/getCarName")
     public Car getCarDetailsByName(@RESTID( id = "name") String name) throws Exception {
@@ -84,8 +87,5 @@ public class Rest1
         testStr[1] = "test1";
 
         return testStr;
-
     }
 }
-
-
