@@ -9,9 +9,8 @@ import org.gluewine.console.CommandContext;
 import org.gluewine.console.CommandProvider;
 import org.gluewine.core.Glue;
 
-
-public class DirectoryAnnotations implements CommandProvider
-{
+public class DirectoryAnnotations implements CommandProvider {
+	
     @Glue(properties = "test.properties")
     private Properties props;
 
