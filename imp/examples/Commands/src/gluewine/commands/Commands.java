@@ -9,8 +9,8 @@ import org.gluewine.console.CommandContext;
 import org.gluewine.console.CommandProvider;
 import org.gluewine.core.Glue;
 
-public class Commands implements CommandProvider
-{
+public class Commands implements CommandProvider {
+	
     @Glue(properties = "test.properties")
     private Properties props;
 
@@ -41,7 +41,6 @@ public class Commands implements CommandProvider
             cc.println("This is a required test-command");
         }
     }
-
 
     @Override
     public List<CLICommand> getCommands()
