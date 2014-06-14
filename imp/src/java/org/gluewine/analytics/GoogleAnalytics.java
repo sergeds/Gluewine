@@ -437,7 +437,7 @@ public class GoogleAnalytics implements AspectProvider, CommandProvider
     @Override
     public void afterSuccess(Object o, Method m, Object[] params, Object result)
     {
-        if (o instanceof HttpServlet)
+        if (o instanceof HttpServlet && threadPool != null)
         {
             // Check if the object and method have been registered to be 'Analyzed'.
             String id = o.getClass().getSuperclass().getName() + "." + m.getName();
