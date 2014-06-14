@@ -504,8 +504,23 @@ public final class Gluer implements CodeSourceListener, RepositoryListener<CodeS
     {
         if (!resolve()) logger.warn("There are unresolved services!");
         glue();
-        registerAllServices();
         activate();
+        registerAllServices();
+        notifyRegistrations();
+    }
+
+    // ===========================================================================
+    /**
+     * Notifies the services that everything has been registered by invoking the
+     * @RunAfterRegistration annotated methods.
+     */
+    private void notifyRegistrations()
+    {
+        for (Service s : serviceMap.values())
+        {
+            if (s.isActive())
+                s.runAfterRegistration();
+        }
     }
 
     // ===========================================================================
@@ -803,7 +818,10 @@ public final class Gluer implements CodeSourceListener, RepositoryListener<CodeS
 
                     Object o = null;
                     if (enhancer == null || AspectProvider.class.isAssignableFrom(clazz))
+                    {
                         o = clazz.newInstance();
+                        interceptor.registered((AspectProvider) o);
+                    }
 
                     else o = enhancer.getEnhanced(clazz);
 

@@ -54,10 +54,10 @@ public class Interceptor implements RepositoryListener<AspectProvider>
     private List<AspectProvider> providers = new ArrayList<AspectProvider>();
 
     /** List of providers that will only be invoked at the start of a command chain. */
-    private List<AspectProvider> chainStartProviders = new ArrayList<AspectProvider>();
+    private Set<AspectProvider> chainStartProviders = new HashSet<AspectProvider>();
 
     /** List of providers that are invoked to initize the stack context. */
-    private List<AspectProvider> contextProviders = new ArrayList<AspectProvider>();
+    private Set<AspectProvider> contextProviders = new HashSet<AspectProvider>();
 
     /**
      * Set containing the thread chains.
