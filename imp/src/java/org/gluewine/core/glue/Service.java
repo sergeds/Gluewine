@@ -38,6 +38,7 @@ import org.apache.log4j.Logger;
 import org.gluewine.core.Glue;
 import org.gluewine.core.GluewineProperties;
 import org.gluewine.core.NoSuchServiceException;
+import org.gluewine.core.RunAfterRegistration;
 import org.gluewine.core.RunOnActivate;
 import org.gluewine.core.RunOnDeactivate;
 import org.gluewine.core.ServiceProvider;
@@ -186,6 +187,32 @@ public class Service
         }
 
         return active;
+    }
+
+    // ===========================================================================
+    /**
+     * Invokes the methods annotated with the {@link RunAfterRegistration} annotation.
+     *
+     * Note that this method will do nothing if isActive() returns false.
+     */
+    void runAfterRegistration()
+    {
+        if (isActive())
+        {
+            for (final Method method : actual.getClass().getMethods())
+            {
+                RunAfterRegistration annot = getRunAfterRegistration(actual.getClass(), method);
+                if (annot != null && method.getParameterTypes().length == 0)
+                {
+                    boolean methodActive = false;
+                    Runnable r = new ThreadedInvoker(method, actual);
+                    if (annot.runThreaded()) new Thread(r).start();
+                    else r.run();
+                    methodActive = true;
+                    active &= methodActive;
+                }
+            }
+        }
     }
 
     // ===========================================================================
@@ -407,6 +434,41 @@ public class Service
         while (annot == null && m != null && c != null)
         {
             annot = m.getAnnotation(RunOnActivate.class);
+            if (annot == null)
+            {
+                c = c.getSuperclass();
+                try
+                {
+                    if (c != null)
+                        m = c.getMethod(m.getName(), m.getParameterTypes());
+                }
+                catch (NoSuchMethodException e)
+                {
+                    m = null;
+                }
+            }
+        }
+
+        return annot;
+    }
+
+    // ===========================================================================
+    /**
+     * Returns the RunAfterRegistration annotation if present in the class specified
+     * (either in the class given, or one of its parents).
+     * If the method hasn't got the annotation, null is returned.
+     *
+     * @param cl The class to process.
+     * @param m The method to check.
+     * @return The (possibly bnull) annotation.
+     */
+    private RunAfterRegistration getRunAfterRegistration(Class<?> cl, Method m)
+    {
+        RunAfterRegistration annot = null;
+        Class<?> c = cl;
+        while (annot == null && m != null && c != null)
+        {
+            annot = m.getAnnotation(RunAfterRegistration.class);
             if (annot == null)
             {
                 c = c.getSuperclass();

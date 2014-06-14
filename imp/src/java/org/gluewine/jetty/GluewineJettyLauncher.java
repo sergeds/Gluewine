@@ -62,6 +62,7 @@ import org.gluewine.console.CommandProvider;
 import org.gluewine.core.Glue;
 import org.gluewine.core.Repository;
 import org.gluewine.core.RepositoryListener;
+import org.gluewine.core.RunAfterRegistration;
 import org.gluewine.core.RunOnActivate;
 import org.gluewine.core.RunOnDeactivate;
 import org.gluewine.utils.ErrorLogger;
@@ -72,7 +73,7 @@ import org.gluewine.utils.ErrorLogger;
  * @author fks/Serge de Schaetzen
  *
  */
-public class GluewineJettyLauncher implements RepositoryListener<GluewineServlet>, CommandProvider, GluewineServletProperties
+public class GluewineJettyLauncher implements RepositoryListener<GluewineServlet>,  CommandProvider, GluewineServletProperties
 {
     // ===========================================================================
     /**
@@ -185,10 +186,10 @@ public class GluewineJettyLauncher implements RepositoryListener<GluewineServlet
 
     // ===========================================================================
     /**
-     * Launches the Jetty server.
+     * Loads the servlets and wars.
      */
-    @RunOnActivate(runThreaded = true)
-    public void launch()
+    @RunOnActivate
+    public void configure()
     {
         try
         {
@@ -210,7 +211,22 @@ public class GluewineJettyLauncher implements RepositoryListener<GluewineServlet
 
             // Register the default servlet if no other servlet has been registered as root.
             if (!handlers.containsKey("/")) registered(new DefaultServlet(this));
+        }
+        catch (Throwable e)
+        {
+            logger.error(e);
+        }
+    }
 
+    // ===========================================================================
+    /**
+     * Launches the Jetty server.
+     */
+    @RunAfterRegistration(runThreaded = true)
+    public void launch()
+    {
+        try
+        {
             GzipHandler gzipHandler = new GzipHandler();
             gzipHandler.setHandler(contexts);
 
