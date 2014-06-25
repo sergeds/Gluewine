@@ -78,6 +78,9 @@ public class RESTDBAuthenticator implements RESTAuthenticator
     private Logger logger = Logger.getLogger(getClass());
 
     // ===========================================================================
+    /**
+     * Initialises the service.
+     */
     @RunOnActivate
     public void initialize()
     {

@@ -38,8 +38,6 @@ public @interface RESTID
     // ===========================================================================
     /**
      * Returns the id of the parameter.
-     *
-     * @return The id.
      */
     String id();
 }

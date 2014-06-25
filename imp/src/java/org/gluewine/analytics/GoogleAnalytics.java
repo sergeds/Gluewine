@@ -387,7 +387,7 @@ public class GoogleAnalytics implements AspectProvider, CommandProvider
     /**
      * Posts the request with the given parameters to GoolgeAnalytics.
      *
-     * @param hreaders The headers to use..
+     * @param headers The headers to use..
      * @param parameters The parameters to report.
      * @throws IOException If an error occurs connecting to Google.
      */

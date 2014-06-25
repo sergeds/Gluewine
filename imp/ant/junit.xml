@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <project name="junit" default="junit.allchecks" basedir=".">
     <import file="init.xml"/>
-    <import file="osgi.xml"/>
+    <import file="gluewine.xml"/>
 
     <taskdef resource="tasks.properties">
         <classpath>
@@ -13,11 +13,11 @@
     </taskdef>
 
     <!-- Compile unit tests -->
-    <target name="junit.compile" depends="osgi.compile, junit.depend">
+    <target name="junit.compile" depends="gluewine.compile, junit.depend">
         <javac srcdir="${dir.src.junit}" destdir="${dir.build.junit}" debug="on" debuglevel="${debuglevel}" source="${source}" target="${target}" includeantruntime="false" encoding="utf8">
             <classpath>
-                <path refid="classpath.osgi.base"/>
-                <pathelement location="${dir.build.osgi}"/>
+                <path refid="classpath.gluewine.base"/>
+                <pathelement location="${dir.build.gluewine}"/>
             </classpath>
         </javac>
     </target>
@@ -55,7 +55,7 @@
 
     <target name="junit.initdb" depends="init" if="${needs_pgsql_for_tests}">
         <tempfile property="templatedb.pgpassfile" prefix="pgpass." createfile="true" deleteonexit="true" destdir="${dir.build}"/>
-        <sql driver="org.postgresql.Driver" url="${templatedb.baseurl}postgres" userid="${templatedb.superuser}" password="${templatedb.superpass}" autocommit="true" classpath="lib/java/runtime/postgresql-9.1-901.jdbc3-fksosgi-9.1.jar">
+        <sql driver="org.postgresql.Driver" url="${templatedb.baseurl}postgres" userid="${templatedb.superuser}" password="${templatedb.superpass}" autocommit="true" classpath="lib/java/runtime/postgresql-9.1-901.jdbc3-fksgluewine-9.1.jar">
             CREATE DATABASE "${templatedb}";
         </sql>
         <echo file="${templatedb.pgpassfile}">ibiza:5433:${templatedb}:test:test</echo>
@@ -79,7 +79,7 @@
     </target>
 
     <target name="junit.cleanupdb"  if="${needs_pgsql_for_tests}">
-        <sql driver="org.postgresql.Driver" url="${templatedb.baseurl}postgres" userid="${templatedb.superuser}" password="${templatedb.superpass}" autocommit="true" classpath="lib/java/runtime/postgresql-9.1-901.jdbc3-fksosgi-9.1.jar">
+        <sql driver="org.postgresql.Driver" url="${templatedb.baseurl}postgres" userid="${templatedb.superuser}" password="${templatedb.superpass}" autocommit="true" classpath="lib/java/runtime/postgresql-9.1-901.jdbc3-fksgluewine-9.1.jar">
             DROP DATABASE "${templatedb}";
         </sql>
     </target>
@@ -128,15 +128,15 @@
         <mkdir dir="${dir.build.cobertura}"/>
         <mkdir dir="${dir.reports.cobertura}"/>
         <cobertura-instrument todir="${dir.build.cobertura}" datafile="${dir.reports.cobertura}/cobertura.ser">
-            <fileset dir="${dir.build.osgi}">
+            <fileset dir="${dir.build.gluewine}">
                 <include name="**/*.class"/>
             </fileset>
         </cobertura-instrument>
         <antcall target="junit.run">
             <param name="junitclasspath" value="classpath.cobertura.full"/>
         </antcall>
-        <cobertura-report datafile="${dir.reports.cobertura}/cobertura.ser" format="html" destdir="${dir.reports.cobertura}" srcdir="${dir.src.osgi}"/>
-        <cobertura-report datafile="${dir.reports.cobertura}/cobertura.ser" format="xml" destdir="${dir.reports.cobertura}" srcdir="${dir.src.osgi}"/>
+        <cobertura-report datafile="${dir.reports.cobertura}/cobertura.ser" format="html" destdir="${dir.reports.cobertura}" srcdir="${dir.src.gluewine}"/>
+        <cobertura-report datafile="${dir.reports.cobertura}/cobertura.ser" format="xml" destdir="${dir.reports.cobertura}" srcdir="${dir.src.gluewine}"/>
         <fail>
             <condition>
                 <and>

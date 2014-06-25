@@ -10,17 +10,16 @@ import org.gluewine.console.CLICommand;
 import org.gluewine.console.CommandContext;
 import org.gluewine.console.CommandProvider;
 import org.gluewine.core.Glue;
-import org.gluewine.persistence.SessionProvider;
+import org.gluewine.persistence_jpa_hibernate.HibernateSessionProvider;
 import org.gluewine.persistence.TransactionCallback;
 import org.gluewine.persistence.Transactional;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
-public class CarService implements CommandProvider
-{
+public class CarService implements CommandProvider {
+	
     @Glue
-    private SessionProvider provider;
-
+    private HibernateSessionProvider provider;
 
     /*
      *The method car_list.
@@ -29,7 +28,7 @@ public class CarService implements CommandProvider
     @Transactional
     public void _car_list(CommandContext cc)
     {
-    	//We need to get all the cars that are in the database
+        //We need to get all the cars that are in the database
         List<Car> cars = provider.getSession().getAll(Car.class);
         cc.tableHeader("Id", "Brand", "Model", "Color");
 
@@ -43,7 +42,7 @@ public class CarService implements CommandProvider
 
     /*
      * The method car_add.
-     * With this method we can add a car. 
+     * With this method we can add a car.
      */
     @Transactional
     public void _car_add(final CommandContext cc)
@@ -55,39 +54,36 @@ public class CarService implements CommandProvider
         Car newCar = new Car();
         newCar.setBrand(newBrand);
         newCar.setModel(newModel);
-        
-        
+
         //Check if the chosen color is available
-        Color color = (Color) provider.getSession().get(Color.class, newColor);        
+        Color color = (Color) provider.getSession().get(Color.class, newColor);
 
         if (color != null)
         {
-        	newCar.setColor(color);
-        	
-        	//Before we add the car, we check if everthing went the way it should have.
-            provider.getSession(new TransactionCallback() {
-				/*
-				 * @see org.gluewine.persistence.TransactionCallback#transactionRolledBack()
-				 * 
-				 * Something went wrong with the transaction, the database was rolled back meaning the car
-				 * wasn't added.
-				 */
-            	@Override
-                public void transactionRolledBack()
-                {
-                    cc.println("Transaction was rolled back.");
-                }
+            newCar.setColor(color);
 
+            //Before we add the car, we check if everthing went the way it should have.
+            provider.getSession(new TransactionCallback() {
+                /*
+                 * Something went wrong with the transaction, 
+                 * the database was rolled back meaning the car wasn't added.
+                 */
                 @Override
-                public void transactionCommitted()
-                {
-                    cc.println("Car has been added successfully");
-                }
-			}).add(newCar);
+                public void transactionRolledBack()
+            {
+                cc.println("Transaction was rolled back.");
+            }
+
+            @Override
+            public void transactionCommitted()
+            {
+                cc.println("Car has been added successfully");
+            }
+            }).add(newCar);
             provider.commitCurrentSession();
         }
-        else 
-        	cc.println("Color does not exist.");
+        else
+            cc.println("Color does not exist.");
     }
 
     /*
@@ -98,7 +94,7 @@ public class CarService implements CommandProvider
     public void _car_search(CommandContext cc)
     {
         String text = cc.getOption("-text");
-        
+
         /*
          * First we need to get a list of all the cars in the database.
          * We will use this list to search cars.
@@ -135,36 +131,32 @@ public class CarService implements CommandProvider
             cc.println("There is no car with id " + id);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.gluewine.console.CommandProvider#getCommands()
-     */
     @Override
     public List<CLICommand> getCommands()
     {
         List<CLICommand> l = new ArrayList<>();
-        
+
         //adding a car
-        CLICommand cmd_car_add = new CLICommand("car_add", "Adds a car");        
+        CLICommand cmd_car_add = new CLICommand("car_add", "Adds a car");
         cmd_car_add.addOption("-brand", "Brand of the car", true, true);
         cmd_car_add.addOption("-model", "Model of the car", true, true);
         cmd_car_add.addOption("-color", "Color", true, true);
         l.add(cmd_car_add);
-        
+
         //delete a car
         CLICommand cmd_car_delete = new CLICommand("car_delete", "Deletes a car");
         cmd_car_delete.addOption("-id", "The id of the car you want to delete", true, true);
         l.add(cmd_car_delete);
-        
+
         //list all the cars in the db
         CLICommand cmd_car_list = new CLICommand("car_list", "Lists the cars");
         l.add(cmd_car_list);
-        
+
         //search a car
         CLICommand cmd_car_search = new CLICommand("car_search", "Searches a car on criteria 'brand' and 'model'");
         cmd_car_search.addOption("-text", "%criteria%", true, true);
         l.add(cmd_car_search);
-        
+
         return l;
     }
 

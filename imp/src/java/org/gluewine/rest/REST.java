@@ -39,16 +39,12 @@ public @interface REST
     // ===========================================================================
     /**
      * Defines the path that needs to be used to access the annotated method.
-     *
-     * @return The path.
      */
     String path();
 
     // ===========================================================================
     /**
      * Defines whether the POST is done using a form. (needed for file transfer).
-     *
-     * @return True if a form is required.
      */
     boolean form() default false;
 }

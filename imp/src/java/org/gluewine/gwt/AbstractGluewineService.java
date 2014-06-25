@@ -172,7 +172,7 @@ public abstract class AbstractGluewineService extends RemoteServiceServlet
      *
      * @param e The exception to handle.
      * @param <T> The generic return signature.
-     * @param T Just to fool the compiler.
+     * @return T Just to fool the compiler.
      */
    protected <T> T handleException(Throwable e)
     {

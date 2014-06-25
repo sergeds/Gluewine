@@ -8,8 +8,7 @@ import org.gluewine.console.CommandContext;
 import org.gluewine.console.CommandProvider;
 import org.gluewine.core.Glue;
 
-public class Commands2 implements CommandProvider
-{
+public class Commands2 implements CommandProvider {
     @Glue
     private Commands test;
 
@@ -30,6 +29,4 @@ public class Commands2 implements CommandProvider
         return l;
 
     }
-    
-   
 }

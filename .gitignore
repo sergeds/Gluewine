@@ -7,3 +7,8 @@
 /doc/javadoc.osgi
 /reports
 /doc
+/imp/examples/*/lib
+/imp/examples/*/build
+/imp/examples/*/*.zip
+/imp/examples/*/log
+gluewine.state

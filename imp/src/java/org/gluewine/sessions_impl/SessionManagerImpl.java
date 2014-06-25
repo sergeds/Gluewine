@@ -97,7 +97,7 @@ public class SessionManagerImpl implements SessionManager, SessionManagerDataSto
         {
             String id = UUID.randomUUID().toString();
             sessions.put(id, Long.valueOf(System.currentTimeMillis()));
-            putData (id, USERNAME, user);
+            putData(id, USERNAME, user);
             return id;
         }
     }
@@ -184,7 +184,7 @@ public class SessionManagerImpl implements SessionManager, SessionManagerDataSto
         {
             checkAndTickSession(session);
             Map dataMap = sessionData.get(session);
-            if(dataMap == null)
+            if (dataMap == null)
             {
                 dataMap = new HashMap<String, Object>();
                 sessionData.put(session, dataMap);
@@ -201,7 +201,7 @@ public class SessionManagerImpl implements SessionManager, SessionManagerDataSto
         {
             checkAndTickSession(session);
             Map dataMap = sessionData.get(session);
-            if(dataMap == null)
+            if (dataMap == null)
                 return null;
             return dataMap.get(key);
         }

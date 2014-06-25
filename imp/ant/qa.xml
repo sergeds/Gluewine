@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <project name="qa" basedir=".">
     <import file="init.xml"/>
-    <import file="osgi.xml"/>
+    <import file="gluewine.xml"/>
 
     <taskdef resource="checkstyletask.properties" classpath="${dir.tools.checkstyle}/checkstyle-5.7-all.jar"/>
     <taskdef name="findbugs" classname="edu.umd.cs.findbugs.anttask.FindBugsTask" classpath="${dir.tools.findbugs}/lib/findbugs-ant.jar"/>

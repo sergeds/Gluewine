@@ -17,8 +17,8 @@
             <fileset dir="${dir.gwt.webxml}" includes="*.xml" />
             <filterchain>
                 <replacetokens>
-                    <token key="OSGIHOST" value="${osgihost}"/>
-                    <token key="OSGIPORT" value="${osgiport}"/>
+                    <token key="OSGIHOST" value="${gluewinehost}"/>
+                    <token key="OSGIPORT" value="${gluewineport}"/>
                     <token key="GLUEWINELIBDIR" value="${dir.dist.lib}"/>
                     <token key="GLUEWINECFGDIR" value="${dir.dist.rtf}/cfg/generic"/>
                 </replacetokens>
@@ -35,8 +35,8 @@
                     </zipfileset>
                     <filterchain>
                         <replacetokens>
-                            <token key="OSGIHOST" value="${osgihost}"/>
-                            <token key="OSGIPORT" value="${osgiport}"/>
+                            <token key="OSGIHOST" value="${gluewinehost}"/>
+                            <token key="OSGIPORT" value="${gluewineport}"/>
                         </replacetokens>
                     </filterchain>
                 </concat>
@@ -46,8 +46,8 @@
             <filelist dir="${dir.gwt.webxml}" files="web_xml.postfix"/>
             <filterchain>
                 <replacetokens>
-                    <token key="OSGIHOST" value="${osgihost}"/>
-                    <token key="OSGIPORT" value="${osgiport}"/>
+                    <token key="OSGIHOST" value="${gluewinehost}"/>
+                    <token key="OSGIPORT" value="${gluewineport}"/>
                 </replacetokens>
             </filterchain>
         </concat>
@@ -179,7 +179,7 @@
             <classpath>
                 <pathelement location="${dir.gwt.runtime}/org.gluewine.gxo-0.1.jar"/>
             </classpath>
-            <arg value="${dir.src.osgi}"/>
+            <arg value="${dir.src.gluewine}"/>
             <arg value="${dir.build.gwt.generated.src}"/>
         </java>
         <copy todir="${dir.build.gwt.generated.src}">
@@ -202,11 +202,11 @@
     <target name="gwt.init">
         <echo>============================================================</echo>
         <echo>|Om een specifieke OSGIServer te gebruiken :               |</echo>
-        <echo>|GEBRUIK: ant -Dosgihost=host -Dosgiport=port              |</echo>
-        <echo>|     bv: ant -Dosgihost=HOSGI -Dosgiport=POSGI            |</echo>
+        <echo>|GEBRUIK: ant -Dgluewinehost=host -Dgluewineport=port              |</echo>
+        <echo>|     bv: ant -Dgluewinehost=HOSGI -Dgluewineport=POSGI            |</echo>
         <echo>============================================================</echo>
-        <echo>OSGI-HOST = ${osgihost}</echo>
-        <echo>OSGI-PORT = ${osgiport}</echo>
+        <echo>OSGI-HOST = ${gluewinehost}</echo>
+        <echo>OSGI-PORT = ${gluewineport}</echo>
         <mkdir dir="${dir.build.gwt}"/>
         <mkdir dir="${dir.build.gwt.generated}"/>
         <mkdir dir="${dir.build.gwt.generated.src}"/>

@@ -1,13 +1,11 @@
 package gluewine.hibernate;
 
-//import gluewine.entities.Car;
-
-import org.gluewine.persistence.QueryPreProcessor;
+import org.gluewine.persistence_jpa.QueryPreProcessor;
 import org.hibernate.Criteria;
 //import org.hibernate.criterion.Restrictions;
+//import gluewine.entities.Car;
 
-public class BeforeAddingService implements QueryPreProcessor
-{
+public class BeforeAddingService implements QueryPreProcessor {
 
     @Override
     public Criteria preProcess(Criteria criteria, Class<?> clazz)
@@ -18,5 +16,4 @@ public class BeforeAddingService implements QueryPreProcessor
         }*/
         return criteria;
     }
-
 }

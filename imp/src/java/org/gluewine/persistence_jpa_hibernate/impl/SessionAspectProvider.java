@@ -350,7 +350,6 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
             synchronized (factoryLocker)
             {
                 Session hibernateSession = factory.openSession();
-                hibernateSession.beginTransaction();
                 session = new HibernateTransactionalSessionImpl(hibernateSession, preProcessors, postProcessors);
                 provider.bindSession(session);
                 session.increaseContextCount();
@@ -373,10 +372,13 @@ public class SessionAspectProvider implements AspectProvider, CommandProvider, C
             synchronized (factoryLocker)
             {
                 Session hibernateSession = factory.openSession();
-                hibernateSession.beginTransaction();
                 session = new HibernateTransactionalSessionImpl(hibernateSession, preProcessors, postProcessors);
                 provider.bindSession(session);
             }
+        }
+        if (session.getReferenceCount() == 0)
+        {
+            session.getHibernateSession().beginTransaction();
         }
 
         if (increase) session.increaseReferenceCount();

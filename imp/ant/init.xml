@@ -5,7 +5,7 @@
     <!-- Directories -->
     <property name="dir.gwt" value="src/gwt"/>
     <property name="dir.build" value="../build"/>
-    <property name="dir.build.osgi" value="${dir.build}/osgi"/>
+    <property name="dir.build.gluewine" value="${dir.build}/gluewine"/>
     <property name="dir.build.junit" value="${dir.build}/test"/>
     <property name="dir.build.gwt" value="${dir.build}/gwt/classes"/>
     <property name="dir.build.gwt.lib" value="${dir.build}/gwt/lib"/>
@@ -28,7 +28,7 @@
     <property name="dir.gwt.webxml" value="${dir.gwt}/webxml"/>
     <property name="dir.gwt.warbuild" value="${dir.build.gwt}/war"/>
     <property name="dir.gwt.dist" value="${dir.dist}/gwt"/>
-    <property name="dir.src.osgi" value="src/java"/>
+    <property name="dir.src.gluewine" value="src/java"/>
     <property name="dir.src.junit" value="test/java"/>
     <property name="dir.src.gwt" value="${dir.gwt}/src"/>
 
@@ -36,10 +36,10 @@
 
     <property name="dir.reports" value="../reports"/>
     <property name="dir.reports.junit" value="${dir.reports}/junit"/>
-    <property name="dir.reports.checkstyle.osgi" value="${dir.reports}/checkstyle.osgi"/>
+    <property name="dir.reports.checkstyle.gluewine" value="${dir.reports}/checkstyle.gluewine"/>
     <property name="dir.reports.checkstyle.junit" value="${dir.reports}/checkstyle.junit"/>
     <property name="dir.reports.checkstyle.gwt" value="${dir.reports}/checkstyle.gwt"/>
-    <property name="dir.reports.findbugs.osgi" value="${dir.reports}/findbugs.osgi"/>
+    <property name="dir.reports.findbugs.gluewine" value="${dir.reports}/findbugs.gluewine"/>
     <property name="dir.reports.findbugs.junit" value="${dir.reports}/findbugs.junit"/>
     <property name="dir.reports.findbugs.gwt" value="${dir.reports}/findbugs.gwt"/>
     <property name="dir.reports.cobertura" value="${dir.reports}/cobertura"/>
@@ -50,7 +50,7 @@
     <property name="dir.build.cobertura" value="${dir.build}/cobertura/build"/>
 
     <property name="dir.doc" value="../doc"/>
-    <property name="dir.doc.api.osgi" value="${dir.doc}/javadoc.osgi"/>
+    <property name="dir.doc.api.gluewine" value="${dir.doc}/javadoc.gluewine"/>
     <property name="dir.doc.api.gwt" value="${dir.doc}/javadoc.gwt"/>
 
     <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpath="${dir.lib.tools}/ant-contrib-1.0b3.jar"/>
@@ -60,20 +60,20 @@
              *.full: the path needed to use the component.
              Do not break this convention, various parts of the build system depend on it.
         -->
-    <path id="classpath.osgi.base">
+    <path id="classpath.gluewine.base">
         <fileset dir="${dir.gwt.compile}" includes="**/*.jar"/>
         <fileset dir="${dir.lib.compile}" includes="**/*.jar"/>
         <fileset dir="${dir.lib.runtime}" includes="**/*.jar"/>
     </path>
 
-    <path id="classpath.osgi.classes">
-        <pathelement location="${dir.build.osgi}"/>
+    <path id="classpath.gluewine.classes">
+        <pathelement location="${dir.build.gluewine}"/>
     </path>
 
-    <path id="classpath.osgi.full">
+    <path id="classpath.gluewine.full">
         <fileset dir="${dir.lib.runtime}" includes="**/*.jar"/>
         <fileset dir="${dir.lib.compile}" includes="**/*.jar"/>
-        <path refid="classpath.osgi.classes"/>
+        <path refid="classpath.gluewine.classes"/>
     </path>
 
     <path id="classpath.gwt.base">
@@ -98,7 +98,7 @@
     </path>
 
     <path id="classpath.junit.base">
-        <path refid="classpath.osgi.full"/>
+        <path refid="classpath.gluewine.full"/>
     </path>
 
     <path id="classpath.junit.classes">
@@ -106,15 +106,15 @@
     </path>
 
     <path id="classpath.junit.full">
-        <path refid="classpath.osgi.base"/>
-        <path refid="classpath.osgi.classes"/>
+        <path refid="classpath.gluewine.base"/>
+        <path refid="classpath.gluewine.classes"/>
         <path refid="classpath.junit.classes"/>
     </path>
 
     <path id="classpath.cobertura.full">
         <pathelement location="${dir.build.cobertura}"/>
         <path refid="classpath.junit.full"/>
-        <path refid="classpath.osgi.full" />
+        <path refid="classpath.gluewine.full" />
         <path>
             <fileset dir="${dir.tools.cobertura}">
                 <include name="cobertura.jar"/>
@@ -136,11 +136,11 @@
     <condition property="warfile" value="${product}.war">
         <not><isset property="warfile"/></not>
     </condition>
-    <condition property="osgihost" value="localhost">
-        <not><isset property="osgihost"/></not>
+    <condition property="gluewinehost" value="localhost">
+        <not><isset property="gluewinehost"/></not>
     </condition>
-    <condition property="osgiport" value="7777">
-        <not><isset property="osgiport"/></not>
+    <condition property="gluewineport" value="7777">
+        <not><isset property="gluewineport"/></not>
     </condition>
     <condition property="debuginfo" value="on">
         <not><isset property="debuginfo"/></not>

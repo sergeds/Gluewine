@@ -1,0 +1,12 @@
+gluewine.hibernate.UserService
+gluewine.hibernate.ContactService
+gluewine.hibernate.PostProcessor
+gluewine.hibernate.PreProcessor
+gluewine.servlet.Login
+gluewine.servlet.Logout
+gluewine.servlet.OverviewContacts
+gluewine.servlet.AddContact
+gluewine.servlet.Adminpanel
+gluewine.servlet.DeleteContact
+gluewine.servlet.ModifyContact
+gluewine.auth.AuthAspectProvider

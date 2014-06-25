@@ -11,9 +11,8 @@ public class TestCommand implements CommandProvider
 {
 
     public void _test(CommandContext cc)
-    {    	
-    	
-        cc.println("This is a test command");        
+    {
+        cc.println("This is a test command");
     }
 
     @Override

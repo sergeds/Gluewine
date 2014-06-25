@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Examples" basedir=".">
+    <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpath="${dir.lib.tools}/ant-contrib-1.0b3.jar"/>
+
+    <target name="examples" depends="gluewine.package" description="Builds the examples">
+        <mkdir dir="${dir.dist}/examples"/>
+        <foreach target="singleexample" param="buildfile" parallel="false">
+            <path id="examples">
+                <fileset dir="examples">
+                    <include name="**/build.xml"/>
+                </fileset>
+            </path>
+        </foreach>
+    </target>
+
+    <target name="singleexample">
+        <propertyregex property="subbasepath" input="${buildfile}" regexp="(.*).build.xml" select="\1" casesensitive="true"/>
+
+        <ant antfile="${buildfile}" inheritAll="false" useNativeBaseDir="true" target="packageExample"/>
+        <copy todir="${dir.dist}/examples">
+            <fileset dir="${subbasepath}">
+                <include name="*.zip"/>
+            </fileset>
+        </copy>
+    </target>
+</project>

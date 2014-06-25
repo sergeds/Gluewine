@@ -9,8 +9,8 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "Cars")
-public class Car
-{
+public class Car {
+	
     @Id
     @GeneratedValue
     private long id = 0;
@@ -87,6 +87,4 @@ public class Car
     {
         this.color = color;
     }
-
-
 }

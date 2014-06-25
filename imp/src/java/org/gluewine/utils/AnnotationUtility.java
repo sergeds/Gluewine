@@ -48,6 +48,7 @@ public final class AnnotationUtility
      *
      * @param cl The annotation class to look for.
      * @param o The object to parse.
+     * @param <T> The annotation type.
      * @return The (possibly null) annotation instance.
      */
     public static <T extends Annotation> T getAnnotation(Class<T> cl, Object o)
@@ -62,6 +63,7 @@ public final class AnnotationUtility
      *
      * @param ann The annotation to look for.
      * @param cl The class to process.
+     * @param <T> The annotation type.
      * @return The (possibly null) annotation.
      */
     public static <T extends Annotation> T getAnnotation(Class<T> ann, Class<?> cl)
@@ -89,6 +91,7 @@ public final class AnnotationUtility
      *
      * @param cl The annotation class to look for.
      * @param o The object to parse.
+     * @param <T> The annotation type.
      * @return The (possibly null) annotation instance.
      */
     public static <T extends Annotation> T getAnnotationRecursively(Class<T> cl, Object o)
@@ -113,6 +116,7 @@ public final class AnnotationUtility
      * @param o The object.
      * @param m The method being inspected.
      * @param param The index of the parameter to process.
+     * @param <T> The annotation type.
      * @return The (possibly null) annotation.
      */
     @SuppressWarnings("unchecked")
@@ -171,6 +175,7 @@ public final class AnnotationUtility
      * @param ann The annotation to look for.
      * @param m The method being inspected.
      * @param o The object owning the method.
+     * @param <T> The annotation type.
      * @return The (possibly null) annotation.
      */
     public static <T extends Annotation> T getAnnotation(Class<T> ann, Method m, Object o)

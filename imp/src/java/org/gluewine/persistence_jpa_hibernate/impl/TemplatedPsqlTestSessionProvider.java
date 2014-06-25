@@ -40,11 +40,14 @@ import java.util.UUID;
  * templatedb.superuser = username allowed to create the new database
  * templatedb.superpass = superuser password
  *
- * @author Frank Gevaerts
+ * @author fks/Frank Gevaerts
  *
  */
 public class TemplatedPsqlTestSessionProvider extends TestSessionProvider
 {
+    /**
+     * The database name.
+     */
     private String dbname = null;
 
     // ===========================================================================
@@ -70,22 +73,28 @@ public class TemplatedPsqlTestSessionProvider extends TestSessionProvider
                 Properties props = new Properties();
                 props.load(new FileInputStream(config));
                 String basename = props.getProperty("hibernate.connection.template");
-                String template = System.getProperty("templatedb."+basename);
+                String template = System.getProperty("templatedb." + basename);
                 String baseurl = System.getProperty("templatedb.baseurl", "jdbc:postgresql://localhost:5432/");
                 dbname = UUID.randomUUID().toString();
 
                 Class.forName("org.postgresql.Driver");
-                Connection con = DriverManager.getConnection(baseurl+"postgres",System.getProperty("templatedb.superuser"),System.getProperty("templatedb.superpass"));
+                Connection con = DriverManager.getConnection(baseurl + "postgres", System.getProperty("templatedb.superuser"), System.getProperty("templatedb.superpass"));
                 Statement stmt = con.createStatement();
-                stmt.execute("CREATE DATABASE \""+dbname+"\" OWNER "+props.getProperty("hibernate.connection.username")+" TEMPLATE \""+template+"\"");
+                stmt.execute("CREATE DATABASE \"" + dbname + "\" OWNER " + props.getProperty("hibernate.connection.username") + " TEMPLATE \"" + template + "\"");
 
-                props.setProperty("hibernate.connection.url",baseurl+dbname);
+                props.setProperty("hibernate.connection.url", baseurl + dbname);
 
                 configure(props, classes);
 
                 open = true;
 
-                Runtime.getRuntime().addShutdownHook( new Thread() { public void run() { closeProvider(); } });
+                Runtime.getRuntime().addShutdownHook(new Thread()
+                        {
+                            public void run()
+                            {
+                                closeProvider();
+                            }
+                        });
             }
             catch (Throwable e)
             {
@@ -106,13 +115,13 @@ public class TemplatedPsqlTestSessionProvider extends TestSessionProvider
 
         try
         {
-            if(dbname != null)
+            if (dbname != null)
             {
                 String baseurl = System.getProperty("templatedb.baseurl", "jdbc:postgresql://localhost:5432/");
                 Class.forName("org.postgresql.Driver");
-                Connection con = DriverManager.getConnection(baseurl+"postgres",System.getProperty("templatedb.superuser"),System.getProperty("templatedb.superpass"));
+                Connection con = DriverManager.getConnection(baseurl + "postgres", System.getProperty("templatedb.superuser"), System.getProperty("templatedb.superpass"));
                 Statement stmt = con.createStatement();
-                stmt.execute("DROP DATABASE \""+dbname+"\"");
+                stmt.execute("DROP DATABASE \"" + dbname + "\"");
                 dbname = null;
             }
         }
