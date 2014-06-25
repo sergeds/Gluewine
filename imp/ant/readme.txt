@@ -4,15 +4,14 @@ Required properties:
 * version : the version of the product as a whole, used for names of source and javadoc zip files
 * starthtml : (required for gwt projects) the html file to use
 * gwt.basepackage : (required for gwt projects) the base package to "anchor" the gwt code
-* framework : "osgi" or "gluewine"
 * target : sets the javac target version.
 * source : sets the javac source version.
 
 Optional properties:
 ====================
 * vcs : "git" or "svn". Used to pick how to get revision numbers. If not set, revision headers will have an empty value
-* osgihost : the host the gwt code connects to. Default localhost
-* osgiport : the port the gwt code connects to. Default 7777
+* gluewinehost : the host the gwt code connects to. Default localhost
+* gluewineport : the port the gwt code connects to. Default 7777
 
 * usesgwt : set to "false" to disable building gwt. Default true
 * has_unit_tests : set to "false" to disable junit tests. Default true

@@ -2,7 +2,7 @@
 <project name="Examples" basedir=".">
     <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpath="${dir.lib.tools}/ant-contrib-1.0b3.jar"/>
 
-    <target name="examples" depends="osgi.package" description="Builds the examples">
+    <target name="examples" depends="gluewine.package" description="Builds the examples">
         <mkdir dir="${dir.dist}/examples"/>
         <foreach target="singleexample" param="buildfile" parallel="false">
             <path id="examples">

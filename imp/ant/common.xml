@@ -21,12 +21,12 @@
         </else>
     </if>
 
-    <import file="osgi.xml"/>
+    <import file="gluewine.xml"/>
     <import file="index.xml"/>
     <import file="deb.xml"/>
 
-    <target name="default" depends="osgi.default, gwt.default" description="Run a moderately fast default build."/>
-    <target name="dist" depends="osgi.dist, gwt.dist" description="Creates the OSGi and GWT distribution."/>
+    <target name="default" depends="gluewine.default, gwt.default" description="Run a moderately fast default build."/>
+    <target name="dist" depends="gluewine.dist, gwt.dist" description="Creates the OSGi and GWT distribution."/>
 
     <!-- Clean the build directories, but not the end results -->
     <target name="clean" description="Cleans all build-directories, but leaves dist/">
@@ -40,13 +40,13 @@
         <delete dir="${dir.reports}"/>
     </target>
 
-    <target name="allchecks" depends="osgi.allchecks, gwt.allchecks" description="Run all checks"/>
+    <target name="allchecks" depends="gluewine.allchecks, gwt.allchecks" description="Run all checks"/>
 
-    <target name="quickchecks" depends="osgi.quickchecks, gwt.quickchecks" description="Run all except time-consuming checks"/>
+    <target name="quickchecks" depends="gluewine.quickchecks, gwt.quickchecks" description="Run all except time-consuming checks"/>
 
-    <target name="findbugs" depends="osgi.findbugs, gwt.findbugs" description="Run findbugs on all code"/>
+    <target name="findbugs" depends="gluewine.findbugs, gwt.findbugs" description="Run findbugs on all code"/>
 
-    <target name="checkstyle" depends="osgi.checkstyle, gwt.checkstyle" description="Run checkstyle on all code"/>
+    <target name="checkstyle" depends="gluewine.checkstyle, gwt.checkstyle" description="Run checkstyle on all code"/>
 
     <!-- empty default bundleextra target. Create a similar target in
          your build.xml and it'll be called instead of this one. -->

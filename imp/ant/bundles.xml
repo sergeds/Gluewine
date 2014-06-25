@@ -29,11 +29,11 @@
             <not><isset property="buildinfo.jenkins.build"/></not>
         </condition>
 
-        <mkdir dir="${dir.build.osgi}/manifests"/>
-        <mkdir dir="${dir.build.osgi}/sums"/>
+        <mkdir dir="${dir.build.gluewine}/manifests"/>
+        <mkdir dir="${dir.build.gluewine}/sums"/>
         <foreach target="bundles.bundle" param="manifest" inheritall="true" parallel="true">
             <path id="manifests">
-                <fileset dir="${dir.src.osgi}">
+                <fileset dir="${dir.src.gluewine}">
                     <include name="**/*.manifest"/>
                 </fileset>
             </path>
@@ -58,20 +58,8 @@
         </condition>
 
 
-        <if>
-            <equals arg1="${framework}" arg2="osgi" />
-            <then>
-                <property name="bundlename" value="${Bundle-SymbolicName}" />
-                <propertyregex property="fileversion" input="${Bundle-Version}" regexp="([^.]*\.[^.]*)(\..*)*" select="\1" casesensitive="false"/>
-            </then>
-        </if>
-        <if>
-            <equals arg1="${framework}" arg2="gluewine" />
-            <then>
-                <basename property="bundlename" file="${manifest}" suffix=".manifest"/>
-                <propertyregex property="fileversion" input="${Jar-Version}" regexp="([^.]*\.[^.]*)(\..*)*" select="\1" casesensitive="false"/>
-            </then>
-        </if>
+        <basename property="bundlename" file="${manifest}" suffix=".manifest"/>
+        <propertyregex property="fileversion" input="${Jar-Version}" regexp="([^.]*\.[^.]*)(\..*)*" select="\1" casesensitive="false"/>
 
         <if>
             <equals arg1="${vcs}" arg2="git" />
@@ -81,7 +69,7 @@
                     <arg value="--format=%h"/>
                     <arg value="-1"/>
                     <arg value="--"/>
-                    <arg value="${dir.src.osgi}/${pack}"/>
+                    <arg value="${dir.src.gluewine}/${pack}"/>
                 </exec>
             </then>
         </if>
@@ -89,7 +77,7 @@
             <equals arg1="${vcs}" arg2="svn" />
             <then>
                 <exec executable="svnversion" outputproperty="bundle.revision">
-                    <arg value="${dir.src.osgi}/${pack}"/>
+                    <arg value="${dir.src.gluewine}/${pack}"/>
                 </exec>
             </then>
         </if>
@@ -99,13 +87,13 @@
 
         <mkdir dir="${dir.bundle.extra}/${pack}"/>
         <union id="contents">
-            <fileset dir="${dir.build.osgi}">
+            <fileset dir="${dir.build.gluewine}">
                 <include name="${pack}/**"/>
             </fileset>
             <fileset dir="${dir.bundle.extra}/${pack}">
                 <include name="**"/>
             </fileset>
-            <fileset dir="${dir.src.osgi}/${pack}">
+            <fileset dir="${dir.src.gluewine}/${pack}">
                 <include name="**/*.sql"/>
                 <include name="**/activation.lst"/>
             </fileset>
@@ -114,16 +102,16 @@
             </fileset>
         </union>
 
-        <checksum algorithm="sha1" todir="${dir.build.osgi}/sums" totalproperty="bundlechecksum">
+        <checksum algorithm="sha1" todir="${dir.build.gluewine}/sums" totalproperty="bundlechecksum">
             <resources refid="contents"/>
             <fileset dir=".">
-                <include name="${dir.src.osgi}/${manfile}"/>
+                <include name="${dir.src.gluewine}/${manfile}"/>
             </fileset>
         </checksum>
 
         <mkdir dir="${dir.bundle.extra}/${pack}"/>
         <mkdir dir="${dir.dist.lib}/${Group}"/>
-        <jar jarfile="${dir.dist.lib}/${Group}/${bundlename}-${fileversion}.jar" manifest="${dir.src.osgi}/${manfile}">
+        <jar jarfile="${dir.dist.lib}/${Group}/${bundlename}-${fileversion}.jar" manifest="${dir.src.gluewine}/${manfile}">
             <manifest>
 
                 <attribute name="X-Fks-BuildDate" value="${buildinfo.timestamp}"/>

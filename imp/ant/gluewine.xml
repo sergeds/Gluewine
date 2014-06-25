@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+<project name="gluewinebundles" default="gluewine.default" basedir=".">
+    <import file="init.xml"/>
+    <import file="qa.xml"/>
+
+    <target name="gluewine.init" depends="init">
+        <mkdir dir="${dir.build.gluewine}"/>
+        <mkdir dir="${dir.bundle.extra}"/>
+    </target>
+
+    <!-- Compile the code -->
+    <target name="gluewine.compile" depends="gluewine.depend">
+        <javac srcdir="${dir.src.gluewine}" destdir="${dir.build.gluewine}" debug="${debuginfo}" debuglevel="${debuglevel}" source="${source}" target="${target}" includeantruntime="false" encoding="utf8">
+            <classpath refid="classpath.gluewine.base"/>
+        </javac>
+    </target>
+
+    <!-- quality checks -->
+    <target name="gluewine.allchecks" depends="junit.allchecks, gluewine.checkstyle, gluewine.findbugs"/>
+    <target name="gluewine.quickchecks" depends="gluewine.checkstyle, junit.quickchecks"/>
+
+    <!-- Clean up old class files -->
+    <target name="gluewine.depend" depends="gluewine.init">
+        <depend srcdir="${dir.src.gluewine}" destdir="${dir.build.gluewine}" closure="yes"/>
+    </target>
+
+    <!-- Package all bundles -->
+    <target name="gluewine.bundles" depends="gluewine.compile, bundles.package"/>
+
+    <!-- Do a regular build with all required steps to be allowed to commit -->
+    <target name="gluewine.default" depends="gluewine.bundles, gluewine.quickchecks, gluewine.javadoc"/>
+
+    <target name="gluewine.package" depends="gluewine.bundles, gluewine.jarsrc, gluewine.zipdoc">
+        <copy todir="${dir.dist.lib}">
+            <fileset dir="${dir.lib.runtime}" includes="**/*.jar"/>
+        </copy>
+        <mkdir dir="${dir.dist.rtf}"/>
+        <mkdir dir="${dir.dist.rtf}/cfg"/>
+        <mkdir dir="${dir.dist.rtf}/cfg/generic"/>
+        <copy todir="${dir.dist.rtf}/cfg/generic">
+            <fileset dir="${dir.templates}/cfg/generic" includes="**/*.properties"/>
+        </copy>
+    </target>
+
+    <!-- Build all distributable files, fully tested -->
+    <target name="gluewine.dist" depends="gluewine.allchecks, gluewine.package"/>
+
+    <!-- Generate API documentation -->
+    <target name="gluewine.javadoc">
+        <mkdir dir="${dir.doc.api.gluewine}"/>
+        <javadoc packagenames="*" destdir="${dir.doc.api.gluewine}" version="true" author="true" splitindex="true" access="package" failonerror="true" encoding="utf8">
+            <sourcepath>
+                <pathelement path="${dir.src.gluewine}"/>
+            </sourcepath>
+            <classpath refid="classpath.gluewine.base"/>
+            <link href="http://download.oracle.com/javase/6/docs/api/"/>
+        </javadoc>
+    </target>
+
+    <!-- Creates a jar containing the source code -->
+    <target name="gluewine.jarsrc">
+        <mkdir dir="${dir.dist.src}"/>
+        <jar jarfile="${dir.dist.src}/${product}_${version}_src.jar">
+            <fileset dir="${dir.src.gluewine}">
+                <include name="*/**"/>
+            </fileset>
+            <fileset dir="..">
+                <include name="LICENSE.txt"/>
+            </fileset>
+        </jar>
+    </target>
+
+    <!-- Creates a zip containing the API doc -->
+    <target name="gluewine.zipdoc" depends="gluewine.javadoc">
+        <mkdir dir="${dir.dist.doc}"/>
+        <zip zipfile="${dir.dist.doc}/${product}_${version}_doc.zip">
+            <fileset dir="${dir.doc.api.gluewine}">
+                <include name="*/**"/>
+            </fileset>
+            <fileset dir="..">
+                <include name="LICENSE.txt"/>
+            </fileset>
+        </zip>
+    </target>
+
+    <!-- Run checkstyle on main source -->
+    <target name="gluewine.checkstyle" depends="gluewine.compile">
+        <antcall target="qa.checkstyle">
+            <param name="target" value="gluewine"/>
+            <param name="sourcedir" value="${dir.src.gluewine}"/>
+            <param name="reportdir" value="${dir.reports.checkstyle.gluewine}"/>
+        </antcall>
+    </target>
+
+    <!-- Run findbugs -->
+    <target name="gluewine.findbugs" depends="gluewine.compile">
+        <antcall target="qa.findbugs">
+            <param name="target" value="gluewine"/>
+            <param name="sourcedir" value="${dir.src.gluewine}"/>
+            <param name="classdir" value="${dir.build.gluewine}"/>
+            <param name="reportdir" value="${dir.reports.findbugs.gluewine}"/>
+        </antcall>
+    </target>
+</project>
