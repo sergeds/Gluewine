@@ -25,6 +25,7 @@ import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -32,6 +33,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 
+import javax.servlet.Filter;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContextListener;
 
@@ -48,8 +50,11 @@ import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.server.session.HashSessionManager;
 import org.eclipse.jetty.server.session.SessionHandler;
+import org.eclipse.jetty.servlet.FilterHolder;
+import org.eclipse.jetty.servlet.FilterMapping;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlets.gzip.GzipHandler;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
@@ -68,12 +73,12 @@ import org.gluewine.core.RunOnDeactivate;
 import org.gluewine.utils.ErrorLogger;
 
 /**
- * Launches the Jerry Server and registers all available contexts.
+ * Launches the Jerry Server and registers all available contexts and filters.
  *
  * @author fks/Serge de Schaetzen
  *
  */
-public class GluewineJettyLauncher implements RepositoryListener<GluewineServlet>,  CommandProvider, GluewineServletProperties
+public class GluewineJettyLauncher implements RepositoryListener<Object>, CommandProvider, GluewineServletProperties
 {
     // ===========================================================================
     /**
@@ -108,6 +113,11 @@ public class GluewineJettyLauncher implements RepositoryListener<GluewineServlet
      */
     private Map<String, Handler> handlers = new HashMap<String, Handler>();
 
+    /**
+     * Set of registered Filters.
+     */
+    private Set<Filter> filters = new HashSet<Filter>();
+
     // ===========================================================================
     /**
      * Loads all the wars.
@@ -128,28 +138,29 @@ public class GluewineJettyLauncher implements RepositoryListener<GluewineServlet
                     try
                     {
                         AccessController.doPrivileged(new PrivilegedExceptionAction<Void>()
+                                {
+                                    @Override
+                                    public Void run() throws Exception
                         {
-                            @Override
-                            public Void run() throws Exception
-                            {
-                                String context = war.getName();
-                                int i = context.lastIndexOf(".war");
-                                if (i > -1) context = context.substring(0, i);
-                                context = "/" + context;
+                            String context = war.getName();
+                            int i = context.lastIndexOf(".war");
+                            if (i > -1) context = context.substring(0, i);
+                            context = "/" + context;
 
-                                WebAppContext webapp = new WebAppContext();
+                            WebAppContext webapp = new WebAppContext();
 
-                                WebAppClassLoader wp = new WebAppClassLoader(GluewineJettyLauncher.class.getClassLoader(), webapp);
-                                webapp.setClassLoader(wp);
-                                webapp.setWar(war.getAbsolutePath());
-                                webapp.setSessionHandler(initSessionHandler(context));
+                            WebAppClassLoader wp = new WebAppClassLoader(GluewineJettyLauncher.class.getClassLoader(), webapp);
+                            webapp.setClassLoader(wp);
+                            webapp.setWar(war.getAbsolutePath());
+                            webapp.setSessionHandler(initSessionHandler(context));
 
-                                if (context.equals("/default")) webapp.setContextPath("/");
-                                else webapp.setContextPath(context);
-                                handlers.put(context, webapp);
-                                contexts.addHandler(webapp);
-                                return null;
-                            }
+                            if (context.equals("/default")) webapp.setContextPath("/");
+                            else webapp.setContextPath(context);
+                            handlers.put(context, webapp);
+                            contexts.addHandler(webapp);
+                            addFilters(webapp);
+                            return null;
+                        }
                         });
                     }
                     catch (PrivilegedActionException e)
@@ -313,6 +324,7 @@ public class GluewineJettyLauncher implements RepositoryListener<GluewineServlet
             h.setHandler(handler);
             handlers.put(context, h);
             contexts.addHandler(h);
+            addFilters(h);
 
             i++;
             path = properties.getProperty("static." + i + ".path");
@@ -471,6 +483,7 @@ public class GluewineJettyLauncher implements RepositoryListener<GluewineServlet
             if (initParameters.containsKey(RESOURCE_BASE)) handler.setResourceBase(initParameters.get(RESOURCE_BASE));
             handlers.put(ctx, handler);
             contexts.addHandler(handler);
+            addFilters(handler);
         }
 
         if (logger.isDebugEnabled()) logger.debug("Adding path: " + path + " to context " + ctx);
@@ -497,17 +510,74 @@ public class GluewineJettyLauncher implements RepositoryListener<GluewineServlet
 
     // ===========================================================================
     @Override
-    public void registered(GluewineServlet t)
+    public void registered(Object t)
     {
-        String ctx = t.getContextPath();
-        register(ctx, t, t.getInitParameters());
+        if (t instanceof GluewineServlet)
+        {
+            GluewineServlet s = (GluewineServlet) t;
+            String ctx = s.getContextPath();
+            register(ctx, s, s.getInitParameters());
+        }
+        if (t instanceof Filter)
+        {
+            Filter f = (Filter) t;
+            filters.add(f);
+            for (Handler h: handlers.values())
+            {
+                if (h instanceof ServletContextHandler)
+                {
+                    ServletHandler sh = ((ServletContextHandler) h).getServletHandler();
+                    sh.addFilterWithMapping(new FilterHolder(f), "/", FilterMapping.DEFAULT);
+                }
+            }
+        }
+    }
+
+    /**
+     * Add already registered filters to a handler.
+     * @param h the handler.
+     */
+    private void addFilters(Handler h)
+    {
+        if (h instanceof ServletContextHandler)
+        {
+            ServletHandler sh = ((ServletContextHandler) h).getServletHandler();
+            for (Filter f: filters)
+                sh.addFilterWithMapping(new FilterHolder(f), "/", FilterMapping.DEFAULT);
+        }
     }
 
     // ===========================================================================
     @Override
-    public void unregistered(GluewineServlet t)
+    public void unregistered(Object t)
     {
-        String ctx = t.getContextPath();
-        unregister(ctx);
+        if (t instanceof GluewineServlet)
+        {
+            GluewineServlet s = (GluewineServlet) t;
+            String ctx = s.getContextPath();
+            unregister(ctx);
+        }
+        if (t instanceof Filter)
+        {
+            Filter f = (Filter) t;
+            filters.remove(f);
+            for (Handler h: handlers.values())
+            {
+                if (h instanceof ServletContextHandler)
+                {
+                    ServletHandler sh = ((ServletContextHandler) h).getServletHandler();
+                    FilterHolder[] holders = sh.getFilters();
+                    ArrayList<FilterHolder> hl = new ArrayList<FilterHolder>();
+                    for (FilterHolder fh: holders)
+                    {
+                        if (fh.getFilter() != f)
+                        {
+                            hl.add(fh);
+                        }
+                    }
+                    sh.setFilters(hl.toArray(new FilterHolder[0]));
+                }
+            }
+        }
     }
 }
