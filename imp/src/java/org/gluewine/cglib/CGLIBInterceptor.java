@@ -66,7 +66,7 @@ public class CGLIBInterceptor implements MethodInterceptor
     {
         ContextInitializer ci = AnnotationUtility.getAnnotation(ContextInitializer.class, method, obj);
 
-        boolean firstInChain = interceptor.registerFirstInChain(ci != null);
+        boolean firstInChain = interceptor.registerFirstInChain(ci == null);
         Stack<AspectProvider> stack = new Stack<AspectProvider>();
         interceptor.invokeBefore(stack, obj, method, args, firstInChain, ci != null);
 
