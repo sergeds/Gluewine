@@ -41,6 +41,7 @@ import org.gluewine.core.Glue;
 import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.RunOnActivate;
 import org.gluewine.core.RunOnDeactivate;
+import org.gluewine.core.RemoteCallValidator;
 import org.gluewine.gxo.CloseBean;
 import org.gluewine.gxo.CompressedBlockInputStream;
 import org.gluewine.gxo.CompressedBlockOutputStream;
@@ -97,9 +98,9 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
     private Map<String, Class<?>> instantiatables = new HashMap<String, Class<?>>();
 
     /**
-     * The set of registered method invocation checkers.
+     * The set of registered method invocation validators.
      */
-    private Set<MethodInvocationChecker> checkers = new HashSet<MethodInvocationChecker>();
+    private Set<RemoteCallValidator> validators = new HashSet<RemoteCallValidator>();
 
     /**
      * The set of registered xsteam converter providers.
@@ -480,8 +481,8 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
                     }
                 }
 
-                for (MethodInvocationChecker checker : checkers)
-                    checker.checkAllowed(o, m, bean);
+                for (RemoteCallValidator validator : validators)
+                    validator.validateCall("GXO", o, m, bean.getParams());
 
                 result = m.invoke(o, bean.getParams());
                 if (logger.isTraceEnabled())
@@ -591,8 +592,8 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
                 services.put(interf.getName(), o);
         }
 
-        if (o instanceof MethodInvocationChecker)
-            checkers.add((MethodInvocationChecker) o);
+        if (o instanceof RemoteCallValidator)
+            validators.add((RemoteCallValidator) o);
 
         if (o instanceof SessionManager)
             sessionManager = (SessionManager) o;
@@ -720,8 +721,8 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
                 services.remove(interf.getName());
         }
 
-        if (o instanceof MethodInvocationChecker)
-            checkers.remove((MethodInvocationChecker) o);
+        if (o instanceof RemoteCallValidator)
+            validators.remove((RemoteCallValidator) o);
     }
 
     // ===========================================================================
