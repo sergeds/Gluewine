@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Gluewine-Name: org.gluewine.gluedgwt
+Jar-Version: 0.1
+Group: jetty

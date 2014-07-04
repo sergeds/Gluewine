@@ -188,7 +188,7 @@ public class HibernateTransactionalSessionImpl implements HibernateTransactional
     public Object merge(Object o)
     {
         Object merged = delegate.merge(o);
-        Serializable id = delegate.getIdentifier(o);
+        Serializable id = delegate.getIdentifier(merged);
         for (QueryPostProcessor post : postProcessors)
             post.updated(id, merged);
 
