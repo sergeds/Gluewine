@@ -816,14 +816,21 @@ public final class Gluer implements CodeSourceListener, RepositoryListener<CodeS
                     logger.debug("Instantiating class " + cl);
                     Class<?> clazz = loader.loadClass(cl);
 
+                    if (clazz.isInterface())
+                    {
+                        throw new Exception("Not instatiating service for " + cl + " (is an interface).");
+                    }
+
                     Object o = null;
                     if (enhancer == null || AspectProvider.class.isAssignableFrom(clazz))
                     {
                         o = clazz.newInstance();
                         interceptor.registered((AspectProvider) o);
                     }
-
-                    else o = enhancer.getEnhanced(clazz);
+                    else
+                    {
+                        o = enhancer.getEnhanced(clazz);
+                    }
 
                     addService(new Service(o, getServiceId(o), this));
 
