@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -92,7 +94,8 @@ public class GluewineLoader extends URLClassLoader
      */
     public void addDispatcher(GluewineLoader loader)
     {
-        if (loader != this && !dispatchers.contains(loader)) dispatchers.add(loader);
+        if (loader != this && !dispatchers.contains(loader))
+            dispatchers.add(loader);
     }
 
     // ===========================================================================
@@ -130,11 +133,39 @@ public class GluewineLoader extends URLClassLoader
     }
 
     // ===========================================================================
+    @Override
+    public Enumeration<URL> findResources(final String name) throws IOException
+    {
+        Set<URL> urls = new HashSet<URL>();
+        updateResources(name, urls);
+
+        for (GluewineLoader l : dispatchers)
+            l.updateResources(name, urls);
+
+        return Collections.enumeration(urls);
+    }
+
+    // ===========================================================================
     /**
-     * Tries to load the resource specified. If the resource is not found and the
-     * dispatch flag is set to true, the call is dispatched to all registered
-     * dispatchers until one can load the resource.
-     * If no one can load the requested resource, null is returned.
+     * Updates the given set with all resources matching the given name.
+     *
+     * @param name The name to look for.
+     * @param urls The set to update.
+     * @throws IOException If an error occurs.
+     */
+    protected void updateResources(final String name, Set<URL> urls) throws IOException
+    {
+        Enumeration<URL> e = super.findResources(name);
+        while (e.hasMoreElements())
+        {
+            urls.add(e.nextElement());
+        }
+    }
+
+    // ===========================================================================
+    /**
+     * Tries to load the resource specified. If the resource is not found and the dispatch flag is set to true, the call is dispatched to all registered dispatchers until one can load the resource. If no one can load the requested resource, null is
+     * returned.
      *
      * @param resource The resource to load.
      * @param dispatch True to dispatch the call.
@@ -148,7 +179,8 @@ public class GluewineLoader extends URLClassLoader
             for (int i = 0; i < dispatchers.size() && url == null; i++)
             {
                 url = dispatchers.get(i).loadOrDispatchResource(resource, false);
-                if (url != null) references.add(dispatchers.get(i));
+                if (url != null)
+                    references.add(dispatchers.get(i));
             }
         }
         return url;
@@ -156,8 +188,7 @@ public class GluewineLoader extends URLClassLoader
 
     // ===========================================================================
     /**
-     * Returns true if this loader loaded a class or resource from the loader
-     * specified as parameter.
+     * Returns true if this loader loaded a class or resource from the loader specified as parameter.
      *
      * @param loader The loader to check.
      * @return True if referenced.
@@ -177,10 +208,7 @@ public class GluewineLoader extends URLClassLoader
 
     // ===========================================================================
     /**
-     * Tries to load the class specified. If the class is not found and the
-     * dispatch flag is set to true, the call is dispatched to all registered
-     * dispatchers until one can load the class.
-     * If no one can load the class, a ClassNotFoundException is thrown.
+     * Tries to load the class specified. If the class is not found and the dispatch flag is set to true, the call is dispatched to all registered dispatchers until one can load the class. If no one can load the class, a ClassNotFoundException is thrown.
      *
      * @param name The class to load.
      * @param dispatch True to dispatch the call.
