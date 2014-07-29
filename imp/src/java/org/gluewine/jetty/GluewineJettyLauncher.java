@@ -20,10 +20,12 @@ package org.gluewine.jetty;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +34,8 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.jar.JarFile;
+import java.util.jar.JarEntry;
 
 import javax.servlet.Filter;
 import javax.servlet.Servlet;
@@ -171,6 +175,40 @@ public class GluewineJettyLauncher implements RepositoryListener<Object>, Comman
             }
         }
 
+    }
+
+    /** Looks for an entry with the specified name in all war files, and returns an InputStream for the entry.
+     * @param fileInWar the entry to look for.
+     * @return an InputStream for the entry.
+     */
+    public InputStream getWarContent(String fileInWar)
+    {
+        for (Handler h : handlers.values())
+        {
+            if (h instanceof WebAppContext)
+            {
+                try
+                {
+                    String war = ((WebAppContext) h).getWar();
+                    if (war == null)
+                        continue;
+                    JarFile jf = new JarFile(war);
+                    for (Enumeration<JarEntry> e = jf.entries(); e.hasMoreElements();)
+                    {
+                        JarEntry je = e.nextElement();
+                        if (je.getName().endsWith(fileInWar))
+                        {
+                            return jf.getInputStream(je);
+                        }
+                    }
+                }
+                catch (Throwable t)
+                {
+                    ErrorLogger.log(GluewineJettyLauncher.class, t);
+                }
+            }
+        }
+        return null;
     }
 
     // ===========================================================================
