@@ -81,7 +81,11 @@ public abstract class ExternalService extends RemoteServiceServlet implements Gl
         InputStream is = null;
         try
         {
-            is = new FileInputStream(new File(new File(Launcher.getInstance().getRoot(), "gwt-rpc"), serializationPolicyFilePath));
+            is = launcher.getWarContent(serializationPolicyFilePath);
+            if (is == null)
+            {
+                is = new FileInputStream(new File(new File(Launcher.getInstance().getRoot(), "gwt-rpc"), serializationPolicyFilePath));
+            }
             serializationPolicy = SerializationPolicyLoader.loadFromStream(is);
             return new GluewineSerializationPolicy((StandardSerializationPolicy) serializationPolicy);
         }
