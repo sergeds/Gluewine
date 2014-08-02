@@ -47,25 +47,23 @@ import java.util.TreeSet;
 import org.gluewine.launcher.sources.DirectoryCodeSource;
 import org.gluewine.launcher.sources.JarCodeSource;
 import org.gluewine.launcher.sources.MissingCodeSource;
+import org.gluewine.launcher.sources.SourceDirCodeSource;
 import org.gluewine.launcher.sources.URLCodeSource;
 import org.gluewine.launcher.utils.FileUtils;
 
-
 /**
- * Launches the Gluewine framework. It acceps one parameter: The name of the class
- * to launch. If ommitted, it will use the org.gluewine.core.glue.Gluer class.
+ * Launches the Gluewine framework. It acceps one parameter: The name of the class to launch. If ommitted, it will use the org.gluewine.core.glue.Gluer class.
  *
- * <p>Beware that this class may not import any class other than java classes, as it
- * acts as the base classloader.
+ * <p>
+ * Beware that this class may not import any class other than java classes, as it acts as the base classloader.
  *
- * <p>By default it will locate the directory where it was started from and look for
- * a lib subdirectory from the parent directory. All jar/zip files stored there will be
- * loaded.
- * <br>The directory where the jars are stored can be overriden using the -Dgluewine.libdir property.
+ * <p>
+ * By default it will locate the directory where it was started from and look for a lib subdirectory from the parent directory. All jar/zip files stored there will be loaded. <br>
+ * The directory where the jars are stored can be overriden using the -Dgluewine.libdir property.
  *
- * <p>Configuration files should be stored in the cfg directory, located as a subdir of the
- * parent directory the class was loaded from.
- * <br>This directory can be explicitely specified using the -Dgluewine.cfgdir property.
+ * <p>
+ * Configuration files should be stored in the cfg directory, located as a subdir of the parent directory the class was loaded from. <br>
+ * This directory can be explicitely specified using the -Dgluewine.cfgdir property.
  *
  * @author fks/Serge de Schaetzen
  *
@@ -181,29 +179,57 @@ public final class Launcher implements Runnable, DirectoryAnnotations
     {
         String path = getClass().getProtectionDomain().getCodeSource().getLocation().getFile();
         File currDir = new File(path).getParentFile();
-        if (path.toLowerCase(Locale.getDefault()).endsWith(".jar")) currDir = currDir.getParentFile();
+        if (path.toLowerCase(Locale.getDefault()).endsWith(".jar"))
+            currDir = currDir.getParentFile();
 
         String propLib = System.getProperty("gluewine.libdir");
-        if (propLib != null) root = new File(propLib);
-        else root = new File(currDir, "lib");
+        if (propLib != null)
+            root = new File(propLib);
+        else
+            root = new File(currDir, "lib");
 
         String propCfg = System.getProperty("gluewine.cfgdir");
-        if (propCfg != null) configDirectory = new File(propCfg);
-        else configDirectory = new File(currDir, "cfg");
+        if (propCfg != null)
+            configDirectory = new File(propCfg);
+        else
+            configDirectory = new File(currDir, "cfg");
 
         String propPersist = System.getProperty("gluewine.persistfile");
-        if (propPersist != null) persistentFile = new File(propPersist);
-        else persistentFile = new File(configDirectory, "gluewine.state");
+        if (propPersist != null)
+            persistentFile = new File(propPersist);
+        else
+            persistentFile = new File(configDirectory, "gluewine.state");
 
         try
         {
+            String srcDir = System.getProperty("gluewine.srcdir");
+            if (srcDir != null)
+            {
+                String binDir = System.getProperty("gluewine.bindir");
+                if (binDir != null)
+                {
+                    SourceDirCodeSource srcSource = new SourceDirCodeSource(srcDir);
+                    GluewineLoader ldr = new GluewineLoader(srcDir);
+                    File bin = new File(binDir);
+                    ldr.addURL(bin.toURI().toURL());
+                    srcSource.setSourceClassLoader(ldr);
+                    sourcesMap.put(srcSource.getDisplayName(), srcSource);
+                    List<CodeSource> l = new ArrayList<CodeSource>();
+                    l.add(srcSource);
+                    codeSources.put(".", l);
+                }
+                else throw new Exception("You cannot use gluewine.srcdir without specifying gluewine.bindir");
+            }
+
             if (System.getProperty("log4j.configuration") == null)
             {
                 File log4j = new File(configDirectory, "log4j.properties");
-                if (log4j.exists()) System.setProperty("log4j.configuration", log4j.toURI().toURL().toExternalForm());
+                if (log4j.exists())
+                    System.setProperty("log4j.configuration", log4j.toURI().toURL().toExternalForm());
             }
 
-            if (root.exists()) processRoot();
+            if (root.exists())
+                processRoot();
 
             loadPersistentMap();
             CodeSource rootCs = sourcesMap.get(getShortName(root));
@@ -211,7 +237,8 @@ public final class Launcher implements Runnable, DirectoryAnnotations
 
             cl.getMethod("main", String[].class).invoke(null, new Object[] {parameters});
 
-            if (initStdIn) new Thread(this).start();
+            if (initStdIn)
+                new Thread(this).start();
         }
         catch (Throwable e)
         {
@@ -221,9 +248,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
 
     // ===========================================================================
     /**
-     * Processes the root directory, and returns all CodeSources that were loaded.
-     * (note that CodeSources that were already loaded will not be added again. So
-     * it is safe to call this method multiple times.)
+     * Processes the root directory, and returns all CodeSources that were loaded. (note that CodeSources that were already loaded will not be added again. So it is safe to call this method multiple times.)
      *
      * @return The list of CodeSources that have been added.
      * @throws IOException Thrown if an IOException occurs reading files.
@@ -322,12 +347,14 @@ public final class Launcher implements Runnable, DirectoryAnnotations
                 jarFilter.add("jansi");
                 jarFilter.add("log4j");
             }
-            if (args.length > 1 && args[1].equals("gwt")) initStdIn = true;
+            if (args.length > 1 && args[1].equals("gwt"))
+                initStdIn = true;
 
             classToStart = clazz;
 
             parameters = new String[args.length - 1];
-            if (args.length > 1) System.arraycopy(args, 1, parameters, 0, parameters.length);
+            if (args.length > 1)
+                System.arraycopy(args, 1, parameters, 0, parameters.length);
         }
         catch (Throwable e)
         {
@@ -376,8 +403,8 @@ public final class Launcher implements Runnable, DirectoryAnnotations
 
     // ===========================================================================
     /**
-     * Returns the map of persistent properties. The map will never be null.
-     * <br>Remark: the map returned is the actual map, not a copy!
+     * Returns the map of persistent properties. The map will never be null. <br>
+     * Remark: the map returned is the actual map, not a copy!
      *
      * @return The persistent map.
      */
@@ -446,7 +473,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
             // First all CodeSources in the same directory.
             for (int j = 0; j < list.size(); j++)
                 for (int k = 0; k < list.size(); k++)
-                list.get(j).getSourceClassLoader().addDispatcher(list.get(k).getSourceClassLoader());
+                    list.get(j).getSourceClassLoader().addDispatcher(list.get(k).getSourceClassLoader());
 
             // Then all directories lower.
             for (int j = i - 1; j >= 0; j--)
@@ -493,12 +520,10 @@ public final class Launcher implements Runnable, DirectoryAnnotations
 
     // ===========================================================================
     /**
-     * Checks for the presence of the @Install annotation in the given
-     * directory, and if present processes it.
+     * Checks for the presence of the @Install annotation in the given directory, and if present processes it.
      *
      * @param dir The directory to process.
-     * @throws IOException If an error occurs reading the annotation file, or fetching
-     * the resources.
+     * @throws IOException If an error occurs reading the annotation file, or fetching the resources.
      */
     private void checkInstallAnnotation(File dir) throws IOException
     {
@@ -510,14 +535,14 @@ public final class Launcher implements Runnable, DirectoryAnnotations
                 fetch(new URL(url), dir);
 
             // Delete the annotation as everything was fetched successfully.
-            if (!annot.delete()) throw new IOException("Could not delete " + annot.getAbsolutePath());
+            if (!annot.delete())
+                throw new IOException("Could not delete " + annot.getAbsolutePath());
         }
     }
 
     // ===========================================================================
     /**
-     * Activates the given file. The activation consists of renaming the
-     * file by removing the '.notactivated' part.
+     * Activates the given file. The activation consists of renaming the file by removing the '.notactivated' part.
      *
      * @param file The file to activate.
      * @throws IOException If an error occurs renaming the file.
@@ -533,9 +558,11 @@ public final class Launcher implements Runnable, DirectoryAnnotations
             log.debug(getClass(), "Activating source: " + name);
             File target = new File(name);
             if (target.exists())
-                if (!target.delete()) throw new IOException("The file " + target.getAbsolutePath() + " could not be deleted.");
+                if (!target.delete())
+                    throw new IOException("The file " + target.getAbsolutePath() + " could not be deleted.");
 
-            if (!file.renameTo(target)) throw new IOException("Could no activate the file " + file.getAbsolutePath());
+            if (!file.renameTo(target))
+                throw new IOException("Could no activate the file " + file.getAbsolutePath());
 
             return target;
         }
@@ -545,9 +572,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
 
     // ===========================================================================
     /**
-     * Fetches the url given and stores it in the given directory. The file
-     * receives the file name of the url, with '.notactivated' appended at
-     * the end.
+     * Fetches the url given and stores it in the given directory. The file receives the file name of the url, with '.notactivated' appended at the end.
      *
      * @param url The url to fetch from.
      * @param dir The directory to save it into.
@@ -561,7 +586,8 @@ public final class Launcher implements Runnable, DirectoryAnnotations
         log.debug(getClass(), "Fetching", url.toExternalForm(), "to be stored in", dir.getAbsolutePath());
 
         if (target.exists())
-            if (!target.delete()) throw new IOException("Could not delete " + target.getAbsolutePath());
+            if (!target.delete())
+                throw new IOException("Could not delete " + target.getAbsolutePath());
 
         if (!target.getParentFile().exists())
             if (!target.getParentFile().mkdirs())
@@ -587,19 +613,20 @@ public final class Launcher implements Runnable, DirectoryAnnotations
         {
             try
             {
-                if (in != null) in.close();
+                if (in != null)
+                    in.close();
             }
             finally
             {
-                if (out != null) out.close();
+                if (out != null)
+                    out.close();
             }
         }
     }
 
     // ===========================================================================
     /**
-     * Returns true if the file specified is allowed by the
-     * filter or if there's no filter.
+     * Returns true if the file specified is allowed by the filter or if there's no filter.
      *
      * @param f The file to check.
      * @return True if allowed by the filter.
@@ -650,7 +677,8 @@ public final class Launcher implements Runnable, DirectoryAnnotations
         // File annotation = new File(dir, SINGLELOADER);
         // boolean single = annotation.exists();
         boolean single = true;
-        if (single) singleLoaderDirectories.add(dir);
+        if (single)
+            singleLoaderDirectories.add(dir);
         checkInstallAnnotation(dir);
 
         List<File> jars = new ArrayList<File>();
@@ -737,9 +765,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
 
     // ===========================================================================
     /**
-     * Creates and returns a CodeSource for the given file. If the loader
-     * is null a new GluewineLoader is created. If it is not null it is
-     * assigned to the CodeSource.
+     * Creates and returns a CodeSource for the given file. If the loader is null a new GluewineLoader is created. If it is not null it is assigned to the CodeSource.
      *
      * @param file The file to process.
      * @param loader The (possibly null) classloader to use.
@@ -749,7 +775,8 @@ public final class Launcher implements Runnable, DirectoryAnnotations
     private CodeSource getCodeSource(File file, GluewineLoader loader) throws IOException
     {
         String name = getShortName(file);
-        if (loader == null) loader = new GluewineLoader(name);
+        if (loader == null)
+            loader = new GluewineLoader(name);
         loader.addURL(file.toURI().toURL());
         CodeSource src = new JarCodeSource(file);
         src.setSourceClassLoader(loader);
@@ -759,9 +786,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
 
     // ===========================================================================
     /**
-     * Creates and returns a CodeSource for the given url. If the loader
-     * is null a new GluewineLoader is created. If it is not null it is
-     * assigned to the CodeSource.
+     * Creates and returns a CodeSource for the given url. If the loader is null a new GluewineLoader is created. If it is not null it is assigned to the CodeSource.
      *
      * @param url The url.
      * @param loader The (possibly null) classloader to use.
@@ -771,7 +796,8 @@ public final class Launcher implements Runnable, DirectoryAnnotations
     private CodeSource getCodeSource(URL url, GluewineLoader loader) throws IOException
     {
         String name = url.toExternalForm();
-        if (loader == null) loader = new GluewineLoader(name);
+        if (loader == null)
+            loader = new GluewineLoader(name);
         loader.addURL(url);
         CodeSource src = new URLCodeSource(url);
         src.setSourceClassLoader(loader);
@@ -781,13 +807,11 @@ public final class Launcher implements Runnable, DirectoryAnnotations
 
     // ===========================================================================
     /**
-     * Reads the URL annotation file (if present) and returns an array of all
-     * urls defined in that file.
+     * Reads the URL annotation file (if present) and returns an array of all urls defined in that file.
      *
      * @param dir The directory to process.
      * @return The array of defined urls.
-     * @throws IOException If an error occurs reading the file. (or an invalud URL
-     * has been defined).
+     * @throws IOException If an error occurs reading the file. (or an invalud URL has been defined).
      */
     @SuppressWarnings("unchecked")
     private URL[] loadUrls(File dir) throws IOException
@@ -798,7 +822,8 @@ public final class Launcher implements Runnable, DirectoryAnnotations
         if (annot.exists())
         {
             HashSet<String> removedUrls = (HashSet<String>) persistentMap.get("GLUEWINE:REMOVEDURLS");
-            if (removedUrls == null) removedUrls = new HashSet<String>();
+            if (removedUrls == null)
+                removedUrls = new HashSet<String>();
             List<String> ss = FileUtils.readFile(annot);
             for (String s : ss)
                 if (!removedUrls.contains(s))
@@ -821,7 +846,8 @@ public final class Launcher implements Runnable, DirectoryAnnotations
         if (repos == null)
             repos = root.toURI().toURL().toExternalForm();
 
-        if (!repos.endsWith("/")) repos = repos + "/";
+        if (!repos.endsWith("/"))
+            repos = repos + "/";
 
         return repos;
     }
@@ -840,9 +866,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
 
     // ===========================================================================
     /**
-     * Returns the list of source versions obtained by reading the
-     * packages.idx file, located in the currently defined source repository.
-     * If no packages.idx could be found, an empty list is returned.
+     * Returns the list of source versions obtained by reading the packages.idx file, located in the currently defined source repository. If no packages.idx could be found, an empty list is returned.
      *
      * @param installMissing If true it also returns missing sources.
      * @return The list of version.
@@ -870,8 +894,10 @@ public final class Launcher implements Runnable, DirectoryAnnotations
                     if (cs != null)
                     {
                         SourceVersion version = null;
-                        if (split.length == 3) version = new SourceVersion(cs, split[1], split[2], sourceUrl);
-                        else if (split.length == 2) version = new SourceVersion(cs, split[1], split[1], sourceUrl);
+                        if (split.length == 3)
+                            version = new SourceVersion(cs, split[1], split[2], sourceUrl);
+                        else if (split.length == 2)
+                            version = new SourceVersion(cs, split[1], split[1], sourceUrl);
                         versions.add(version);
                     }
                     else if (installMissing)
@@ -879,8 +905,10 @@ public final class Launcher implements Runnable, DirectoryAnnotations
                         SourceVersion version = null;
                         MissingCodeSource ms = new MissingCodeSource();
                         ms.setDisplayName("/" + split[0]);
-                        if (split.length == 3) version = new SourceVersion(ms, split[1], split[2], sourceUrl);
-                        else if (split.length == 2) version = new SourceVersion(ms, split[1], split[1], sourceUrl);
+                        if (split.length == 3)
+                            version = new SourceVersion(ms, split[1], split[2], sourceUrl);
+                        else if (split.length == 2)
+                            version = new SourceVersion(ms, split[1], split[1], sourceUrl);
                         versions.add(version);
                     }
                 }
@@ -888,7 +916,8 @@ public final class Launcher implements Runnable, DirectoryAnnotations
         }
         finally
         {
-            if (reader != null) reader.close();
+            if (reader != null)
+                reader.close();
         }
 
         return versions;
@@ -1016,8 +1045,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
 
     // ===========================================================================
     /**
-     * Fetches the list of sources specified without activating them, and
-     * returns the list of files that need to be activated.
+     * Fetches the list of sources specified without activating them, and returns the list of files that need to be activated.
      *
      * @param toFetch The sources to fetch.
      * @return The files to activate.
@@ -1042,15 +1070,15 @@ public final class Launcher implements Runnable, DirectoryAnnotations
 
     // ===========================================================================
     /**
-     * Returns the short name of the given file. This is the name starting from
-     * the root library.
+     * Returns the short name of the given file. This is the name starting from the root library.
      *
      * @param file The file to process.
      * @return The shortname.
      */
     private String getShortName(File file)
     {
-        if (file.equals(root)) return "/";
+        if (file.equals(root))
+            return "/";
         else
         {
             String name = file.getAbsolutePath();
@@ -1091,7 +1119,8 @@ public final class Launcher implements Runnable, DirectoryAnnotations
         }
         finally
         {
-            if (input != null) input.close();
+            if (input != null)
+                input.close();
         }
 
         return props;
@@ -1166,7 +1195,8 @@ public final class Launcher implements Runnable, DirectoryAnnotations
             }
         }
 
-        if (updated) getSourcesToReload(toRemove, toReload);
+        if (updated)
+            getSourcesToReload(toRemove, toReload);
 
         return updated;
     }
@@ -1189,9 +1219,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
 
     // ===========================================================================
     /**
-     * Removes the given list of codesources. This does not do a physical remove,
-     * but only a deregistration of the associated classloaders, and returns the
-     * list of ALL codesources that have been removed.
+     * Removes the given list of codesources. This does not do a physical remove, but only a deregistration of the associated classloaders, and returns the list of ALL codesources that have been removed.
      *
      * @param toRemove The sources to remove.
      * @param deleteFile If true deletes the file associated with the codesources.
@@ -1291,7 +1319,8 @@ public final class Launcher implements Runnable, DirectoryAnnotations
             @Override
             public Launcher run()
             {
-                if (instance == null) instance = new Launcher();
+                if (instance == null)
+                    instance = new Launcher();
                 return instance;
             }
         });
