@@ -19,6 +19,7 @@
 package org.gluewine.cglib;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Stack;
 
 import net.sf.cglib.proxy.MethodInterceptor;
@@ -64,10 +65,49 @@ public class CGLIBInterceptor implements MethodInterceptor
     @Override
     public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable
     {
+        if (Modifier.isSynchronized(method.getModifiers()))
+            return interceptSynchronized(obj, method, args, proxy);
+        else
+            return interceptNonSynchronized(obj, method, args, proxy);
+    }
+
+    // ===========================================================================
+    /**
+     * Executes the method given in a synchronized way.
+     *
+     * @param obj The object being invoked.
+     * @param method The method being invoked
+     * @param args The method arguments.
+     * @param proxy The proxy object.
+     * @return The return value (if any).
+     * @throws Throwable If an error occurs.
+     */
+    private Object interceptSynchronized(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable
+    {
+        synchronized (obj)
+        {
+            return interceptNonSynchronized(obj, method, args, proxy);
+        }
+    }
+
+    // ===========================================================================
+    /**
+     * Executes the method given in a synchronized way.
+     *
+     * @param obj The object being invoked.
+     * @param method The method being invoked
+     * @param args The method arguments.
+     * @param proxy The proxy object.
+     * @return The return value (if any).
+     * @throws Throwable If an error occurs.
+     */
+    private Object interceptNonSynchronized(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable
+    {
         ContextInitializer ci = AnnotationUtility.getAnnotation(ContextInitializer.class, method, obj);
 
         boolean firstInChain = interceptor.registerFirstInChain(ci == null);
         Stack<AspectProvider> stack = new Stack<AspectProvider>();
+
         interceptor.invokeBefore(stack, obj, method, args, firstInChain, ci != null);
 
         try
