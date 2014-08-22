@@ -24,6 +24,7 @@ public class GluewineSerializationPolicy extends SerializationPolicy implements 
     {
         aliases.put(org.hibernate.collection.internal.PersistentSet.class, java.util.HashSet.class);
         aliases.put(org.hibernate.collection.internal.PersistentList.class, java.util.ArrayList.class);
+        aliases.put(org.hibernate.collection.internal.PersistentBag.class, java.util.ArrayList.class);
         aliases.put(org.hibernate.collection.internal.PersistentMap.class, java.util.HashMap.class);
         aliases.put(org.hibernate.collection.internal.PersistentSortedMap.class, java.util.TreeMap.class);
         aliases.put(org.hibernate.collection.internal.PersistentSortedSet.class, java.util.TreeSet.class);
