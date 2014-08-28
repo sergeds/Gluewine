@@ -341,6 +341,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
                 jarFilter.add("org.gluewine.gxo");
                 jarFilter.add("org.gluewine.dbauth");
                 jarFilter.add("org.gluewine.authentication");
+                jarFilter.add("org.gluewine.sessions");
                 jarFilter.add("xpp3_min");
                 jarFilter.add("xstream");
                 jarFilter.add("jline");
