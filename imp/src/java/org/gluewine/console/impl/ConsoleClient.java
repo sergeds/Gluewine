@@ -246,9 +246,11 @@ public final class ConsoleClient implements Runnable, Completer, AnsiCodes
                     server = null;
                     return;
                 }
-
-                System.out.println("An error occured on line: " + (i + 1));
-                e.printStackTrace();
+                else
+                {
+                    System.out.println("An error occured on line: " + (i + 1));
+                    e.printStackTrace();
+                }
             }
         }
     }
