@@ -81,8 +81,12 @@ public class SessionManagerImpl implements SessionManager, SessionManagerDataSto
                     Iterator<Entry<String, Long>> iter = sessions.entrySet().iterator();
                     while (iter.hasNext())
                     {
-                        if (System.currentTimeMillis() - iter.next().getValue().longValue() > MAXIDLE)
+                        Entry<String, Long> e = iter.next();
+                        if (System.currentTimeMillis() - e.getValue().longValue() > MAXIDLE)
+                        {
+                            sessionData.remove(e.getKey());
                             iter.remove();
+                        }
                     }
                 }
             }
