@@ -18,6 +18,8 @@
  ***************************************************************************/
 package org.gluewine.mailer;
 
+import javax.mail.internet.MimeBodyPart;
+
 /**
  * Defines the mailer interface.
  *
@@ -36,4 +38,16 @@ public interface Mailer
      * @throws MailException If a problem occurs sending out the mail.
      */
     void sendMail(String subject, String body, String ... recipients) throws MailException;
+
+    // ===========================================================================
+    /**
+     * Sends out a mail to the recipients specified.
+     *
+     * @param subject The subject of the mail.
+     * @param body The body (text) of the mail.
+     * @param recipients The recipients.
+     * @param attachments The attachments.
+     * @throws MailException If a problem occurs sending out the mail.
+     */
+    void sendMail(String subject, String body, MimeBodyPart[] attachments, String ... recipients) throws MailException;
 }
