@@ -72,6 +72,14 @@ public class MailerImpl implements Mailer
     @Override
     public void sendMail(String subject, String body, String... recipients) throws MailException
     {
+        MimeBodyPart[] attachments = new MimeBodyPart[0];
+        sendMail(subject, body, attachments, recipients);
+    }
+
+    // ===========================================================================
+    @Override
+    public void sendMail(String subject, String body, MimeBodyPart[] attachments, String... recipients) throws MailException
+    {
         try
         {
             launch();
@@ -113,6 +121,11 @@ public class MailerImpl implements Mailer
 
             MimeMultipart mimemultipart = new MimeMultipart();
             mimemultipart.addBodyPart(mimebodypart);
+
+            for (MimeBodyPart mbp: attachments)
+            {
+                mimemultipart.addBodyPart(mbp);
+            }
 
             if (subject != null)
                 mimemessage.setSubject(subject); // If subject is present, set it.
