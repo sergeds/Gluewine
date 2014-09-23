@@ -29,6 +29,7 @@ import java.util.TreeSet;
 import org.apache.log4j.Logger;
 import org.gluewine.core.Repository;
 import org.gluewine.core.RepositoryListener;
+import org.gluewine.utils.ErrorLogger;
 
 /**
  * Default implementation of the Registry.
@@ -108,8 +109,15 @@ public final class RepositoryImpl implements Repository
     @SuppressWarnings("unchecked")
     private void registered(Object o, RepositoryListener<?> l, Class<?> generic)
     {
-        if (generic != null && generic.isAssignableFrom(o.getClass()))
-            ((RepositoryListener<Object>) l).registered(o);
+        try
+        {
+            if (generic != null && generic.isAssignableFrom(o.getClass()))
+                ((RepositoryListener<Object>) l).registered(o);
+        }
+        catch (Throwable t)
+        {
+            ErrorLogger.log(getClass(), t);
+        }
     }
 
     // ===========================================================================
@@ -124,8 +132,15 @@ public final class RepositoryImpl implements Repository
     @SuppressWarnings("unchecked")
     private void unregistered(Object o, RepositoryListener<?> l, Class<?> generic)
     {
-        if (generic != null && generic.isAssignableFrom(o.getClass()))
-            ((RepositoryListener<Object>) l).unregistered(o);
+        try
+        {
+            if (generic != null && generic.isAssignableFrom(o.getClass()))
+                ((RepositoryListener<Object>) l).unregistered(o);
+        }
+        catch (Throwable t)
+        {
+            ErrorLogger.log(getClass(), t);
+        }
     }
 
     // ===========================================================================
