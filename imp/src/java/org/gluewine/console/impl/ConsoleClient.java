@@ -246,9 +246,11 @@ public final class ConsoleClient implements Runnable, Completer, AnsiCodes
                     server = null;
                     return;
                 }
-
-                System.out.println("An error occured on line: " + (i + 1));
-                e.printStackTrace();
+                else
+                {
+                    System.out.println("An error occured on line: " + (i + 1));
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -363,8 +365,15 @@ public final class ConsoleClient implements Runnable, Completer, AnsiCodes
                     }
 
                     String line = reader.readLine(prompt);
-                    if (line == null) line = "";
-                    executeCommands(null, false, false, line);
+                    if (line == null)
+                    {
+                        System.out.println("Input closed. Closing console.");
+                        stopRequested = true;
+                    }
+                    else
+                    {
+                        executeCommands(null, false, false, line);
+                    }
                 }
                 catch (AuthenticationAbortedException e)
                 {
