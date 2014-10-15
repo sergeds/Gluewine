@@ -571,7 +571,11 @@ public final class Gluer implements CodeSourceListener, RepositoryListener<CodeS
         for (Service s : serviceMap.values())
         {
             if (s.isGlued() && !s.unglue())
+            {
                 unglued = false;
+                if (s.getActualService() instanceof AspectProvider)
+                    providers.remove(s.getActualService());
+            }
         }
 
         return unglued;
