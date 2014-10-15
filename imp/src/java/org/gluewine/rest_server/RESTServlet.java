@@ -259,24 +259,41 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
                 if (item != null)
                 {
                     String[] val = null;
-                    if (item.isFormField()) val = new String[] {item.getString()};
+                    if (item.isFormField())
+                    {
+                        val = new String[] {item.getString()};
+                        params[i] = serializer.deserialize(paramTypes[i], val);
+                        if (logger.isTraceEnabled()) traceParameter(id.id(), val);
+                    }
                     else
                     {
                         try
                         {
-                            File nf = new File(item.getName());
-                            File f = File.createTempFile("___", "___" + nf.getName());
-                            item.write(f);
-                            val = new String[] {f.getAbsolutePath()};
+                            if (InputStream.class.isAssignableFrom(paramTypes[i]))
+                            {
+                                params[i] = item.getInputStream();
+                            }
+                            else
+                            {
+                                File nf = new File(item.getName());
+                                File f = File.createTempFile("___", "___" + nf.getName());
+                                item.write(f);
+                                if (File.class.isAssignableFrom(paramTypes[i]))
+                                {
+                                    params[i] = f;
+                                }
+                                else
+                                {
+                                    logger.warn("File upload to string field for method " + rm.getMethod());
+                                    params[i] = f.getAbsolutePath();
+                                }
+                            }
                         }
                         catch (Exception e)
                         {
                             throw new IOException(e.getMessage());
                         }
                     }
-                    if (logger.isTraceEnabled()) traceParameter(id.id(), val);
-                    if (val != null && val.length > 0) params[i] = serializer.deserialize(paramTypes[i], val);
-                    else params[i] = null;
                 }
                 else params[i] = null;
             }
