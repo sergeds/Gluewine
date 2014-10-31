@@ -16,7 +16,7 @@
  *          ((ServiceDefTarget) myService).setServiceEntryPoint("/myServicerPath/");
  * </code>
  * <p>
- * See {@see org.gluewine.gwt} for gwt support in a more traditional way.
+ * See {@link org.gluewine.gwt} for gwt support in a more traditional way.
  * </p>
  */
 package org.gluewine.gluedgwt;

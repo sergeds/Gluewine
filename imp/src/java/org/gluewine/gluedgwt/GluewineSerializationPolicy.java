@@ -31,6 +31,16 @@ public class GluewineSerializationPolicy extends SerializationPolicy implements 
     }
 
     /**
+     * Add an alias.
+     * @param alias the alias to add
+     * @param target the class the alias should be mapped to
+     */
+    public static void addAlias(Class<?> alias, Class<?> target)
+    {
+        aliases.put(alias, target);
+    }
+
+    /**
      * Constructs a GluewineSerializationPolicy.
      * @param parent the parent to use.
      */
