@@ -73,12 +73,27 @@ public class MailerImpl implements Mailer
     public void sendMail(String subject, String body, String... recipients) throws MailException
     {
         MimeBodyPart[] attachments = new MimeBodyPart[0];
-        sendMail(subject, body, attachments, recipients);
+        sendMail(subject, body, ContentType.PLAIN, attachments, recipients);
+    }
+
+    // ===========================================================================
+    @Override
+    public void sendMail(String subject, String body, ContentType contentType, String... recipients) throws MailException
+    {
+        MimeBodyPart[] attachments = new MimeBodyPart[0];
+        sendMail(subject, body, contentType, attachments, recipients);
     }
 
     // ===========================================================================
     @Override
     public void sendMail(String subject, String body, MimeBodyPart[] attachments, String... recipients) throws MailException
+    {
+        sendMail(subject, body, ContentType.PLAIN, attachments, recipients);
+    }
+
+    // ===========================================================================
+    @Override
+    public void sendMail(String subject, String body, ContentType contentType, MimeBodyPart[] attachments, String... recipients) throws MailException
     {
         try
         {
@@ -115,7 +130,7 @@ public class MailerImpl implements Mailer
 
             MimeBodyPart mimebodypart = new MimeBodyPart();
             if (body != null)
-                mimebodypart.setText(body); // Set the message as mail body.
+                mimebodypart.setText(body, "UTF-8", contentType.getType()); // Set the message as mail body.
             else
                 mimebodypart.setText(""); // No message ==> Empty message body.
 
