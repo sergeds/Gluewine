@@ -24,6 +24,7 @@ import org.gluewine.core.Glue;
 import org.gluewine.core.RepositoryListener;
 import org.gluewine.core.RunOnActivate;
 import org.gluewine.core.RemoteCallValidator;
+import org.gluewine.core.Repository;
 import org.gluewine.jetty.GluewineJettyLauncher;
 import org.gluewine.jetty.GluewineServletProperties;
 import org.gluewine.launcher.Launcher;
@@ -34,7 +35,7 @@ import org.gluewine.utils.AnnotationUtility;
  *
  * @author fks/Frank Gevaerts
  */
-public abstract class ExternalService extends RemoteServiceServlet implements GluewineServletProperties, RepositoryListener<RemoteCallValidator>
+public abstract class ExternalService extends RemoteServiceServlet implements GluewineServletProperties
 {
     /**
      * The logger instance.
@@ -46,12 +47,38 @@ public abstract class ExternalService extends RemoteServiceServlet implements Gl
      * */
     private Set<RemoteCallValidator> validators = new HashSet<RemoteCallValidator>();
 
+    /**
+     * The current registry.
+     */
+    @Glue
+    private Repository registry = null;
 
     /**
      * The jetty launcher to register with.
      */
     @Glue
     private GluewineJettyLauncher launcher;
+
+    /**
+     * listener for RemoteCallValidators.
+     */
+    private class ValidatorListener implements RepositoryListener<RemoteCallValidator>
+    {
+        @Override
+        public void registered(RemoteCallValidator validator)
+        {
+            validators.add(validator);
+        }
+
+        @Override
+        public void unregistered(RemoteCallValidator validator)
+        {
+            validators.remove(validator);
+        }
+    }
+
+    /** The listener. */
+    private ValidatorListener listener = new ValidatorListener();
 
     /**
      * Register the servlet.
@@ -66,6 +93,7 @@ public abstract class ExternalService extends RemoteServiceServlet implements Gl
             params.put(RESOURCE_BASE, new File(Launcher.getInstance().getConfigDirectory(), "jetty/default").getAbsolutePath());
             launcher.register(sp.path(), this, params);
         }
+        registry.addListener(listener);
     }
 
     @Override
@@ -184,17 +212,5 @@ public abstract class ExternalService extends RemoteServiceServlet implements Gl
         {
             super.doUnexpectedFailure(e);
         }
-    }
-
-    @Override
-    public void registered(RemoteCallValidator validator)
-    {
-        validators.add(validator);
-    }
-
-    @Override
-    public void unregistered(RemoteCallValidator validator)
-    {
-        validators.remove(validator);
     }
 }

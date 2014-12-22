@@ -28,6 +28,37 @@ import javax.mail.internet.MimeBodyPart;
  */
 public interface Mailer
 {
+    /**
+     * Email body content types.
+     */
+    public enum ContentType
+    {
+        /** text/plain. */
+        PLAIN("plain"),
+        /** text/html . */
+        HTML("html");
+
+        /** The type string. */
+        private String type;
+        /**
+         * Constructor.
+         * @param type the type.
+         */
+        private ContentType(String type)
+        {
+            this.type = type;
+        }
+
+        /**
+         * Get type.
+         *
+         * @return type.
+         */
+        public String getType()
+        {
+            return type;
+        }
+    }
     // ===========================================================================
     /**
      * Sends out a mail to the recipients specified.
@@ -50,4 +81,29 @@ public interface Mailer
      * @throws MailException If a problem occurs sending out the mail.
      */
     void sendMail(String subject, String body, MimeBodyPart[] attachments, String ... recipients) throws MailException;
+
+    // ===========================================================================
+    /**
+     * Sends out a mail to the recipients specified.
+     *
+     * @param subject The subject of the mail.
+     * @param body The body (text) of the mail.
+     * @param contentType the content type
+     * @param recipients The recipients.
+     * @throws MailException If a problem occurs sending out the mail.
+     */
+    void sendMail(String subject, String body, ContentType contentType, String ... recipients) throws MailException;
+
+    // ===========================================================================
+    /**
+     * Sends out a mail to the recipients specified.
+     *
+     * @param subject The subject of the mail.
+     * @param body The body (text) of the mail.
+     * @param contentType the content type
+     * @param recipients The recipients.
+     * @param attachments The attachments.
+     * @throws MailException If a problem occurs sending out the mail.
+     */
+    void sendMail(String subject, String body, ContentType contentType, MimeBodyPart[] attachments, String ... recipients) throws MailException;
 }

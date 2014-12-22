@@ -184,7 +184,7 @@ public class SessionManagerImpl implements SessionManager, SessionManagerDataSto
     @Override
     public void putData(String session, String key, Object data) throws SessionExpiredException
     {
-        synchronized (sessionData)
+        synchronized (sessions)
         {
             checkAndTickSession(session);
             Map dataMap = sessionData.get(session);
@@ -201,7 +201,7 @@ public class SessionManagerImpl implements SessionManager, SessionManagerDataSto
     @Override
     public Object getData(String session, String key) throws SessionExpiredException
     {
-        synchronized (sessionData)
+        synchronized (sessions)
         {
             checkAndTickSession(session);
             Map dataMap = sessionData.get(session);

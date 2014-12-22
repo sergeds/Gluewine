@@ -261,7 +261,7 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
                     String[] val = null;
                     if (item.isFormField())
                     {
-                        val = new String[] {item.getString()};
+                        val = new String[] {item.getString("UTF-8")};
                         params[i] = serializer.deserialize(paramTypes[i], val);
                         if (logger.isTraceEnabled()) traceParameter(id.id(), val);
                     }
@@ -325,7 +325,7 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
                 if (rm.isForm())
                 {
                     FileItem item = formFields.get("format");
-                    if (item != null) format = item.getString();
+                    if (item != null) format = item.getString("UTF-8");
                 }
                 else format = req.getParameter("format");
 
