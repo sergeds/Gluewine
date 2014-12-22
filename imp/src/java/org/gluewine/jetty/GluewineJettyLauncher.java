@@ -34,8 +34,8 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.jar.JarFile;
 import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 import javax.servlet.Filter;
 import javax.servlet.Servlet;
@@ -57,8 +57,8 @@ import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.FilterMapping;
 import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.servlet.ServletHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.servlets.gzip.GzipHandler;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
@@ -255,11 +255,6 @@ public class GluewineJettyLauncher implements RepositoryListener<Object>, Comman
             Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
             logger.info("Loading class " + ServletContextListener.class.getName());
 
-            loadWars();
-            loadStaticHandlers();
-
-            // Register the default servlet if no other servlet has been registered as root.
-            if (!handlers.containsKey("/")) registered(new DefaultServlet(this));
         }
         catch (Throwable e)
         {
@@ -276,6 +271,13 @@ public class GluewineJettyLauncher implements RepositoryListener<Object>, Comman
     {
         try
         {
+            loadWars();
+            loadStaticHandlers();
+
+            boolean registerDefault = properties.getProperty("registerDefaultServlet", "true").equals("true");
+            // Register the default servlet if no other servlet has been registered as root.
+            if (!handlers.containsKey("/") && registerDefault) registered(new DefaultServlet(this));
+
             GzipHandler gzipHandler = new GzipHandler();
             gzipHandler.setHandler(contexts);
 
