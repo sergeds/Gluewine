@@ -307,6 +307,20 @@ public final class Launcher implements Runnable, DirectoryAnnotations
         getInstance().stop();
     }
 
+    public static void shutdownWindowsService()
+    {
+        try
+        {
+            terminate();
+            System.exit(0);
+        }
+        catch (Throwable e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+
     // ===========================================================================
     /**
      * Stops the daemon.
