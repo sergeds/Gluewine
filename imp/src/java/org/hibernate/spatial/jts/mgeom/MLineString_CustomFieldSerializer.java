@@ -8,6 +8,7 @@ import com.google.gwt.user.client.rpc.core.com.vividsolutions.jts.geom.LineStrin
  * Custom field serializer for MLineString.
  * @author fks/Frank Gevaerts
  */
+@SuppressWarnings({"checkstyle:hideutilityclassconstructor", "checkstyle:typename" })
 public final class MLineString_CustomFieldSerializer
 {
     /**

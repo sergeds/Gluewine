@@ -782,7 +782,7 @@ public class SystemCommandProvider implements CommandProvider
                 ci.tableHeader("CodeSource");
                 for (CodeSource s: Launcher.getInstance().getSources())
                 {
-                    if(s.getType().equals("LocaL Jar") && !availableSources.contains(s.getDisplayName()))
+                    if (s.getType().equals("LocaL Jar") && !availableSources.contains(s.getDisplayName()))
                     {
                         ci.tableRow(s.getDisplayName().substring(1));
                     }

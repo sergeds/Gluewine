@@ -77,8 +77,8 @@ public class SourceDirCodeSource extends AbstractCodeSource
 
     // ===========================================================================
     /**
-     *
-     * @param file
+     * Loads a manifest file.
+     * @param file the file to load
      * @throws IOException Thrown if an error occurs reading the manifest file.
      */
     private void loadManifest(File file) throws IOException

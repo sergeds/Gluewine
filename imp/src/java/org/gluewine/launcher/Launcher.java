@@ -307,6 +307,9 @@ public final class Launcher implements Runnable, DirectoryAnnotations
         getInstance().stop();
     }
 
+    /**
+     * Rermonates the framework, for compatibility with JSL.
+     */
     public static void shutdownWindowsService()
     {
         try

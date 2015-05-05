@@ -63,6 +63,7 @@ public class TestSessionProvider implements HibernateSessionProvider
     /**
      * Flag indicating that another instance is already in use.
      */
+    @SuppressWarnings("checkstyle:visibilitymodifier")
     protected static boolean open = false;
 
     /**

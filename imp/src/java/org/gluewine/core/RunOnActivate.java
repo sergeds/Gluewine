@@ -25,7 +25,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Defines that the annotated method must be invoked AFTER all members have been glued.
+ * Defines that the annotated method must be invoked AFTER the service has been registered.
  *
  * The method may not have any parameters.
  *

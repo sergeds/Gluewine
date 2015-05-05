@@ -512,7 +512,7 @@ public final class Gluer implements CodeSourceListener, RepositoryListener<CodeS
     // ===========================================================================
     /**
      * Notifies the services that everything has been registered by invoking the
-     * @RunAfterRegistration annotated methods.
+     * {@literal @}RunAfterRegistration annotated methods.
      */
     private void notifyRegistrations()
     {

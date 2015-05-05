@@ -34,7 +34,7 @@ import java.lang.annotation.Target;
  * @author fks/Serge de Schaetzen
  *
  */
-@Target({ElementType.TYPE, ElementType.METHOD})
+@Target({ElementType.TYPE, ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 public @interface ContextInitializer
