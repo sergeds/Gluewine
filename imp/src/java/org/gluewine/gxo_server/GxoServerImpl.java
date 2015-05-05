@@ -330,13 +330,11 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
      * @param bean The bean to process.
      * @throws IOException Thrown if an error occurs writing back to the caller.
      */
-    @ContextInitializer
     public void processExecBean(OutputStreamWriter out, Map<String, Object> instantiated, ExecBean bean) throws IOException
     {
         try
         {
-            Object result = processExecBean(instantiated, bean);
-            stream.toXML(result, out);
+            processExecBean(instantiated, bean, out);
         }
         catch (SessionExpiredException e)
         {
@@ -369,7 +367,6 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
         {
             Object result = processInitBean(instantiated, bean);
             stream.toXML(result, out);
-            out.flush();
         }
         catch (Throwable e)
         {
@@ -454,12 +451,10 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
      *
      * @param instantiated The map of services instantiated in this session.
      * @param bean The bean to process.
-     * @return The output.
+     * @param out the output stream to serialise the result to.
      */
-    private Object processExecBean(Map<String, Object> instantiated, ExecBean bean)
+    private void processExecBean(Map<String, Object> instantiated, ExecBean bean, OutputStreamWriter out)
     {
-        Object result = null;
-
         if (logger.isDebugEnabled())
             logger.debug("Executing " + bean.getService() + ":" + bean.getMethod());
 
@@ -484,9 +479,9 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
                 for (RemoteCallValidator validator : validators)
                     validator.validateCall("GXO", o, m, bean.getParams());
 
-                result = m.invoke(o, bean.getParams());
+                invokeMethod(out, m, o, bean.getParams());
                 if (logger.isTraceEnabled())
-                    logger.trace(bean.getService() + ":" + bean.getMethod() + " finished with result: " + result);
+                    logger.trace(bean.getService() + ":" + bean.getMethod() + " finished");
             }
             catch (SessionExpiredException e)
             {
@@ -497,22 +492,37 @@ public class GxoServerImpl implements Runnable, GxoServer, RepositoryListener<Ob
             {
                 ErrorLogger.log(getClass(), e);
                 GxoException ge = new GxoException(toRegularException(e.getCause()));
-                result = ge;
+                stream.toXML(ge, out);
             }
             catch (Throwable e)
             {
                 ErrorLogger.log(getClass(), e);
                 GxoException ge = new GxoException(toRegularException(e));
-                result = ge;
+                stream.toXML(ge, out);
             }
         }
         else
         {
             logger.warn("Undefined service " + bean.getService());
-            result = new GxoException("Undefined service " + bean.getService());
+            GxoException ge = new GxoException("Undefined service " + bean.getService());
+            stream.toXML(ge, out);
         }
+    }
 
-        return result;
+    /**
+     * Calls a method and serialises the output.
+     * @param out the stream to write to.
+     * @param m the method to call.
+     * @param o the object to call the method on.
+     * @param params the method parameters.
+     * @throws InvocationTargetException if the call fails.
+     * @throws IllegalAccessException if the call fails.
+     */
+    @ContextInitializer
+    public void invokeMethod(OutputStreamWriter out, Method m, Object o, Object[] params) throws InvocationTargetException, IllegalAccessException
+    {
+        Object result = m.invoke(o, params);
+        stream.toXML(result, out);
     }
 
     // ===========================================================================
