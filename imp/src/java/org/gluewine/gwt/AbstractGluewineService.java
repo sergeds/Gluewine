@@ -59,11 +59,19 @@ public abstract class AbstractGluewineService extends RemoteServiceServlet
      */
     private Logger logger = Logger.getLogger(getClass());
 
+    /** Setter for gxoClient.
+     * @param client the client to set.
+     */
+    private static void setGxoClient(GxoClient client)
+    {
+        gxoClient = client;
+    }
+
     // ===========================================================================
     @Override
     public void init()
     {
-        synchronized (OSGI_SESSION)
+        synchronized (AbstractGluewineService.class)
         {
             if (gxoClient == null)
             {
@@ -71,7 +79,7 @@ public abstract class AbstractGluewineService extends RemoteServiceServlet
                 if (local)
                 {
                     logger.info("Starting servlet " + getClass().getName() + " in 'Local' mode.");
-                    gxoClient = new GxoClient();
+                    setGxoClient(new GxoClient());
                 }
 
                 else
@@ -79,7 +87,7 @@ public abstract class AbstractGluewineService extends RemoteServiceServlet
                     String osgiHost = this.getServletContext().getInitParameter("osgi-host");
                     int osgiPort = Integer.parseInt(this.getServletContext().getInitParameter("osgi-port"));
                     logger.info("Starting servlet " + getClass().getName() + " in 'Remove' mode, connecting to server " + osgiHost + ":" + osgiPort);
-                    gxoClient = new GxoClient(osgiHost, osgiPort);
+                    setGxoClient(new GxoClient(osgiHost, osgiPort));
                 }
             }
         }

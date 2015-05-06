@@ -552,7 +552,7 @@ public class SystemCommandProvider implements CommandProvider
         {
             String n = ci.nextArgument();
             if (n != null && n.trim().length() > 0)
-                ids[i] = Integer.valueOf(n);
+                ids[i] = Integer.parseInt(n);
         }
 
         return ids;

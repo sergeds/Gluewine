@@ -93,7 +93,7 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
     /**
      * Bean holding the current request and response.
      */
-    private class RESTBean
+    private static class RESTBean
     {
         /**
          * The current request.
@@ -364,7 +364,7 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
                         resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Method execution failed: " + e.getMessage());
                     }
                 }
-                else resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unsupported format " + format);
+                else resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unsupported format");
             }
             else
             {

@@ -175,6 +175,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
     /**
      * Initializes the list of available jar files.
      */
+    @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "DP_CREATE_CLASSLOADER_INSIDE_DO_PRIVILEGED")
     public void start()
     {
         String path = getClass().getProtectionDomain().getCodeSource().getLocation().getFile();

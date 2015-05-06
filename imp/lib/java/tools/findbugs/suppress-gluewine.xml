@@ -46,5 +46,24 @@
              can play different WAV files depending on the return code.
         -->
      </Match>
+
+
+     <Match>
+         <!-- We don't care about issues in example/test code -->
+         <Package name="org.gluewine.vaadintest" />
+     </Match>
+
+     <Match>
+       <Bug pattern="MTIA_SUSPECT_SERVLET_INSTANCE_FIELD" />
+       <!--
+            Gluewine isn't a traditional J2EE system, so errors specific to usual J2EE behaviour aren't relevant.
+        -->
+     </Match>
+     <Match>
+       <Bug pattern="MSF_MUTABLE_SERVLET_FIELD" />
+       <!--
+            Gluewine isn't a traditional J2EE system, so errors specific to usual J2EE behaviour aren't relevant.
+        -->
+     </Match>
 </FindBugsFilter>
 

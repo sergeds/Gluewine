@@ -494,7 +494,7 @@ public class GoogleAnalytics implements AspectProvider, CommandProvider
      *
      * @param cc The current context.
      */
-    public void _google_stats(CommandContext cc)
+    public synchronized void _google_stats(CommandContext cc)
     {
         cc.tableHeader("Statistic", "Value");
         cc.tableRow("# Total Submits", Long.toString(totalEvents));

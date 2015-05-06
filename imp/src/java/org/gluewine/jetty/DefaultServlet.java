@@ -127,10 +127,12 @@ public class DefaultServlet extends GluewineServlet implements GluewineServletPr
      */
     private String loadLogoAsBase64String()
     {
-        InputStream in = getClass().getResourceAsStream("/logoGluewine.png");
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
         int read = 0;
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
         try
+        (
+         InputStream in = DefaultServlet.class.getResourceAsStream("/logoGluewine.png");
+        )
         {
             while ((read = in.read()) > -1)
                 out.write(read);

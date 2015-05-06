@@ -45,7 +45,7 @@
             </sourcePath>
             <class location="${classdir}"/>
         </findbugs>
-        <xslt in="${reportdir}/findbugs.xml" out="${reportdir}/index.html" style="${dir.tools.findbugs}/lib/default.xsl"/>
+        <xslt in="${reportdir}/findbugs.xml" out="${reportdir}/index.html" style="${dir.tools.findbugs}/src/xsl/fancy.xsl"/>
         <fail>
             <condition>
                 <and>

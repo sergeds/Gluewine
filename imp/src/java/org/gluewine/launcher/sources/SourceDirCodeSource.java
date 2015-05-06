@@ -65,6 +65,8 @@ public class SourceDirCodeSource extends AbstractCodeSource
     private void process(File dir) throws IOException
     {
         File[] files = dir.listFiles();
+        if (files == null)
+            return;
         for (File file : files)
         {
             if (file.isFile() && file.getName().endsWith(".manifest"))

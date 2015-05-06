@@ -31,6 +31,7 @@ import java.lang.reflect.Proxy;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -127,31 +128,38 @@ public final class RESTClient implements InvocationHandler
                 b.append("format=xml");
 
                 con.setDoOutput(true);
-                DataOutputStream wr = new DataOutputStream(con.getOutputStream());
-                wr.writeBytes(b.toString());
-                wr.flush();
                 Object result = null;
-                if (!method.getReturnType().equals(Void.TYPE))
+                try
+                (
+                    DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+                )
                 {
-                    // If the return type is either Input- or Outpustream, we return it, but we must
-                    // make sure that the connection is not closed!.
-                    if (method.getReturnType().equals(InputStream.class)) return con.getInputStream();
-                    else if (method.getReturnType().equals(OutputStream.class))
+                    wr.writeBytes(b.toString());
+                    wr.flush();
+                    if (!method.getReturnType().equals(Void.TYPE))
                     {
-                        con.getInputStream();
-                        return con.getOutputStream();
+                        // If the return type is either Input- or Outpustream, we return it, but we must
+                        // make sure that the connection is not closed!.
+                        if (method.getReturnType().equals(InputStream.class)) return con.getInputStream();
+                        else if (method.getReturnType().equals(OutputStream.class))
+                        {
+                            con.getInputStream();
+                            return con.getOutputStream();
+                        }
+
+                        try
+                        (
+                            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream(), Charset.forName("UTF-8")));
+                        )
+                        {
+                            String inputLine;
+                            StringBuilder response = new StringBuilder();
+                            while ((inputLine = in.readLine()) != null)
+                                response.append(inputLine);
+                            result = fromString(response.toString(), method.getReturnType());
+                        }
                     }
-
-                    BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-                    String inputLine;
-                    StringBuilder response = new StringBuilder();
-                    while ((inputLine = in.readLine()) != null)
-                        response.append(inputLine);
-                    in.close();
-                    result = fromString(response.toString(), method.getReturnType());
                 }
-
-                wr.close();
 
                 if (con.getResponseCode() != HttpServletResponse.SC_OK) throw new RuntimeException(con.getResponseMessage());
                 else return result;

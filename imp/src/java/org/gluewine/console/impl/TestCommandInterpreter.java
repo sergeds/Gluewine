@@ -147,7 +147,7 @@ public class TestCommandInterpreter
         if (interpreter != null)
         {
             String output = interpreter.getOutput();
-            hasOutput = output != null && output.length() > 0;
+            hasOutput = output.length() > 0;
         }
 
         return hasOutput;

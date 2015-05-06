@@ -181,6 +181,7 @@ public class GluewineJettyLauncher implements RepositoryListener<Object>, Comman
      * @param fileInWar the entry to look for.
      * @return an InputStream for the entry.
      */
+    @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "OS_OPEN_STREAM") // We know about this, but it's very hard to fix
     public InputStream getWarContent(String fileInWar)
     {
         for (Handler h : handlers.values())
@@ -198,6 +199,7 @@ public class GluewineJettyLauncher implements RepositoryListener<Object>, Comman
                         JarEntry je = e.nextElement();
                         if (je.getName().endsWith(fileInWar))
                         {
+                            // TODO: This is a problem, because we can't close the war file
                             return jf.getInputStream(je);
                         }
                     }

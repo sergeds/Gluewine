@@ -64,6 +64,7 @@ public class TestSessionProvider implements HibernateSessionProvider
      * Flag indicating that another instance is already in use.
      */
     @SuppressWarnings("checkstyle:visibilitymodifier")
+    @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "MS_PKGPROTECT")
     protected static boolean open = false;
 
     /**
@@ -94,13 +95,29 @@ public class TestSessionProvider implements HibernateSessionProvider
     {
     }
 
+    /** Sets the open flag.
+     * @param open the new open value.
+     */
+    protected static void setOpen(boolean open)
+    {
+        TestSessionProvider.open = open;
+    }
+
+    /** Gets a sequence number for database files.
+     * @return the sequence number.
+     */
+    private static int getDbSeq()
+    {
+        return dbseq++;
+    }
+
     // ===========================================================================
     /** Configures the session provider.
      *
      * @param props The config to use.
      * @param classes The annotated classes to include in the Hibernate config.
      */
-    protected void configure(Properties props, Class<?> ... classes)
+    protected synchronized void configure(Properties props, Class<?> ... classes)
     {
         configuration = new Configuration();
         configuration.setProperties(props);
@@ -132,14 +149,17 @@ public class TestSessionProvider implements HibernateSessionProvider
         if (config.exists())
         {
             try
+            (
+                FileInputStream fis = new FileInputStream(config);
+            )
             {
                 Properties props = new Properties();
-                props.load(new FileInputStream(config));
-                props.setProperty("hibernate.connection.url", props.getProperty("hibernate.connection.url").replaceAll("mem:empty", "mem:empty" + (dbseq++)));
+                props.load(fis);
+                props.setProperty("hibernate.connection.url", props.getProperty("hibernate.connection.url").replaceAll("mem:empty", "mem:empty" + getDbSeq()));
 
                 configure(props, classes);
 
-                open = true;
+                setOpen(true);
             }
             catch (Throwable e)
             {
@@ -185,7 +205,7 @@ public class TestSessionProvider implements HibernateSessionProvider
     /**
      * Closes the provider.
      */
-    public void closeProvider()
+    public synchronized void closeProvider()
     {
         if (transactionalSession != null)
         {
@@ -199,7 +219,7 @@ public class TestSessionProvider implements HibernateSessionProvider
             factory = null;
         }
 
-        open = false;
+        setOpen(false);
     }
 
     // ===========================================================================
@@ -244,7 +264,7 @@ public class TestSessionProvider implements HibernateSessionProvider
 
     // ===========================================================================
     @Override
-    public Configuration getConfiguration()
+    public synchronized Configuration getConfiguration()
     {
         return configuration;
     }
