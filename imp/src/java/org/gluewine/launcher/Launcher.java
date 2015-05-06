@@ -311,6 +311,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
     /**
      * Rermonates the framework, for compatibility with JSL.
      */
+    @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "DM_EXIT")
     public static void shutdownWindowsService()
     {
         try
@@ -1367,6 +1368,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
 
     // ===========================================================================
     @Override
+    @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "DM_EXIT")
     public void run()
     {
         try
