@@ -650,7 +650,17 @@ public class Service
                                 else
                                     props = new GluewineProperties(name, actual);
 
-                                props.load();
+                                try
+                                {
+                                    props.load();
+                                }
+                                catch (IOException e)
+                                {
+                                    if (glue.optional())
+                                        logger.info("Optional properties file " + name + " not present");
+                                    else
+                                        throw e;
+                                }
                                 references.put(field, props);
                                 fieldResolved = true;
                             }

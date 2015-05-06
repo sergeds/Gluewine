@@ -50,4 +50,13 @@ public @interface Glue
      * Return the name of the method.
      */
     String refresh() default "";
+
+    // ===========================================================================
+    /**
+     * When used on a Properties object, it indicates what to do if the properties
+     * file is not found. If false (default) the service won't be fully resolved and
+     * therefore won't start. If true, the service will get an empty properties
+     * object and will start normally.
+     */
+    boolean optional() default false;
 }
