@@ -25,7 +25,6 @@ import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -203,21 +202,50 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
 
     // ===========================================================================
     /**
+     * Initialises the parameter values for the given method parsed from the request.
+     *
+     * @param rm The method to process.
+     * @param req The request containing the parameters.
+     * @param params the parameter value array to fill in.
+     * @param paramTypes the parameter types array.
+     * @throws IOException If an error occurs.
+     */
+    private void initParamValues(RESTMethod rm, HttpServletRequest req, Object[] params, Class<?>[] paramTypes) throws IOException
+    {
+        for (int i = 0; i < params.length; i++)
+        {
+            params[i] = null;
+            RESTID id = AnnotationUtility.getAnnotations(RESTID.class, rm.getObject(), rm.getMethod(), i);
+            if (id != null)
+            {
+                if (id.header())
+                {
+                    params[i] = req.getHeader(id.id());
+                }
+                else if (id.method())
+                {
+                    params[i] = req.getMethod();
+                }
+            }
+        }
+    }
+    /**
      * Returns the parameter values for the given method parsed from the request.
      *
      * @param rm The method to process.
      * @param req The request containing the parameters.
      * @param serializer The serializer to use.
-     * @return The array of parameters.
+     * @param params the parameter value array to fill in.
+     * @param paramTypes the parameter types array.
      * @throws IOException If an error occurs.
      */
-    private Object[] getParamValuesFromRequest(RESTMethod rm, HttpServletRequest req, RESTSerializer serializer) throws IOException
+    private void fillParamValuesFromRequest(RESTMethod rm, HttpServletRequest req, RESTSerializer serializer, Object[] params, Class<?>[] paramTypes) throws IOException
     {
-        Class<?>[] paramTypes = rm.getMethod().getParameterTypes();
-        Object[] params = new Object[paramTypes.length];
         for (int i = 0; i < params.length; i++)
         {
-            params[i] = null;
+            if (params[i] != null)
+                continue;
+
             RESTID id = AnnotationUtility.getAnnotations(RESTID.class, rm.getObject(), rm.getMethod(), i);
             if (id != null)
             {
@@ -235,14 +263,6 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
                         val[0] = new String(bytes, "UTF-8");
                     }
                 }
-                else if (id.header())
-                {
-                    val = ((ArrayList<String>) Collections.list(req.getHeaders(id.id()))).toArray(new String[0]);
-                }
-                else if (id.method())
-                {
-                    val = new String[] {req.getMethod()};
-                }
                 else
                 {
                     val = req.getParameterValues(id.id());
@@ -251,8 +271,6 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
                 if (params[i] == null && val != null && val.length > 0) params[i] = serializer.deserialize(paramTypes[i], val);
             }
         }
-
-        return params;
     }
 
     // ===========================================================================
@@ -262,15 +280,17 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
      * @param rm The method to process.
      * @param formFields The fields to parse.
      * @param serializer The serializer to use.
-     * @return The parameter values.
+     * @param params the parameter value array to fill in.
+     * @param paramTypes the parameter types array.
      * @throws IOException If an error occurs.
      */
-    private Object[] getParamValuesFromForm(RESTMethod rm, Map<String, FileItem> formFields, RESTSerializer serializer) throws IOException
+    private void fillParamValuesFromForm(RESTMethod rm, Map<String, FileItem> formFields, RESTSerializer serializer, Object[] params, Class<?>[] paramTypes) throws IOException
     {
-        Class<?>[] paramTypes = rm.getMethod().getParameterTypes();
-        Object[] params = new Object[paramTypes.length];
         for (int i = 0; i < params.length; i++)
         {
+            if (params[i] != null)
+                continue;
+
             RESTID id = AnnotationUtility.getAnnotations(RESTID.class, rm.getObject(), rm.getMethod(), i);
             if (id != null)
             {
@@ -286,39 +306,47 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
                     }
                     else
                     {
-                        try
+                        if (id.mimetype())
                         {
-                            if (InputStream.class.isAssignableFrom(paramTypes[i]))
+                            params[i] = item.getContentType();
+                        }
+                        else if (id.filename())
+                        {
+                            params[i] = item.getName();
+                        }
+                        else
+                        {
+                            try
                             {
-                                params[i] = item.getInputStream();
-                            }
-                            else
-                            {
-                                File nf = new File(item.getName());
-                                File f = File.createTempFile("___", "___" + nf.getName());
-                                item.write(f);
-                                if (File.class.isAssignableFrom(paramTypes[i]))
+                                if (InputStream.class.isAssignableFrom(paramTypes[i]))
                                 {
-                                    params[i] = f;
+                                    params[i] = item.getInputStream();
                                 }
                                 else
                                 {
-                                    logger.warn("File upload to string field for method " + rm.getMethod());
-                                    params[i] = f.getAbsolutePath();
+                                    File nf = new File(item.getName());
+                                    File f = File.createTempFile("___", "___" + nf.getName());
+                                    item.write(f);
+                                    if (File.class.isAssignableFrom(paramTypes[i]))
+                                    {
+                                        params[i] = f;
+                                    }
+                                    else
+                                    {
+                                        logger.warn("File upload to string field for method " + rm.getMethod());
+                                        params[i] = f.getAbsolutePath();
+                                    }
                                 }
                             }
-                        }
-                        catch (Exception e)
-                        {
-                            throw new IOException(e.getMessage());
+                            catch (Exception e)
+                            {
+                                throw new IOException(e.getMessage());
+                            }
                         }
                     }
                 }
-                else params[i] = null;
             }
-            else params[i] = null;
         }
-        return params;
     }
 
     // ===========================================================================
@@ -356,9 +384,15 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
                     if (AnnotationUtility.getAnnotation(Unsecured.class, rm.getMethod(), rm.getObject()) == null)
                         authenticate(req, resp);
 
-                    Object[] params = null;
-                    if (rm.isForm()) params = getParamValuesFromForm(rm, formFields, serializer);
-                    else params = getParamValuesFromRequest(rm, req, serializer);
+                    Class<?>[] paramTypes = rm.getMethod().getParameterTypes();
+                    Object[] params = new Object[paramTypes.length];
+
+                    initParamValues(rm, req, params, paramTypes);
+
+                    if (rm.isForm())
+                        fillParamValuesFromForm(rm, formFields, serializer, params, paramTypes);
+                    else
+                        fillParamValuesFromRequest(rm, req, serializer, params, paramTypes);
 
                     try
                     {
