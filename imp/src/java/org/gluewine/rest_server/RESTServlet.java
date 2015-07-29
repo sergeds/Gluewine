@@ -206,11 +206,12 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
      *
      * @param rm The method to process.
      * @param req The request containing the parameters.
+     * @param resp The servlet response.
      * @param params the parameter value array to fill in.
      * @param paramTypes the parameter types array.
      * @throws IOException If an error occurs.
      */
-    private void initParamValues(RESTMethod rm, HttpServletRequest req, Object[] params, Class<?>[] paramTypes) throws IOException
+    private void initParamValues(RESTMethod rm, HttpServletRequest req, HttpServletResponse resp, Object[] params, Class<?>[] paramTypes) throws IOException
     {
         for (int i = 0; i < params.length; i++)
         {
@@ -226,6 +227,10 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
                 {
                     params[i] = req.getMethod();
                 }
+            }
+            else if (HttpServletResponse.class.isAssignableFrom(paramTypes[i]))
+            {
+                params[i] = resp;
             }
         }
     }
@@ -387,7 +392,7 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
                     Class<?>[] paramTypes = rm.getMethod().getParameterTypes();
                     Object[] params = new Object[paramTypes.length];
 
-                    initParamValues(rm, req, params, paramTypes);
+                    initParamValues(rm, req, resp, params, paramTypes);
 
                     if (rm.isForm())
                         fillParamValuesFromForm(rm, formFields, serializer, params, paramTypes);
