@@ -64,6 +64,7 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.webapp.WebAppClassLoader;
 import org.eclipse.jetty.webapp.WebAppContext;
+import org.eclipse.jetty.webapp.Origin;
 import org.gluewine.authentication.UseridPasswordAuthentication;
 import org.gluewine.console.CLICommand;
 import org.gluewine.console.CommandContext;
@@ -153,10 +154,27 @@ public class GluewineJettyLauncher implements RepositoryListener<Object>, Comman
 
                             WebAppContext webapp = new WebAppContext();
 
+
                             WebAppClassLoader wp = new WebAppClassLoader(GluewineJettyLauncher.class.getClassLoader(), webapp);
                             webapp.setClassLoader(wp);
                             webapp.setWar(war.getAbsolutePath());
                             webapp.setSessionHandler(initSessionHandler(context));
+
+                            String propPrefix = "context." + context.substring(1) + ".";
+                            for (Enumeration e = properties.propertyNames(); e.hasMoreElements();)
+                            {
+                                String prop = (String) e.nextElement();
+                                if (prop.startsWith(propPrefix))
+                                {
+                                    String paramName = prop.substring(propPrefix.length());
+                                    String paramValue = properties.getProperty(prop);
+                                    logger.debug("Setting context parameter " + paramName + " for context " + context + " to " + paramValue);
+                                    String prev = webapp.setInitParameter(paramName, paramValue);
+                                    logger.debug("Previous value was " + prev);
+                                    webapp.getMetaData().setOrigin("context-param." + paramName, Origin.API);
+
+                                }
+                            }
 
                             if (context.equals("/default")) webapp.setContextPath("/");
                             else webapp.setContextPath(context);
@@ -181,6 +199,7 @@ public class GluewineJettyLauncher implements RepositoryListener<Object>, Comman
      * @param fileInWar the entry to look for.
      * @return an InputStream for the entry.
      */
+    @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "OS_OPEN_STREAM") // We know about this, but it's very hard to fix
     public InputStream getWarContent(String fileInWar)
     {
         for (Handler h : handlers.values())
@@ -198,6 +217,7 @@ public class GluewineJettyLauncher implements RepositoryListener<Object>, Comman
                         JarEntry je = e.nextElement();
                         if (je.getName().endsWith(fileInWar))
                         {
+                            // TODO: This is a problem, because we can't close the war file
                             return jf.getInputStream(je);
                         }
                     }

@@ -153,6 +153,7 @@ public class GluewineLoader extends URLClassLoader
      * @param urls The set to update.
      * @throws IOException If an error occurs.
      */
+    @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "DMI_COLLECTION_OF_URLS") // These aren't network URLs anyway
     protected void updateResources(final String name, Set<URL> urls) throws IOException
     {
         Enumeration<URL> e = super.findResources(name);

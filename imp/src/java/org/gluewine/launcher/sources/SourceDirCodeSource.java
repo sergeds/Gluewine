@@ -65,6 +65,8 @@ public class SourceDirCodeSource extends AbstractCodeSource
     private void process(File dir) throws IOException
     {
         File[] files = dir.listFiles();
+        if (files == null)
+            return;
         for (File file : files)
         {
             if (file.isFile() && file.getName().endsWith(".manifest"))
@@ -77,8 +79,8 @@ public class SourceDirCodeSource extends AbstractCodeSource
 
     // ===========================================================================
     /**
-     *
-     * @param file
+     * Loads a manifest file.
+     * @param file the file to load
      * @throws IOException Thrown if an error occurs reading the manifest file.
      */
     private void loadManifest(File file) throws IOException

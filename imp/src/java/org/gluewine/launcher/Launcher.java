@@ -175,6 +175,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
     /**
      * Initializes the list of available jar files.
      */
+    @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "DP_CREATE_CLASSLOADER_INSIDE_DO_PRIVILEGED")
     public void start()
     {
         String path = getClass().getProtectionDomain().getCodeSource().getLocation().getFile();
@@ -306,6 +307,24 @@ public final class Launcher implements Runnable, DirectoryAnnotations
     {
         getInstance().stop();
     }
+
+    /**
+     * Rermonates the framework, for compatibility with JSL.
+     */
+    @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "DM_EXIT")
+    public static void shutdownWindowsService()
+    {
+        try
+        {
+            terminate();
+            System.exit(0);
+        }
+        catch (Throwable e)
+        {
+            e.printStackTrace();
+        }
+    }
+
 
     // ===========================================================================
     /**
@@ -1349,6 +1368,7 @@ public final class Launcher implements Runnable, DirectoryAnnotations
 
     // ===========================================================================
     @Override
+    @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "DM_EXIT")
     public void run()
     {
         try

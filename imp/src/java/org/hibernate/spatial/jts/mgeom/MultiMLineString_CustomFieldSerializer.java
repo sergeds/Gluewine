@@ -8,6 +8,7 @@ import com.google.gwt.user.client.rpc.core.com.vividsolutions.jts.geom.MultiLine
  * Custom field serializer for MultiMLineString.
  * @author fks/Frank Gevaerts
  */
+@SuppressWarnings({"checkstyle:hideutilityclassconstructor", "checkstyle:typename" })
 public final class MultiMLineString_CustomFieldSerializer
 {
     /**

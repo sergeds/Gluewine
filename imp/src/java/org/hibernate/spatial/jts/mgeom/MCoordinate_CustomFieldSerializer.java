@@ -8,6 +8,7 @@ import com.google.gwt.user.client.rpc.core.com.vividsolutions.jts.geom.Coordinat
  * Custom field serializer for MCoordinate.
  * @author fks/Frank Gevaerts
  */
+@SuppressWarnings({"checkstyle:hideutilityclassconstructor", "checkstyle:typename" })
 public final class MCoordinate_CustomFieldSerializer
 {
     /**

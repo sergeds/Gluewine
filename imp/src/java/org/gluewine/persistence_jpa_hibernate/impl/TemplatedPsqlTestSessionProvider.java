@@ -61,6 +61,7 @@ public class TemplatedPsqlTestSessionProvider extends TestSessionProvider
      * @param config The config to use.
      * @param classes The annotated classes to include in the Hibernate config.
      */
+    @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE")
     public TemplatedPsqlTestSessionProvider(File config, Class<?> ... classes)
     {
         if (open)
@@ -69,24 +70,32 @@ public class TemplatedPsqlTestSessionProvider extends TestSessionProvider
         if (config.exists())
         {
             try
+            (
+                FileInputStream fis = new FileInputStream(config);
+            )
             {
                 Properties props = new Properties();
-                props.load(new FileInputStream(config));
+                props.load(fis);
                 String basename = props.getProperty("hibernate.connection.template");
                 String template = System.getProperty("templatedb." + basename);
                 String baseurl = System.getProperty("templatedb.baseurl", "jdbc:postgresql://localhost:5432/");
                 dbname = UUID.randomUUID().toString();
 
                 Class.forName("org.postgresql.Driver");
-                Connection con = DriverManager.getConnection(baseurl + "postgres", System.getProperty("templatedb.superuser"), System.getProperty("templatedb.superpass"));
-                Statement stmt = con.createStatement();
-                stmt.execute("CREATE DATABASE \"" + dbname + "\" OWNER " + props.getProperty("hibernate.connection.username") + " TEMPLATE \"" + template + "\"");
+                try
+                (
+                    Connection con = DriverManager.getConnection(baseurl + "postgres", System.getProperty("templatedb.superuser"), System.getProperty("templatedb.superpass"));
+                    Statement stmt = con.createStatement();
+                )
+                {
+                    stmt.execute("CREATE DATABASE \"" + dbname + "\" OWNER " + props.getProperty("hibernate.connection.username") + " TEMPLATE \"" + template + "\"");
+                }
 
                 props.setProperty("hibernate.connection.url", baseurl + dbname);
 
                 configure(props, classes);
 
-                open = true;
+                setOpen(true);
 
                 Runtime.getRuntime().addShutdownHook(new Thread()
                         {
@@ -109,6 +118,7 @@ public class TemplatedPsqlTestSessionProvider extends TestSessionProvider
     /**
      * Closes the provider.
      */
+    @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE")
     public void closeProvider()
     {
         super.closeProvider();
@@ -119,9 +129,14 @@ public class TemplatedPsqlTestSessionProvider extends TestSessionProvider
             {
                 String baseurl = System.getProperty("templatedb.baseurl", "jdbc:postgresql://localhost:5432/");
                 Class.forName("org.postgresql.Driver");
-                Connection con = DriverManager.getConnection(baseurl + "postgres", System.getProperty("templatedb.superuser"), System.getProperty("templatedb.superpass"));
-                Statement stmt = con.createStatement();
-                stmt.execute("DROP DATABASE \"" + dbname + "\"");
+                try
+                (
+                    Connection con = DriverManager.getConnection(baseurl + "postgres", System.getProperty("templatedb.superuser"), System.getProperty("templatedb.superpass"));
+                    Statement stmt = con.createStatement();
+                )
+                {
+                    stmt.execute("DROP DATABASE \"" + dbname + "\"");
+                }
                 dbname = null;
             }
         }
@@ -130,6 +145,6 @@ public class TemplatedPsqlTestSessionProvider extends TestSessionProvider
             throw new RuntimeException(e);
         }
 
-        open = false;
+        setOpen(false);
     }
 }

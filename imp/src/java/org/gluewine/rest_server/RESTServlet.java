@@ -25,6 +25,7 @@ import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,7 @@ import org.apache.commons.fileupload.FileItemFactory;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.gluewine.authentication.AuthenticationException;
 import org.gluewine.core.RepositoryListener;
@@ -93,7 +95,7 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
     /**
      * Bean holding the current request and response.
      */
-    private class RESTBean
+    private static class RESTBean
     {
         /**
          * The current request.
@@ -171,13 +173,6 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
     }
 
     // ===========================================================================
-    @Override
-    public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException
-    {
-        doGet(req, resp);
-    }
-
-    // ===========================================================================
     /**
      * Parses the form stored in the given request, and returns a map containing
      * all FileItems indexed on their name.
@@ -222,15 +217,39 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
         Object[] params = new Object[paramTypes.length];
         for (int i = 0; i < params.length; i++)
         {
+            params[i] = null;
             RESTID id = AnnotationUtility.getAnnotations(RESTID.class, rm.getObject(), rm.getMethod(), i);
             if (id != null)
             {
-                String[] val = req.getParameterValues(id.id());
+                String[] val;
+                if (id.body())
+                {
+                    val = new String[1];
+                    if (InputStream.class.isAssignableFrom(paramTypes[i]))
+                    {
+                        params[i] = req.getInputStream();
+                    }
+                    else
+                    {
+                        byte[] bytes = IOUtils.toByteArray(req.getInputStream());
+                        val[0] = new String(bytes, "UTF-8");
+                    }
+                }
+                else if (id.header())
+                {
+                    val = ((ArrayList<String>) Collections.list(req.getHeaders(id.id()))).toArray(new String[0]);
+                }
+                else if (id.method())
+                {
+                    val = new String[] {req.getMethod()};
+                }
+                else
+                {
+                    val = req.getParameterValues(id.id());
+                }
                 if (logger.isTraceEnabled()) traceParameter(id.id(), val);
-                if (val != null && val.length > 0) params[i] = serializer.deserialize(paramTypes[i], val);
-                else params[i] = null;
+                if (params[i] == null && val != null && val.length > 0) params[i] = serializer.deserialize(paramTypes[i], val);
             }
-            else params[i] = null;
         }
 
         return params;
@@ -304,7 +323,7 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
 
     // ===========================================================================
     @Override
-    public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
+    public void service(HttpServletRequest req, HttpServletResponse resp) throws IOException
     {
         try
         {
@@ -364,7 +383,7 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
                         resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Method execution failed: " + e.getMessage());
                     }
                 }
-                else resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unsupported format " + format);
+                else resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unsupported format");
             }
             else
             {

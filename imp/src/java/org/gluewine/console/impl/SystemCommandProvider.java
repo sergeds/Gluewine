@@ -552,7 +552,7 @@ public class SystemCommandProvider implements CommandProvider
         {
             String n = ci.nextArgument();
             if (n != null && n.trim().length() > 0)
-                ids[i] = Integer.valueOf(n);
+                ids[i] = Integer.parseInt(n);
         }
 
         return ids;
@@ -767,6 +767,28 @@ public class SystemCommandProvider implements CommandProvider
 
             ci.println("Execute the update command with -f the perform the update!");
             ci.printTable();
+
+            List<SourceVersion> available = Launcher.getInstance().getSourceVersions(false);
+            if (available.size() > 0)
+            {
+                Set<String> availableSources = new HashSet<String>();
+                for (SourceVersion sv : available)
+                {
+                    availableSources.add(sv.getSource().getDisplayName());
+                }
+
+                ci.println();
+                ci.println("Sources that are no longer listed as needed:");
+                ci.tableHeader("CodeSource");
+                for (CodeSource s: Launcher.getInstance().getSources())
+                {
+                    if (s.getType().equals("LocaL Jar") && !availableSources.contains(s.getDisplayName()))
+                    {
+                        ci.tableRow(s.getDisplayName().substring(1));
+                    }
+                }
+                ci.printTable();
+            }
         }
     }
 }

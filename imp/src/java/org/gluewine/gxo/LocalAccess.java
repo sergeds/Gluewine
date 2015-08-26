@@ -113,7 +113,7 @@ public final class LocalAccess
      * @return The input stream.
      * @throws IOException If an error occurs connecting the streams.
      */
-    public InputStream getClientInputStream() throws IOException
+    public synchronized InputStream getClientInputStream() throws IOException
     {
         connect();
         return clientInput;
@@ -126,7 +126,7 @@ public final class LocalAccess
      * @return The input stream.
      * @throws IOException If an error occurs connecting the streams.
      */
-    public InputStream getServerInputStream() throws IOException
+    public synchronized InputStream getServerInputStream() throws IOException
     {
         connect();
         return serverInput;
@@ -139,7 +139,7 @@ public final class LocalAccess
      * @return The output stream.
      * @throws IOException If an error occurs connecting the streams.
      */
-    public OutputStream getClientOutputStream() throws IOException
+    public synchronized OutputStream getClientOutputStream() throws IOException
     {
         connect();
         return clientOutput;
@@ -152,7 +152,7 @@ public final class LocalAccess
      * @return The input stream.
      * @throws IOException If an error occurs connecting the streams.
      */
-    public OutputStream getServerOutputStream() throws IOException
+    public synchronized OutputStream getServerOutputStream() throws IOException
     {
         connect();
         return serverOutput;
@@ -176,7 +176,7 @@ public final class LocalAccess
      *
      * @return True if is has been closed.
      */
-    public boolean isClosed()
+    public synchronized boolean isClosed()
     {
         return closed;
     }

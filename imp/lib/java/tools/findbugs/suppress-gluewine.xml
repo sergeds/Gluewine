@@ -27,23 +27,27 @@
        <!-- 
              This check has been removed as it is not compatible with Hibernate which expects collection
              members to be defined as interfaces.
-             From the OSGi point of view, the classes do not need to be serializable, as they are 
+             From the Gluewine point of view, the classes do not need to be serializable, as they are 
              processed by XStream. But GWT needs the classes to be serializable for the communication
              between the servlets and the client.
         -->
      </Match>
-     
+
      <Match>
-       <!--  Invoking System.exit shuts down the entire Java virtual machine. This should only been done when 
-             it is appropriate. Such calls make it hard or impossible for your code to be invoked by other code. 
-             Consider throwing a RuntimeException instead.  
+         <!-- We don't care about issues in example/test code -->
+         <Package name="org.gluewine.vaadintest" />
+     </Match>
+
+     <Match>
+       <Bug pattern="MTIA_SUSPECT_SERVLET_INSTANCE_FIELD" />
+       <!--
+            Gluewine isn't a traditional J2EE system, so errors specific to usual J2EE behaviour aren't relevant.
         -->
-       <Bug pattern="DM_EXIT" />
-       <!-- 
-             This check has been removed as it causes problems in the PhoneCallApi that runs 'outside' the OSGi
-             environment, but is defined in one of the OSGi bundles.
-             The System.exit is used as it allows to differntiate the exit code so that the asterisk application
-             can play different WAV files depending on the return code.
+     </Match>
+     <Match>
+       <Bug pattern="MSF_MUTABLE_SERVLET_FIELD" />
+       <!--
+            Gluewine isn't a traditional J2EE system, so errors specific to usual J2EE behaviour aren't relevant.
         -->
      </Match>
 </FindBugsFilter>

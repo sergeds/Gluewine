@@ -40,4 +40,20 @@ public @interface RESTID
      * Returns the id of the parameter.
      */
     String id();
+
+    /**
+     * If true, the parameter value will be retrieved from a HTTP header instead of
+     * a POST or GET field.
+     */
+    boolean header() default false;
+
+    /**
+     * If true, the parameter value will be the entire HTTP body. Don't combine this with regular non-header and non-body RESTID.
+     */
+    boolean body() default false;
+
+    /**
+     * If true, the parameter value will be the HTTP request method (GET, PUT, ...).
+     */
+    boolean method() default false;
 }

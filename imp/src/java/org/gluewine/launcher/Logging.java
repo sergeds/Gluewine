@@ -18,6 +18,7 @@
  ***************************************************************************/
 package org.gluewine.launcher;
 
+import java.util.Locale;
 
 /**
  * Static logging that can be used by the classes of the launcher
@@ -59,7 +60,7 @@ public final class Logging implements Log
      */
     private Logging()
     {
-        String l = System.getProperty("log.level", "info").toLowerCase();
+        String l = System.getProperty("log.level", "info").toLowerCase(Locale.US);
         switch (l)
         {
             case "error" :

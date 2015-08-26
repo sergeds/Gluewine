@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
@@ -29,6 +30,8 @@ import java.util.UUID;
 import org.gluewine.sessions.SessionExpiredException;
 import org.gluewine.sessions.SessionManager;
 import org.gluewine.sessions.SessionManagerDataStore;
+import org.gluewine.core.RunOnActivate;
+import org.gluewine.core.Glue;
 
 /**
  * Simple implementation that stores sessions in a map.
@@ -52,7 +55,7 @@ public class SessionManagerImpl implements SessionManager, SessionManagerDataSto
     /**
      * Max amount of time in milliseconds that a session can be idle.
      */
-    private static final long MAXIDLE = 300000;
+    private long maxIdle = 300000;
 
     /**
      * The timer used to check the sessions.
@@ -63,6 +66,12 @@ public class SessionManagerImpl implements SessionManager, SessionManagerDataSto
      * The map of session id indexed on the thread.
      */
     private Map<Thread, String> threadSessions = new HashMap<Thread, String>();
+
+    /**
+     * The property file to use.
+     */
+    @Glue(properties = "session.properties", refresh = "propertiesChanged", optional = true)
+    private Properties properties;
 
     // ===========================================================================
     /**
@@ -82,7 +91,7 @@ public class SessionManagerImpl implements SessionManager, SessionManagerDataSto
                     while (iter.hasNext())
                     {
                         Entry<String, Long> e = iter.next();
-                        if (System.currentTimeMillis() - e.getValue().longValue() > MAXIDLE)
+                        if (System.currentTimeMillis() - e.getValue().longValue() > maxIdle)
                         {
                             sessionData.remove(e.getKey());
                             iter.remove();
@@ -90,7 +99,7 @@ public class SessionManagerImpl implements SessionManager, SessionManagerDataSto
                     }
                 }
             }
-        }, 0, MAXIDLE);
+        }, 0, 120000L);
     }
 
     // ===========================================================================
@@ -114,7 +123,7 @@ public class SessionManagerImpl implements SessionManager, SessionManagerDataSto
         {
             boolean valid = false;
             if (sessions.containsKey(session))
-                valid = System.currentTimeMillis() - sessions.get(session).longValue() < MAXIDLE;
+                valid = System.currentTimeMillis() - sessions.get(session).longValue() < maxIdle;
 
             if (!valid) throw new SessionExpiredException();
         }
@@ -209,5 +218,15 @@ public class SessionManagerImpl implements SessionManager, SessionManagerDataSto
                 return null;
             return dataMap.get(key);
         }
+    }
+
+    // ===========================================================================
+    /**
+     * Invoked when the properties have changed.
+     */
+    @RunOnActivate
+    public void propertiesChanged()
+    {
+        maxIdle = Long.parseLong(properties.getProperty("maxidle", "300")) * 1000;
     }
 }

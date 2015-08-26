@@ -74,7 +74,7 @@ public final class AnnotationUtility
         if (res == null)
         {
             Class<?>[] inter = cl.getInterfaces();
-            for (int i = 0; i < inter.length && ann == null; i++)
+            for (int i = 0; i < inter.length && res == null; i++)
                 res = inter[i].getAnnotation(ann);
         }
 

@@ -172,7 +172,7 @@ public class VaadinTestUi extends GluewineVaadinUI
     private void initContactList()
     {
         contactList.setContainerDataSource(contactContainer);
-        contactList.setVisibleColumns(new String[] {RECNO, FNAME, LNAME, COMPANY});
+        contactList.setVisibleColumns(RECNO, FNAME, LNAME, COMPANY);
         contactList.setSelectable(true);
         contactList.setImmediate(true);
 
