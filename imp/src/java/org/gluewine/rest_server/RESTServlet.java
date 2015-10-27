@@ -232,6 +232,10 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
             {
                 params[i] = resp;
             }
+            else if (HttpServletRequest.class.isAssignableFrom(paramTypes[i]))
+            {
+                params[i] = req;
+            }
         }
     }
     /**
