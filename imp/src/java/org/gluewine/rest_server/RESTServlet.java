@@ -151,10 +151,13 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
      *
      * @param req The current request.
      * @param resp The current response.
+     * @param service The service where the method is called.
      * @throws AuthenticationException Throw if none of the available authenticators succeeded.
      */
-    private void authenticate(HttpServletRequest req, HttpServletResponse resp) throws AuthenticationException
+    private void authenticate(HttpServletRequest req, HttpServletResponse resp, Object service) throws AuthenticationException
     {
+        req.setAttribute(RESTAuthenticator.CALLED_SERVICE, service);
+
         for (RESTAuthenticator auth : authenticators)
         {
             try
@@ -391,7 +394,7 @@ public class RESTServlet extends GluewineServlet implements RepositoryListener<O
                 {
 
                     if (AnnotationUtility.getAnnotation(Unsecured.class, rm.getMethod(), rm.getObject()) == null)
-                        authenticate(req, resp);
+                        authenticate(req, resp, rm.getObject());
 
                     Class<?>[] paramTypes = rm.getMethod().getParameterTypes();
                     Object[] params = new Object[paramTypes.length];
