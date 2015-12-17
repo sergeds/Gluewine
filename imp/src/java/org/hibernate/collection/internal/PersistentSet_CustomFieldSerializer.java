@@ -7,7 +7,7 @@ import com.google.gwt.user.client.rpc.core.java.util.Collection_CustomFieldSeria
 import com.google.gwt.user.client.rpc.CustomFieldSerializer;
 
 /**
- * Custom field serializer for {@link java.util.PersistentSet}.
+ * Custom field serializer for org.hibernate.collection.PersistentSet.
  *
  * @author fks/Frank Gevaerts
  */

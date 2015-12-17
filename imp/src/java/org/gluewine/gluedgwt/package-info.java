@@ -11,7 +11,7 @@
  * Also, the servlets will likely not run at exactly the path the gwt compiler expects them,
  * so the client code needs to have:
  * </p>
- * <br/>
+ * <br>
  * <code>
  *          ((ServiceDefTarget) myService).setServiceEntryPoint("/myServicerPath/");
  * </code>
