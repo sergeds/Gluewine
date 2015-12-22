@@ -321,11 +321,13 @@ public class GluewineJettyLauncher implements RepositoryListener<Object>, Comman
                 // SSL Connector
                 ServerConnector sslConnector = new ServerConnector(server, new SslConnectionFactory(sslContextFactory, "http/1.1"), new HttpConnectionFactory(httpsConfig));
                 sslConnector.setPort(Integer.parseInt(properties.getProperty("https.port")));
+                sslConnector.setHost(properties.getProperty("https.host"));
                 server.addConnector(sslConnector);
             }
 
             ServerConnector http = new ServerConnector(server);
             http.setPort(Integer.parseInt(properties.getProperty("http.port", "8080")));
+            http.setHost(properties.getProperty("http.host"));
             server.addConnector(http);
 
             server.start();
