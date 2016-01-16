@@ -56,4 +56,14 @@ public @interface RESTID
      * If true, the parameter value will be the HTTP request method (GET, PUT, ...).
      */
     boolean method() default false;
+
+    /**
+     * If true, the parameter value will be the provided mime type of the file field. This only makes sense for file upload fields in forms.
+     */
+    boolean mimetype() default false;
+
+    /**
+     * If true, the parameter value will be the provided filename of the file field. This only makes sense for file upload fields in forms.
+     */
+    boolean filename() default false;
 }

@@ -31,12 +31,19 @@ import org.gluewine.authentication.AuthenticationException;
  */
 public interface RESTAuthenticator
 {
+    /**
+     * Name of the ServletRequest attribute where the service object for the called method is stored.
+     */
+    String CALLED_SERVICE = "org.gluewine.rest_server.called_service";
+
     // ===========================================================================
     /**
      * Requests the instance to perform authentication using the given request and response.
      * If authentication fails, an exception must be thrown. The response can be used
      * to set some headers, but should not be used to send an error code, as
      * the RESTServlet will handle that.
+     *
+     * req.getAttribute(CALLED_SERVICE) will contain the actual service that has the called method.
      *
      * @param req The current request.
      * @param response The current response.

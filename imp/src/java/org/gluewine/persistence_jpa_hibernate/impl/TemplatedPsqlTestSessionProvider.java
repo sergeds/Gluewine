@@ -35,7 +35,7 @@ import java.util.UUID;
  * hibernate.connection.template = The logical name for the connection
  *
  * The following properties are expected as system properties:
- * templatedb.<logicalname> = the name of the created template database
+ * templatedb.&lt;logicalname&gt; = the name of the created template database
  * templatedb.baseurl = The base of the jdbc url. The database names will be appended to this
  * templatedb.superuser = username allowed to create the new database
  * templatedb.superpass = superuser password

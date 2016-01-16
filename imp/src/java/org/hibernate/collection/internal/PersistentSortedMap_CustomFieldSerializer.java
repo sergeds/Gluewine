@@ -7,7 +7,7 @@ import com.google.gwt.user.client.rpc.core.java.util.Map_CustomFieldSerializerBa
 import com.google.gwt.user.client.rpc.CustomFieldSerializer;
 
 /**
- * Custom field serializer for {@link java.util.PersistentSortedMap}.
+ * Custom field serializer for org.hibernate.collection.PersistentSortedMap.
  *
  * @author fks/Frank Gevaerts
  */
